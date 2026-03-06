@@ -410,7 +410,7 @@ function buildSpider(factors) {
     const pts = factors.map((_,i)=>polar(i,R*lvl));
     const d = pts.map((p,i)=>`${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')+'Z';
     svgEl('path',{d,fill:'none',stroke:li===4?'rgba(255,255,255,0.1)':'rgba(255,255,255,0.05)','stroke-width':li===4?'1.2':'0.8','stroke-dasharray':li===4?'none':'3 4'},svg);
-    if (li<4) svgEl('text',{x:cx+4,y:(cy-R*lvl+3).toFixed(1),fill:'rgba(255,255,255,0.15)','font-family':'DM Mono,monospace','font-size':'7','letter-spacing':'0.5px'},svg).textContent=(lvl*100)+'%';
+    if (li<4) svgEl('text',{x:cx+4,y:(cy-R*lvl+3).toFixed(1),fill:'rgba(255,255,255,0.15)','font-family':'ui-monospace,-apple-system-monospace,Menlo,monospace','font-size':'7','letter-spacing':'0.5px'},svg).textContent=(lvl*100)+'%';
   });
 
   // Spokes
@@ -466,16 +466,16 @@ function buildSpider(factors) {
     // For top-pointing labels: percent goes ABOVE first line; for all others: BELOW last line
     if (isTop) {
       // % above label block
-      svgEl('text',{x:lp.x.toFixed(1),y:(lp.y - lines.length*lineH - 1).toFixed(1),'text-anchor':anchor,fill:'#93c5fd','font-family':'ui-monospace,monospace','font-size':'8.5'},g).textContent=Math.round(f.live*100)+'%';
+      svgEl('text',{x:lp.x.toFixed(1),y:(lp.y - lines.length*lineH - 1).toFixed(1),'text-anchor':anchor,fill:'#93c5fd','font-family':'ui-monospace,-apple-system-monospace,Menlo,monospace','font-size':'8.5'},g).textContent=Math.round(f.live*100)+'%';
       lines.forEach((line,li)=>{
-        svgEl('text',{x:lp.x.toFixed(1),y:(lp.y - (lines.length-1-li)*lineH).toFixed(1),'text-anchor':anchor,fill:'#eef0f4','font-family':'system-ui,sans-serif','font-size':'9.5','font-weight':'600'},g).textContent=line;
+        svgEl('text',{x:lp.x.toFixed(1),y:(lp.y - (lines.length-1-li)*lineH).toFixed(1),'text-anchor':anchor,fill:'#eef0f4','font-family':'-apple-system,BlinkMacSystemFont,system-ui,sans-serif','font-size':'9.5','font-weight':'600'},g).textContent=line;
       });
     } else {
       // label block then % below
       lines.forEach((line,li)=>{
-        svgEl('text',{x:lp.x.toFixed(1),y:(lp.y + li*lineH).toFixed(1),'text-anchor':anchor,fill:'#eef0f4','font-family':'system-ui,sans-serif','font-size':'9.5','font-weight':'600'},g).textContent=line;
+        svgEl('text',{x:lp.x.toFixed(1),y:(lp.y + li*lineH).toFixed(1),'text-anchor':anchor,fill:'#eef0f4','font-family':'-apple-system,BlinkMacSystemFont,system-ui,sans-serif','font-size':'9.5','font-weight':'600'},g).textContent=line;
       });
-      svgEl('text',{x:lp.x.toFixed(1),y:(lp.y + lines.length*lineH - 1).toFixed(1),'text-anchor':anchor,fill:'#93c5fd','font-family':'ui-monospace,monospace','font-size':'8.5'},g).textContent=Math.round(f.live*100)+'%';
+      svgEl('text',{x:lp.x.toFixed(1),y:(lp.y + lines.length*lineH - 1).toFixed(1),'text-anchor':anchor,fill:'#93c5fd','font-family':'ui-monospace,-apple-system-monospace,Menlo,monospace','font-size':'8.5'},g).textContent=Math.round(f.live*100)+'%';
     }
     const tip2 = document.getElementById('tipbox');
     g.addEventListener('mouseenter',e=>{
@@ -487,8 +487,8 @@ function buildSpider(factors) {
   });
 
   // Center watermark
-  svgEl('text',{x:cx,y:cy-4,'text-anchor':'middle',fill:'rgba(255,255,255,0.04)','font-family':'DM Sans,sans-serif','font-size':'14','font-weight':'700','letter-spacing':'-0.5px'},svg).textContent='TORNADO';
-  svgEl('text',{x:cx,y:cy+9,'text-anchor':'middle',fill:'rgba(255,255,255,0.03)','font-family':'DM Mono,monospace','font-size':'6','letter-spacing':'2px'},svg).textContent='RISK INDEX';
+  svgEl('text',{x:cx,y:cy-4,'text-anchor':'middle',fill:'rgba(255,255,255,0.04)','font-family':'-apple-system,BlinkMacSystemFont,system-ui,sans-serif','font-size':'14','font-weight':'700','letter-spacing':'-0.5px'},svg).textContent='TORNADO';
+  svgEl('text',{x:cx,y:cy+9,'text-anchor':'middle',fill:'rgba(255,255,255,0.03)','font-family':'ui-monospace,-apple-system-monospace,Menlo,monospace','font-size':'6','letter-spacing':'2px'},svg).textContent='RISK INDEX';
 
   applySpiderMode(spiderMode);
 }
