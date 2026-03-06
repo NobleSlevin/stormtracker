@@ -74,7 +74,9 @@ header {
 .logo-sub {
   color: var(--dim); font-weight: 400; font-size: 9px;
   letter-spacing: 2px; text-transform: uppercase; margin-left: 1px;
+  display: none;
 }
+@media (min-width: 360px) { .logo-sub { display: inline; } }
 .search-pill {
   display: flex; align-items: center; gap: 8px;
   background: var(--card2); border: 1px solid var(--border);
@@ -95,7 +97,7 @@ header {
   font-size: 16px; transition: color .15s;
 }
 .go-btn:active { color: var(--blue); }
-.hdr-status { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.hdr-status { display: flex; align-items: center; gap: 5px; flex-shrink: 0; width: 52px; justify-content: flex-end; overflow: hidden; }
 .ldot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--green); animation: lp 1.5s ease infinite; flex-shrink: 0;
@@ -103,7 +105,7 @@ header {
 .ldot.loading { background: var(--yellow); }
 .ldot.err { background: var(--red); animation: none; }
 @keyframes lp { 0%,100%{opacity:1} 50%{opacity:.25} }
-#liveText { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: .5px; white-space: nowrap; }
+#liveText { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: .5px; white-space: nowrap; overflow: hidden; max-width: 36px; text-overflow: ellipsis; }
 
 /* ── LOC BAR ── */
 .loc-bar {
