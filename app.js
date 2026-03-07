@@ -206,9 +206,10 @@ function renderForecast(periods){
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
   </div>`:'';
   const rows=days.slice(1,7).map(d=>{const dt=new Date(d.startTime);return`<div class="fc-day-row"><span class="fdr-name">${dn[dt.getDay()]}</span><span class="fdr-icon">${wxIcon(d.shortForecast)}</span><span class="fdr-desc">${d.shortForecast}</span><span class="fdr-temp ${tempClass(d.temperature)}">${d.temperature}°</span></div>`;}).join('');
-  box.innerHTML=heroHTML+'<div class="fc-days">'+rows+'</div>'
+  box.innerHTML=heroHTML
     +'<div class="hourly-toggle" id="hourlyToggle"><span class="hourly-toggle-lbl"><svg width="12" height="12" fill="currentColor"><use href="#bi-sun"/></svg> Hourly Forecast</span><span class="hourly-toggle-chevron"><svg width="10" height="10" fill="currentColor"><use href="#bi-chevron-right"/></svg></span></div>'
-    +'<div class="hourly-scroll" id="hourlyScroll"><div class="hourly-track" id="hourlyTrack"></div></div>';
+    +'<div class="hourly-scroll" id="hourlyScroll"><div class="hourly-track" id="hourlyTrack"></div></div>'
+    +'<div class="fc-days">'+rows+'</div>';
   document.getElementById('hourlyToggle').addEventListener('click', () => {
     document.getElementById('hourlyToggle').classList.toggle('open');
     document.getElementById('hourlyScroll').classList.toggle('open');
@@ -283,12 +284,13 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const watches = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('watch')).length;
       const adv = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('advisory')).length;
       const countColor = sa.length >= 10 ? 'var(--red)' : sa.length >= 5 ? 'var(--orange)' : sa.length > 0 ? 'var(--yellow)' : 'var(--green)';
-      const stateFlags = {'AL':'🏳️','AK':'🏔️','AZ':'🌵','AR':'🏳️','CA':'🐻','CO':'🏔️','CT':'🏳️','DE':'🏳️','FL':'🌴','GA':'🍑','HI':'🌺','ID':'🥔','IL':'🏙️','IN':'🏳️','IA':'🌽','KS':'🌾','KY':'🏇','LA':'🎷','ME':'🦞','MD':'🦀','MA':'🏛️','MI':'🚗','MN':'🌊','MS':'🎸','MO':'🏹','MT':'🦌','NE':'🌽','NV':'🎰','NH':'🏔️','NJ':'🏙️','NM':'🌶️','NY':'🗽','NC':'🏳️','ND':'🌾','OH':'🏳️','OK':'🌪️','OR':'🌲','PA':'🔔','RI':'🏳️','SC':'🏖️','SD':'🦅','TN':'🎸','TX':'🤠','UT':'🏜️','VT':'🍁','VA':'🏛️','WA':'🌲','WV':'⛏️','WI':'🧀','WY':'🦬'};
+      const stateFlags = {'AL':'AL','AK':'AK','AZ':'AZ','AR':'AR','CA':'CA','CO':'CO','CT':'CT','DE':'DE','FL':'FL','GA':'GA','HI':'HI','ID':'ID','IL':'IL','IN':'IN','IA':'IA','KS':'KS','KY':'KY','LA':'LA','ME':'ME','MD':'MD','MA':'MA','MI':'MI','MN':'MN','MS':'MS','MO':'MO','MT':'MT','NE':'NE','NV':'NV','NH':'NH','NJ':'NJ','NM':'NM','NY':'NY','NC':'NC','ND':'ND','OH':'OH','OK':'OK','OR':'OR','PA':'PA','RI':'RI','SC':'SC','SD':'SD','TN':'TN','TX':'TX','UT':'UT','VT':'VT','VA':'VA','WA':'WA','WV':'WV','WI':'WI','WY':'WY'};
+      const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
       sections.push(`
         <div class="section-ttl">State Alerts — ${curState}</div>
         <div class="state-alert-card">
           <div class="state-alert-header">
-            <div class="state-flag">${stateFlags[abbr]||'🗺️'}</div>
+            <div class="state-flag">${geoIcon}</div>
             <div class="state-name-block">
               <div class="state-name">${curState}</div>
               <div style="font-size:10px;color:var(--dim);font-family:var(--mono)">${abbr} · NWS Active Alerts</div>
@@ -318,12 +320,12 @@ async function fetchNearby(lat, lon, stationsUrl) {
     }
     if (nearest) {
       const sp = nearest.properties;
+      const sid = sp.stationIdentifier || nearest.id?.split('/').pop() || '—';
       const [rlon, rlat] = nearest.geometry?.coordinates || [];
-      // Rough miles (1 deg ≈ 69 miles)
       const miles = Math.round(Math.sqrt(Math.pow((rlat-lat)*69,2) + Math.pow((rlon-lon)*54,2)));
       const stationType = sp.stationType || 'NEXRAD';
       const elevation = sp.elevation?.value != null ? Math.round(sp.elevation.value * 3.281) + ' ft' : '—';
-      const radarUrl = `https://radar.weather.gov/station/${nearest.properties.stationIdentifier}/standard`;
+      const radarUrl = `https://radar.weather.gov/station/${sid}/standard`;
       sections.push(`
         <div class="section-ttl" style="margin-top:4px">Nearest Radar Station</div>
         <div class="radar-card">
@@ -332,13 +334,13 @@ async function fetchNearby(lat, lon, stationsUrl) {
               <svg width="16" height="16" fill="var(--green)"><use href="#bi-broadcast"/></svg>
             </div>
             <div class="radar-info">
-              <div class="radar-name">${sp.name || nearest.properties.stationIdentifier}</div>
+              <div class="radar-name">${sp.name || sid}</div>
               <div class="radar-meta">${sp.timeZone || ''}</div>
             </div>
             <div class="radar-dist">${miles} mi</div>
           </div>
           <div class="radar-details">
-            <div class="rdt-item"><span class="rdt-label">ID</span><span class="rdt-val" style="color:var(--green);font-family:var(--mono)">${nearest.properties.stationIdentifier}</span></div>
+            <div class="rdt-item"><span class="rdt-label">ID</span><span class="rdt-val" style="color:var(--green);font-family:var(--mono)">${sid}</span></div>
             <div class="rdt-item"><span class="rdt-label">Type</span><span class="rdt-val">${stationType}</span></div>
             <div class="rdt-item"><span class="rdt-label">Elevation</span><span class="rdt-val">${elevation}</span></div>
           </div>
@@ -567,8 +569,7 @@ function buildSpider(factors) {
     g.addEventListener('mousemove',posTip);
     g.addEventListener('mouseleave',()=>{tip2.style.opacity='0';});
   });
-  svgEl('text',{x:cx,y:cy-4,'text-anchor':'middle',fill:'rgba(255,255,255,0.04)','font-family':'-apple-system,BlinkMacSystemFont,system-ui,sans-serif','font-size':'14','font-weight':'700','letter-spacing':'-0.5px'},svg).textContent='TORNADO';
-  svgEl('text',{x:cx,y:cy+9,'text-anchor':'middle',fill:'rgba(255,255,255,0.03)','font-family':'ui-monospace,-apple-system-monospace,Menlo,monospace','font-size':'6','letter-spacing':'2px'},svg).textContent='RISK INDEX';
+
   applySpiderMode(spiderMode);
 }
 
