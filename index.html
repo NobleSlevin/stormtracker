@@ -61,12 +61,12 @@ header { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px 10p
 
 /* ── OBS STRIP ── */
 .obs-strip { display: grid; grid-template-columns: repeat(8,1fr); border-bottom: 1px solid var(--border); background: var(--card2); flex-shrink: 0; overflow: hidden; max-height: 0; transition: max-height .3s ease; }
-.obs-strip.show { max-height: 60px; }
-.obs-item { padding: 6px 4px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 1px; align-items: center; }
+.obs-strip.show { max-height: 72px; }
+.obs-item { padding: 8px 2px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; }
 .obs-item:last-child { border-right: none; }
-.obs-label { font-size: 7px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
-.obs-val { font-size: 13px; font-weight: 400; color: var(--text); line-height: 1.2; }
-.obs-unit { font-size: 7px; color: var(--dim); }
+.obs-label { font-size: 7px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.obs-val { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1; }
+.obs-unit { font-size: 8px; color: var(--dim); }
 
 /* ── ALERT STAT STRIP ── */
 .stat-strip { display: grid; grid-template-columns: repeat(4,1fr); border-bottom: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
