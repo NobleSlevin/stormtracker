@@ -289,11 +289,12 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .install-close { background: none; border: none; color: var(--dim); font-size: 18px; cursor: pointer; padding: 0 4px; -webkit-appearance: none; }
 
 /* ── RADAR TAB ── */
-.radar-bar { display: flex; flex-direction: column; gap: 4px; padding: 6px 14px 8px; background: var(--card); border-top: 1px solid var(--border); flex-shrink: 0; }
-.radar-bar-labels { display: flex; align-items: center; gap: 8px; }
-.radar-bar-controls { display: flex; align-items: center; gap: 10px; }
+.radar-bar { display: flex; flex-direction: column; gap: 5px; padding: 7px 14px 8px; background: var(--card); border-top: 1px solid var(--border); flex-shrink: 0; }
+.radar-bar-labels { display: flex; align-items: center; gap: 8px; width: 100%; }
+.radar-bar-controls { display: flex; align-items: center; gap: 10px; width: 100%; }
 .radar-play-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); background: var(--card2); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; -webkit-appearance: none; }
 .radar-play-btn:active { background: var(--card3); }
+.radar-timeline-wrap { display: none; }
 .radar-ticks { position: relative; flex: 1; height: 14px; pointer-events: none; }
 .radar-tick { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column-reverse; align-items: center; gap: 1px; }
 .radar-tick-line { width: 1px; height: 4px; background: var(--muted); }
@@ -302,7 +303,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .radar-tick-label.active { color: var(--blue); }
 .radar-timeline { flex: 1; position: relative; height: 4px; background: var(--card3); border-radius: 2px; cursor: pointer; }
 .radar-timeline-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width .1s; pointer-events: none; }
-.radar-timestamp { font-size: 10px; font-weight: 500; color: var(--dim); font-family: var(--mono); flex-shrink: 0; text-align: right; letter-spacing: 0; line-height: 14px; }
+.radar-timestamp { font-size: 10px; font-weight: 500; color: var(--dim); font-family: var(--mono); flex-shrink: 0; text-align: right; white-space: nowrap; }
 .leaflet-tile-pane { filter: saturate(1.3) brightness(0.9); }
 </style>
 </head>
