@@ -420,8 +420,10 @@ async function renderAQISlot(lat, lon) {
             </svg>
           </div>
           <div class="aqi-info">
-            <div class="aqi-category" style="color:${aqiColor}">${aq.category}</div>
-            <div class="aqi-area">AirNow · ${aq.reportingArea}${aq.stateCode ? ', ' + aq.stateCode : ''}</div>
+            <div class="aqi-area">Open-Meteo · US AQI</div>
+          </div>
+          <div class="aqi-badge" style="background:${aqiBg};color:${aqiColor};border:1px solid ${aqiColor}33">
+            ${aq.category}
           </div>
           <div class="aqi-score" style="color:${aqiColor}">${aq.aqi}</div>
         </div>
