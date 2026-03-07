@@ -384,51 +384,60 @@ function patchHourlyTemps(omHourly) {
 }
 
 // ── RENDER AQI INTO FORECAST TAB ─────────────────
+let _aqiCache = null; // persist last result so slot can repaint instantly on refresh
+
+function aqiHTML(aq) {
+  const aqiColor = aq.categoryNum <= 1 ? 'var(--green)'
+    : aq.categoryNum === 2 ? 'var(--yellow)'
+    : aq.categoryNum === 3 ? 'var(--orange)'
+    : aq.categoryNum === 4 ? 'var(--red)'
+    : aq.categoryNum === 5 ? '#c084fc'
+    : '#f87171';
+  const aqiBg = aq.categoryNum <= 1 ? 'rgba(74,222,128,.1)'
+    : aq.categoryNum === 2 ? 'rgba(251,191,36,.1)'
+    : aq.categoryNum === 3 ? 'rgba(251,146,60,.1)'
+    : aq.categoryNum === 4 ? 'rgba(248,113,113,.1)'
+    : aq.categoryNum === 5 ? 'rgba(192,132,252,.1)'
+    : 'rgba(248,113,113,.15)';
+  const pollCells = aq.pollutants.slice(0, 3).map(p => `
+    <div class="aqi-cell">
+      <span class="aqi-cell-lbl">${p.name}</span>
+      <span class="aqi-cell-val">${p.aqi}</span>
+      <span class="aqi-cell-sub">${p.category}</span>
+    </div>`).join('');
+  const padCells = aq.pollutants.length < 3
+    ? Array(3 - aq.pollutants.length).fill('<div class="aqi-cell"></div>').join('') : '';
+  return `
+    <div class="aqi-section-ttl">Air Quality</div>
+    <div class="aqi-card">
+      <div class="aqi-header">
+        <div class="aqi-icon-wrap" style="background:${aqiBg};border-color:${aqiColor}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${aqiColor}" viewBox="0 0 16 16">
+            <path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2h-5a.5.5 0 0 1 0-1h5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>
+          </svg>
+        </div>
+        <div class="aqi-info">
+          <div class="aqi-area">Open-Meteo · US AQI</div>
+        </div>
+        <div class="aqi-badge" style="background:${aqiBg};color:${aqiColor};border:1px solid ${aqiColor}33">
+          ${aq.category}
+        </div>
+        <div class="aqi-score" style="color:${aqiColor}">${aq.aqi}</div>
+      </div>
+      <div class="aqi-cells">${pollCells}${padCells}</div>
+    </div>`;
+}
+
 async function renderAQISlot(lat, lon) {
   const slot = document.getElementById('aqiSlot');
   if (!slot) return;
+  // Paint cached result immediately to prevent flicker on refresh
+  if (_aqiCache) slot.innerHTML = aqiHTML(_aqiCache);
   try {
     const aq = await fetchAQI(lat, lon);
     if (!aq) return;
-    const aqiColor = aq.categoryNum <= 1 ? 'var(--green)'
-      : aq.categoryNum === 2 ? 'var(--yellow)'
-      : aq.categoryNum === 3 ? 'var(--orange)'
-      : aq.categoryNum === 4 ? 'var(--red)'
-      : aq.categoryNum === 5 ? '#c084fc'
-      : '#f87171';
-    const aqiBg = aq.categoryNum <= 1 ? 'rgba(74,222,128,.1)'
-      : aq.categoryNum === 2 ? 'rgba(251,191,36,.1)'
-      : aq.categoryNum === 3 ? 'rgba(251,146,60,.1)'
-      : aq.categoryNum === 4 ? 'rgba(248,113,113,.1)'
-      : aq.categoryNum === 5 ? 'rgba(192,132,252,.1)'
-      : 'rgba(248,113,113,.15)';
-    const pollCells = aq.pollutants.slice(0, 3).map(p => `
-      <div class="aqi-cell">
-        <span class="aqi-cell-lbl">${p.name}</span>
-        <span class="aqi-cell-val">${p.aqi}</span>
-        <span class="aqi-cell-sub">${p.category}</span>
-      </div>`).join('');
-    const padCells = aq.pollutants.length < 3
-      ? Array(3 - aq.pollutants.length).fill('<div class="aqi-cell"></div>').join('') : '';
-    slot.innerHTML = `
-      <div class="aqi-section-ttl">Air Quality</div>
-      <div class="aqi-card">
-        <div class="aqi-header">
-          <div class="aqi-icon-wrap" style="background:${aqiBg};border-color:${aqiColor}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${aqiColor}" viewBox="0 0 16 16">
-              <path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2h-5a.5.5 0 0 1 0-1h5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>
-            </svg>
-          </div>
-          <div class="aqi-info">
-            <div class="aqi-area">Open-Meteo · US AQI</div>
-          </div>
-          <div class="aqi-badge" style="background:${aqiBg};color:${aqiColor};border:1px solid ${aqiColor}33">
-            ${aq.category}
-          </div>
-          <div class="aqi-score" style="color:${aqiColor}">${aq.aqi}</div>
-        </div>
-        <div class="aqi-cells">${pollCells}${padCells}</div>
-      </div>`;
+    _aqiCache = aq;
+    slot.innerHTML = aqiHTML(aq);
   } catch(e) { console.warn('AQI slot error:', e); }
 }
 
