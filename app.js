@@ -757,13 +757,15 @@ function initRadar(lat, lon) {
     rvMap = L.map('radarMap', {
       center: [lat, lon],
       zoom: 8,
+      maxZoom: 12,
       zoomControl: true,
       attributionControl: false
     });
 
     // Dark base map tiles
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 7,
+      maxNativeZoom: 19,
+      maxZoom: 19,
       subdomains: 'abcd'
     }).addTo(rvMap);
 
@@ -889,6 +891,10 @@ function rvUpdatePlayIcon() {
   }
 }
 
+function isRadarTabActive() {
+  return document.getElementById('tabRadar')?.classList.contains('on');
+}
+
 // ── OPEN-METEO (no key required) ──────────────────
 async function fetchOpenMeteo(lat, lon) {
   try {
@@ -993,6 +999,16 @@ async function fetchForPoint(lat, lon) {
     fetchNearby(lat, lon, stationUrl)
   ]);
   if (periods && periods.length) computeTornadoRisk(periods, lat, lon, allAlerts);
+
+  // If radar tab is already visible when location updates, init or re-center
+  if (isRadarTabActive()) {
+    if (!rvInited) {
+      initRadar(lat, lon);
+    } else if (rvMap) {
+      rvMap.setView([lat, lon], 8);
+      setTimeout(() => rvMap.invalidateSize(), 60);
+    }
+  }
 }
 
 async function geoMe() {
