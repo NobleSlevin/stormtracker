@@ -306,103 +306,93 @@ function beaufortFromMph(mph) {
 function compassSVG(windDeg, deviceDeg) {
   // windDeg  : degrees wind is FROM (meteorological: 0=N wind blowing south)
   // deviceDeg: current device compass heading (null if no permission)
-  const cx = 110, cy = 110, r = 100;
+  // Viewbox 260×260, compass ring at cx=130,cy=130,r=118
+  const cx = 130, cy = 130, r = 118;
   const ticksHTML = [];
 
-  // Tick marks around the ring
+  // Tick marks — every 5°, with major at 22.5° (16-point) and mid at 10°
   for (let i = 0; i < 72; i++) {
-    const a = (i * 5) * Math.PI / 180;
-    const isMajor = i % 9 === 0; // every 45°
-    const isMid   = i % 3 === 0; // every 15°
+    const deg = i * 5;
+    const a = deg * Math.PI / 180;
+    const is16pt = deg % 22.5 === 0;   // 16 compass points
+    const isMid  = deg % 10 === 0;
     const rOuter = r;
-    const rInner = isMajor ? r - 14 : isMid ? r - 9 : r - 5;
+    const rInner = is16pt ? r - 16 : isMid ? r - 10 : r - 6;
     const x1 = cx + rOuter * Math.sin(a), y1 = cy - rOuter * Math.cos(a);
     const x2 = cx + rInner * Math.sin(a), y2 = cy - rInner * Math.cos(a);
-    ticksHTML.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,${isMajor?'.35':isMid?'.18':'.1'})" stroke-width="${isMajor?1.5:1}"/>`);
+    ticksHTML.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,${is16pt?'.4':isMid?'.2':'.1'})" stroke-width="${is16pt?1.5:1}"/>`);
   }
 
-  // Cardinal labels
-  const cardinals = [['N',0],['E',90],['S',180],['W',270]];
-  const cardHTML = cardinals.map(([lbl, deg]) => {
+  // 16-point compass labels + degree values
+  const pts16 = [
+    ['N',0],['NNE',22.5],['NE',45],['ENE',67.5],
+    ['E',90],['ESE',112.5],['SE',135],['SSE',157.5],
+    ['S',180],['SSW',202.5],['SW',225],['WSW',247.5],
+    ['W',270],['WNW',292.5],['NW',315],['NNW',337.5]
+  ];
+  const isCardinal = new Set([0,90,180,270]);
+  const cardHTML = pts16.map(([lbl, deg]) => {
     const a = deg * Math.PI / 180;
-    const rLbl = r - 22;
+    const isCard = isCardinal.has(deg);
+    const rLbl = r - (isCard ? 26 : 24);
     const x = cx + rLbl * Math.sin(a), y = cy - rLbl * Math.cos(a);
-    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.5)" font-size="11" font-family="ui-monospace,monospace" font-weight="600">${lbl}</text>`;
+    // Degree label just outside the ring for every 30°
+    let degLbl = '';
+    if (deg % 30 === 0) {
+      const rDeg = r + 12;
+      const dx = cx + rDeg * Math.sin(a), dy = cy - rDeg * Math.cos(a);
+      degLbl = `<text x="${dx.toFixed(1)}" y="${dy.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.28)" font-size="8" font-family="ui-monospace,monospace">${deg}</text>`;
+    }
+    return degLbl + `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${isCard?'rgba(255,255,255,.75)':'rgba(255,255,255,.38)'}" font-size="${isCard?13:9}" font-family="ui-monospace,monospace" font-weight="${isCard?700:500}">${lbl}</text>`;
   }).join('');
 
-  // Wind arrow:
-  // windDeg = direction wind is FROM (meteorological convention).
-  // The arrowhead points downwind (where wind is going = windDeg + 180).
-  // Line spans full inner diameter — from the upwind side to the downwind tip.
+  // Wind arrow — spans full inner diameter
+  // windDeg = FROM direction; arrowhead points downwind (windDeg+180)
   let windArrowHTML = '';
   if (windDeg != null) {
-    // Downwind angle: where the wind is traveling TO
     const waDeg = (windDeg + 180) % 360;
     const wa = waDeg * Math.PI / 180;
-    const innerR = 30; // stop just inside the center circle edge
-
-    // Downwind tip (arrowhead end) — stop at inner circle edge
-    const tipX = cx + innerR * Math.sin(wa),  tipY = cy - innerR * Math.cos(wa);
-    // Extend line all the way to the opposite inner circle edge (upwind end)
-    const tailX = cx - innerR * Math.sin(wa), tailY = cy + innerR * Math.cos(wa);
-
-    // Build a long line from upwind inner-circle edge to downwind inner-circle edge
-    // but we want it to visually cross the full diameter, so use a larger inner reach
-    const lineR = 75; // reach from center toward each side (fits inside r=100 ring comfortably)
-    const lx1 = cx + lineR * Math.sin(wa),  ly1 = cy - lineR * Math.cos(wa);  // downwind end
-    const lx2 = cx - lineR * Math.sin(wa),  ly2 = cy + lineR * Math.cos(wa);  // upwind end (no head)
-
-    // Arrowhead at downwind tip
-    const headSize = 10;
+    const lineR = 88; // reach from center — stops inside the ring
+    const lx1 = cx + lineR * Math.sin(wa),  ly1 = cy - lineR * Math.cos(wa);  // downwind tip
+    const lx2 = cx - lineR * Math.sin(wa),  ly2 = cy + lineR * Math.cos(wa);  // upwind tail
+    const headSize = 11;
     const perpX = Math.cos(wa), perpY = Math.sin(wa);
-    const hx  = lx1, hy  = ly1;
-    const hlx = hx - headSize * Math.sin(wa) + (headSize * 0.55) * perpX;
-    const hly = hy + headSize * Math.cos(wa) + (headSize * 0.55) * perpY;
-    const hrx = hx - headSize * Math.sin(wa) - (headSize * 0.55) * perpX;
-    const hry = hy + headSize * Math.cos(wa) - (headSize * 0.55) * perpY;
-
-    // Small circle at upwind tail end
-    const tailCircleX = lx2, tailCircleY = ly2;
-
+    const hlx = lx1 - headSize * Math.sin(wa) + headSize * 0.55 * perpX;
+    const hly = ly1 + headSize * Math.cos(wa) + headSize * 0.55 * perpY;
+    const hrx = lx1 - headSize * Math.sin(wa) - headSize * 0.55 * perpX;
+    const hry = ly1 + headSize * Math.cos(wa) - headSize * 0.55 * perpY;
     windArrowHTML = `
       <line x1="${lx2.toFixed(1)}" y1="${ly2.toFixed(1)}" x2="${lx1.toFixed(1)}" y2="${ly1.toFixed(1)}" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-      <polygon points="${hx.toFixed(1)},${hy.toFixed(1)} ${hlx.toFixed(1)},${hly.toFixed(1)} ${hrx.toFixed(1)},${hry.toFixed(1)}" fill="white"/>
-      <circle cx="${tailCircleX.toFixed(1)}" cy="${tailCircleY.toFixed(1)}" r="4" fill="none" stroke="white" stroke-width="2"/>
+      <polygon points="${lx1.toFixed(1)},${ly1.toFixed(1)} ${hlx.toFixed(1)},${hly.toFixed(1)} ${hrx.toFixed(1)},${hry.toFixed(1)}" fill="white"/>
+      <circle cx="${lx2.toFixed(1)}" cy="${ly2.toFixed(1)}" r="4.5" fill="none" stroke="white" stroke-width="2.2"/>
     `;
   }
 
-  // Device heading indicator (blue triangle at rim)
+  // Device heading — blue tick at rim, inside the ring (no outside protrusion)
   let deviceHTML = '';
   if (deviceDeg != null) {
     const da = deviceDeg * Math.PI / 180;
-    const dr = r - 3;
-    const dx = cx + dr * Math.sin(da), dy = cy - dr * Math.cos(da);
-    const p1x = cx + (r+4) * Math.sin(da), p1y = cy - (r+4) * Math.cos(da);
-    const perp = 5;
-    const p2x = dx + perp * Math.cos(da), p2y = dy + perp * Math.sin(da);
-    const p3x = dx - perp * Math.cos(da), p3y = dy - perp * Math.sin(da);
-    deviceHTML = `<polygon points="${p1x.toFixed(1)},${p1y.toFixed(1)} ${p2x.toFixed(1)},${p2y.toFixed(1)} ${p3x.toFixed(1)},${p3y.toFixed(1)}" fill="#93c5fd" opacity=".9"/>`;
+    const rOut = r - 2,  rIn = r - 14;
+    const x1 = cx + rOut * Math.sin(da), y1 = cy - rOut * Math.cos(da);
+    const x2 = cx + rIn  * Math.sin(da), y2 = cy - rIn  * Math.cos(da);
+    deviceHTML = `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#93c5fd" stroke-width="3" stroke-linecap="round"/>`;
   }
 
-  // Center circle + dot
-  const centerHTML = `
-    <circle cx="${cx}" cy="${cy}" r="32" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
-    <circle cx="${cx}" cy="${cy}" r="4" fill="rgba(255,255,255,.3)"/>
-  `;
-
-  return `<svg class="wc-svg" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-    <!-- Outer ring -->
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
+  return `<svg class="wc-svg" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+    <!-- Ring stroke only, no fill -->
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
     <!-- Tick marks -->
     ${ticksHTML.join('')}
-    <!-- Cardinals -->
+    <!-- Labels -->
     ${cardHTML}
     <!-- Wind arrow -->
     ${windArrowHTML}
-    <!-- Device indicator -->
+    <!-- Device heading tick -->
     ${deviceHTML}
-    <!-- Center -->
-    ${centerHTML}
+    <!-- Center crosshair -->
+    <line x1="${(cx-10).toFixed(1)}" y1="${cy}" x2="${(cx+10).toFixed(1)}" y2="${cy}" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>
+    <line x1="${cx}" y1="${(cy-10).toFixed(1)}" x2="${cx}" y2="${(cy+10).toFixed(1)}" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>
+    <circle cx="${cx}" cy="${cy}" r="2.5" fill="rgba(255,255,255,.4)"/>
   </svg>`;
 }
 
@@ -471,7 +461,7 @@ function renderWindModal() {
 
   // ── Device compass ──
   const compassPermHTML = _compassActive
-    ? `<div class="wind-compass-status">📡 Live compass active · You are facing ${_compassHeading != null ? _compassHeading.toFixed(0)+'° '+degToCard(_compassHeading) : '…'}</div>`
+    ? `<div class="wind-compass-status" style="display:flex;align-items:center;gap:6px;justify-content:center"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" fill=\"#93c5fd\" viewBox=\"0 0 16 16\"><path d=\"M8 16.016a7.5 7.5 0 0 0 1.962-14.74A1 1 0 0 0 9 0H7a1 1 0 0 0-.962 1.276A7.5 7.5 0 0 0 8 16.016m6.5-7.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0\"/><path d=\"m6.94 7.44 4.95-2.83-2.83 4.95-4.949 2.83 2.828-4.95z\"/></svg> Live compass · ${_compassHeading != null ? _compassHeading.toFixed(0)+'° '+degToCard(_compassHeading) : '…'}</div>`
     : `<button class="wind-compass-btn" onclick="requestCompass()">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/><path d="m5.904 6.523.94 2.555.938-2.555L10.338 5.5l-2.556.94L6.844 5.5l-.94 2.023zm2.598 3.168-1.11-3.015L4.378 7.566l3.014-1.11 1.11 3.015 3.015-1.11-3.015 1.11z"/></svg>
         Enable Live Compass
@@ -523,13 +513,15 @@ function closeWindModal() {
 }
 
 function requestCompass() {
+  // If already active, just re-render (no re-prompt needed)
+  if (_compassActive) { renderWindModal(); return; }
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // Check if permission was already granted this session
     DeviceOrientationEvent.requestPermission().then(state => {
       if (state === 'granted') startCompass();
       else { alert('Compass access denied. You can re-enable it in iOS Settings → Safari → Motion & Orientation Access.'); }
     }).catch(err => { console.warn('Compass permission error:', err); });
   } else {
-    // Non-iOS or already granted
     startCompass();
   }
 }
@@ -546,7 +538,7 @@ function startCompass() {
       const compassWrap = document.querySelector('.wind-compass');
       if (compassWrap) compassWrap.innerHTML = compassSVG(window._windData?.direction ?? null, heading);
       const statusEl = document.querySelector('.wind-compass-status');
-      if (statusEl) statusEl.textContent = `📡 Live compass · ${heading.toFixed(0)}° ${degToCard(heading)}`;
+      if (statusEl) statusEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#93c5fd" viewBox="0 0 16 16"><path d="M8 16.016a7.5 7.5 0 0 0 1.962-14.74A1 1 0 0 0 9 0H7a1 1 0 0 0-.962 1.276A7.5 7.5 0 0 0 8 16.016m6.5-7.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0"/><path d="m6.94 7.44 4.95-2.83-2.83 4.95-4.949 2.83 2.828-4.95z"/></svg> Live compass · ${heading.toFixed(0)}° ${degToCard(heading)}`;
     }
   };
   window.addEventListener('deviceorientation', _compassHandler, true);
