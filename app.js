@@ -125,25 +125,29 @@ function wxIcon(s, size=18) {
     // cloudy / overcast / default
     path = `<path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.476A5.5 5.5 0 0 1 4.406 3.342"/>`;
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="currentColor" viewBox="0 0 16 16">${path}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="currentColor" viewBox="0 0 16 16" style="overflow:visible">${path}</svg>`;
 }
 function wxLabel(s) {
   s = (s||'').toLowerCase();
-  if (s.includes('tornado'))                                      return 'Tornado';
-  if (s.includes('thunder') || s.includes('tstm'))               return 'Storm';
-  if (s.includes('blizzard'))                                     return 'Blizzard';
-  if (s.includes('snow') || s.includes('sleet'))                  return 'Snow';
-  if (s.includes('ice') || s.includes('freezing'))                return 'Ice';
-  if (s.includes('drizzle'))                                      return 'Drizzle';
-  if (s.includes('shower'))                                       return 'Showers';
-  if (s.includes('rain'))                                         return 'Rain';
-  if (s.includes('fog') || s.includes('mist'))                    return 'Fog';
-  if (s.includes('haz') || s.includes('smoke') || s.includes('dust')) return 'Hazy';
+  if (s.includes('tornado'))                                            return 'Tornado';
+  // Only "Storm" when thunder is the lead condition, not a rain modifier
+  // "Thunderstorms" -> Storm, "Showers And Thunderstorms" -> Showers
+  const hasThunder = s.includes('thunder') || s.includes('tstm');
+  const hasRain    = s.includes('rain') || s.includes('shower') || s.includes('drizzle');
+  if (hasThunder && !hasRain)                                           return 'Storm';
+  if (s.includes('blizzard'))                                           return 'Blizzard';
+  if (s.includes('snow') || s.includes('sleet'))                        return 'Snow';
+  if (s.includes('ice') || s.includes('freezing'))                      return 'Ice';
+  if (s.includes('drizzle'))                                            return 'Drizzle';
+  if (s.includes('shower') || (hasThunder && hasRain))                  return 'Showers';
+  if (s.includes('rain'))                                               return 'Rain';
+  if (s.includes('fog') || s.includes('mist'))                          return 'Fog';
+  if (s.includes('haz') || s.includes('smoke') || s.includes('dust'))   return 'Hazy';
   if (s.includes('breezy') || s.includes('blustery') || s.includes('windy')) return 'Windy';
-  if (s.includes('sunny') || s.includes('clear'))                 return 'Clear';
-  if (s.includes('partly cloudy') || s.includes('partly sunny'))  return 'Partly';
-  if (s.includes('mostly cloudy') || s.includes('overcast'))      return 'Cloudy';
-  if (s.includes('mostly sunny') || s.includes('mostly clear'))   return 'Mostly Clear';
+  if (s.includes('sunny') || s.includes('clear'))                       return 'Clear';
+  if (s.includes('partly cloudy') || s.includes('partly sunny'))        return 'Partly';
+  if (s.includes('mostly cloudy') || s.includes('overcast'))            return 'Cloudy';
+  if (s.includes('mostly sunny') || s.includes('mostly clear'))         return 'Mostly Clear';
   return 'Cloudy';
 }
 function tempClass(t) {
