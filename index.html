@@ -161,9 +161,10 @@ header { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px 10p
 .hourly-scroll::-webkit-scrollbar { display: none; }
 .hourly-scroll.open { display: block; }
 .hourly-track { display: flex; gap: 8px; padding: 4px 2px; width: max-content; }
-.hour-card { display: flex; flex-direction: column; align-items: center; gap: 5px; background: var(--card2); border: 1px solid var(--border); border-radius: var(--rsm); padding: 10px 10px; min-width: 58px; }
+.hour-card { display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--card2); border: 1px solid var(--border); border-radius: var(--rsm); padding: 9px 8px; min-width: 62px; }
 .hc-time { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: .5px; }
 .hc-icon { color: var(--blue); opacity: .8; display: flex; }
+.hc-label { font-size: 9px; font-weight: 500; color: var(--dim); text-align: center; white-space: nowrap; }
 .hc-temp { font-size: 15px; font-weight: 400; }
 .hc-precip { font-family: var(--mono); font-size: 9px; color: var(--blue); }
 .hc-wind { font-family: var(--mono); font-size: 8px; color: var(--dim); }
@@ -274,12 +275,11 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
 /* ── RADAR TAB ── */
 .radar-bar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--card); border-top: 1px solid var(--border); flex-shrink: 0; }
-.radar-play-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); background: var(--card2); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; -webkit-appearance: none; }
+.radar-play-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border2); background: var(--card2); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; -webkit-appearance: none; }
 .radar-play-btn:active { background: var(--card3); }
 .radar-timeline { flex: 1; position: relative; height: 4px; background: var(--card3); border-radius: 2px; cursor: pointer; }
 .radar-timeline-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width .1s; pointer-events: none; }
-.radar-timestamp { font-size: 11px; color: var(--dim); font-family: var(--mono); flex-shrink: 0; min-width: 64px; text-align: right; }
-.radar-frames-label { font-size: 9px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
+.radar-timestamp { font-size: 15px; font-weight: 600; color: var(--text); font-family: var(--mono); flex-shrink: 0; min-width: 72px; text-align: right; letter-spacing: -0.3px; }
 .leaflet-tile-pane { filter: saturate(1.3) brightness(0.9); }
 </style>
 </head>

@@ -127,6 +127,25 @@ function wxIcon(s, size=18) {
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="currentColor" viewBox="0 0 16 16">${path}</svg>`;
 }
+function wxLabel(s) {
+  s = (s||'').toLowerCase();
+  if (s.includes('tornado'))                                      return 'Tornado';
+  if (s.includes('thunder') || s.includes('tstm'))               return 'Storm';
+  if (s.includes('blizzard'))                                     return 'Blizzard';
+  if (s.includes('snow') || s.includes('sleet'))                  return 'Snow';
+  if (s.includes('ice') || s.includes('freezing'))                return 'Ice';
+  if (s.includes('drizzle'))                                      return 'Drizzle';
+  if (s.includes('shower'))                                       return 'Showers';
+  if (s.includes('rain'))                                         return 'Rain';
+  if (s.includes('fog') || s.includes('mist'))                    return 'Fog';
+  if (s.includes('haz') || s.includes('smoke') || s.includes('dust')) return 'Hazy';
+  if (s.includes('breezy') || s.includes('blustery') || s.includes('windy')) return 'Windy';
+  if (s.includes('sunny') || s.includes('clear'))                 return 'Clear';
+  if (s.includes('partly cloudy') || s.includes('partly sunny'))  return 'Partly';
+  if (s.includes('mostly cloudy') || s.includes('overcast'))      return 'Cloudy';
+  if (s.includes('mostly sunny') || s.includes('mostly clear'))   return 'Mostly Clear';
+  return 'Cloudy';
+}
 function tempClass(t) {
   if(t>=95)return't-hot'; if(t>=80)return't-warm'; if(t>=60)return't-mild'; if(t>=40)return't-cool'; return't-cold';
 }
@@ -269,6 +288,7 @@ function renderHourly(periods) {
     return `<div class="hour-card">
       <span class="hc-time">${hr}</span>
       <span class="hc-icon">${wxIcon(p.shortForecast)}</span>
+      <span class="hc-label">${wxLabel(p.shortForecast)}</span>
       <span class="hc-temp ${tempClass(p.temperature)}">${p.temperature}°</span>
       ${precip != null ? `<span class="hc-precip">${precip}%</span>` : ''}
       <span class="hc-wind">${windMax}mph</span>
@@ -727,7 +747,6 @@ function initRadar(lat, lon) {
           <div class="radar-timeline-fill" id="rvFill" style="width:0%"></div>
         </div>
         <span class="radar-timestamp" id="rvTimestamp">Loading…</span>
-        <span class="radar-frames-label" id="rvFrameLabel"></span>
       </div>`;
 
     // Size the map to fill available space
@@ -834,7 +853,7 @@ async function rvLoadFrames() {
 
     rvPos = rvFrames.length - 1;
     rvShowFrame(rvPos);
-    document.getElementById('rvFrameLabel').textContent = `${rvFrames.length}f`;
+
 
     rvPlay();
 
