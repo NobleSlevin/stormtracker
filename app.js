@@ -20,7 +20,6 @@ window.addEventListener('load', () => {
 });
 
 const NWS = 'https://api.weather.gov';
-const AIRNOW_KEY = 'BB809EBB-E72D-4D0D-89E7-6C5904BA166E';
 
 const NWR_STATIONS=[
   {st:"TX",city:"Fort Worth",call:"KEC55",freq:162.55,url:"https://wxradio.org/TX-FortWorth-KEC55",lat:32.7555,lon:-97.3308},
@@ -612,46 +611,46 @@ function pointInPolygon(lat, lon, geojson) {
   return false;
 }
 
-// ── AIR QUALITY INDEX (AirNow) ───────────────────
-// AirNow doesn't send CORS headers, so we use JSONP to bypass the restriction.
-function fetchAQI(lat, lon) {
-  return new Promise((resolve, reject) => {
-    const cbName = '_airnowCb_' + Date.now();
-    const timeout = setTimeout(() => {
-      delete window[cbName];
-      script.remove();
-      reject(new Error('AirNow timeout'));
-    }, 8000);
-
-    window[cbName] = (data) => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      script.remove();
-      if (!Array.isArray(data) || !data.length) { resolve(null); return; }
-      const sorted = data.slice().sort((a, b) => b.AQI - a.AQI);
-      const primary = sorted[0];
-      const pollutants = sorted.map(d => ({
-        name: d.ParameterName,
-        aqi: d.AQI,
-        category: d.Category?.Name || ''
-      }));
-      resolve({
-        aqi: primary.AQI,
-        category: primary.Category?.Name || 'Unknown',
-        categoryNum: primary.Category?.Number || 1,
-        dominant: primary.ParameterName,
-        reportingArea: primary.ReportingArea || '',
-        stateCode: primary.StateCode || '',
-        pollutants
-      });
-    };
-
-    const script = document.createElement('script');
-    script.src = `https://www.airnowapi.org/aq/observation/latLong/current/?format=application/json&latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&distance=50&API_KEY=${AIRNOW_KEY}&callback=${cbName}`;
-    script.onerror = () => { clearTimeout(timeout); delete window[cbName]; reject(new Error('AirNow script error')); };
-    document.head.appendChild(script);
+// ── AIR QUALITY INDEX (Open-Meteo Air Quality API) ───
+// Free, no key, CORS-enabled. Uses the US AQI standard.
+async function fetchAQI(lat, lon) {
+  const params = new URLSearchParams({
+    latitude: lat.toFixed(4),
+    longitude: lon.toFixed(4),
+    current: 'us_aqi,us_aqi_pm2_5,us_aqi_pm10,us_aqi_ozone,us_aqi_nitrogen_dioxide,us_aqi_carbon_monoxide',
+    timezone: 'auto'
   });
+  const r = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?${params}`);
+  if (!r.ok) throw new Error('OM AQ ' + r.status);
+  const data = await r.json();
+  const c = data.current;
+  if (!c || c.us_aqi == null) return null;
+
+  const aqi = Math.round(c.us_aqi);
+
+  // Map US AQI value to category name and number (1-6 matching AirNow scale)
+  const catNum = aqi <= 50 ? 1 : aqi <= 100 ? 2 : aqi <= 150 ? 3 : aqi <= 200 ? 4 : aqi <= 300 ? 5 : 6;
+  const catName = ['Good','Moderate','Unhealthy for Sensitive Groups','Unhealthy','Very Unhealthy','Hazardous'][catNum - 1];
+
+  // Build pollutant breakdown — only include ones with data
+  const pollutants = [
+    { name: 'PM2.5',  aqi: c.us_aqi_pm2_5 != null ? Math.round(c.us_aqi_pm2_5) : null },
+    { name: 'PM10',   aqi: c.us_aqi_pm10 != null ? Math.round(c.us_aqi_pm10) : null },
+    { name: 'Ozone',  aqi: c.us_aqi_ozone != null ? Math.round(c.us_aqi_ozone) : null },
+    { name: 'NO₂',   aqi: c.us_aqi_nitrogen_dioxide != null ? Math.round(c.us_aqi_nitrogen_dioxide) : null },
+    { name: 'CO',     aqi: c.us_aqi_carbon_monoxide != null ? Math.round(c.us_aqi_carbon_monoxide) : null },
+  ].filter(p => p.aqi != null)
+   .sort((a, b) => b.aqi - a.aqi)
+   .map(p => {
+     const pCatNum = p.aqi <= 50 ? 1 : p.aqi <= 100 ? 2 : p.aqi <= 150 ? 3 : p.aqi <= 200 ? 4 : p.aqi <= 300 ? 5 : 6;
+     return { ...p, category: ['Good','Moderate','Unhealthy for Sensitive Groups','Unhealthy','Very Unhealthy','Hazardous'][pCatNum - 1] };
+   });
+
+  const dominant = pollutants[0]?.name || '—';
+
+  return { aqi, category: catName, categoryNum: catNum, dominant, reportingArea: 'Open-Meteo', stateCode: '', pollutants };
 }
+
 
 async function fetchNearby(lat, lon, stationsUrl) {
   const box = document.getElementById('panelNearby');
