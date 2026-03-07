@@ -319,8 +319,13 @@ svg#radar { width: 100%; max-width: 480px; height: auto; overflow: visible; }
 /* ── TICKER ── */
 .ticker {
   flex-shrink: 0; background: var(--card); border-top: 1px solid var(--border);
-  height: 28px; display: flex; align-items: center; overflow: hidden;
+  display: flex; align-items: flex-start; overflow: hidden;
 }
+.ticker-inner-row {
+  display: flex; align-items: center; height: 28px; flex: 1; overflow: hidden;
+}
+.ticker-lbl { height: 28px; }
+.ticker-credit { height: 28px; }
 .ticker-lbl { background: var(--blue); color: #000; font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 0 12px; height: 100%; display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
 .ticker-track { overflow: hidden; flex: 1; height: 100%; display: flex; align-items: center; }
 .ticker-inner { font-family: var(--mono); font-size: 10px; color: var(--dim); white-space: nowrap; animation: ticker 40s linear infinite; letter-spacing: .5px; }
@@ -501,12 +506,11 @@ svg#radar { width: 100%; max-width: 480px; height: auto; overflow: visible; }
 
   </div>
 
-  <div class="ticker">
+  <div class="ticker" style="padding-bottom:env(safe-area-inset-bottom,0px)">
     <div class="ticker-lbl">NWS</div>
     <div class="ticker-track"><div class="ticker-inner" id="tickerInner">Loading…</div></div>
     <div class="ticker-credit">BUILT BY TREY</div>
   </div>
-  <div class="sa-bot"></div>
 
 </div>
 <div id="tipbox"></div>
