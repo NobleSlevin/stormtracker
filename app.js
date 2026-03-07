@@ -511,12 +511,12 @@ function openWindModal() {
 
 function closeWindModal() {
   document.getElementById('windModal').classList.remove('open');
-  stopCompass();
+  // Do NOT stop compass — keep it running so button stays hidden on re-open
 }
 
 function requestCompass() {
-  // If already active, just re-render (no re-prompt needed)
-  if (_compassActive) { renderWindModal(); return; }
+  // If already active, nothing to do
+  if (_compassActive) return;
   if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     // Check if permission was already granted this session
     DeviceOrientationEvent.requestPermission().then(state => {
@@ -1602,6 +1602,7 @@ function initRadar(lat, lon) {
   // Build map container if not yet created
   if (!rvInited) {
     panel.style.cssText = 'flex:1;min-height:0;display:flex;flex-direction:column;';
+    document.getElementById('tabRadar').classList.add('map-ready');
     panel.innerHTML = `
       <div id="radarMap"></div>
       <div class="radar-bar">
