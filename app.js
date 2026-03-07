@@ -853,19 +853,19 @@ function initRadar(lat, lon) {
     panel.innerHTML = `
       <div id="radarMap"></div>
       <div class="radar-bar">
-        <div class="radar-bar-top">
+        <div class="radar-bar-labels">
+          <div class="radar-ticks" id="rvTicks"></div>
+          <span class="radar-timestamp" id="rvTimestamp">Loading…</span>
+        </div>
+        <div class="radar-bar-controls">
           <button class="radar-play-btn" id="rvPlayBtn">
             <svg id="rvPlayIcon" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
               <path d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
             </svg>
           </button>
-          <div class="radar-timeline-wrap">
-            <div class="radar-ticks" id="rvTicks"></div>
-            <div class="radar-timeline" id="rvTimeline">
-              <div class="radar-timeline-fill" id="rvFill" style="width:0%"></div>
-            </div>
+          <div class="radar-timeline" id="rvTimeline">
+            <div class="radar-timeline-fill" id="rvFill" style="width:0%"></div>
           </div>
-          <span class="radar-timestamp" id="rvTimestamp">Loading…</span>
         </div>
       </div>`;
 
@@ -1255,7 +1255,7 @@ function nwrToggle(callsign, url, btn) {
     btn.classList.add('playing');
     playIcon.style.display = 'none';
     stopIcon.style.display = '';
-    if (statusEl) statusEl.textContent = '🔴 LIVE — Broadcasting';
+    if (statusEl) statusEl.innerHTML = '<svg width="8" height="8" viewBox="0 0 8 8" style="margin-right:5px;vertical-align:middle;flex-shrink:0"><circle cx="4" cy="4" r="4" fill="#ef4444"/></svg>LIVE — Broadcasting';
   }, {once: true});
 
   a.addEventListener('error', () => {
