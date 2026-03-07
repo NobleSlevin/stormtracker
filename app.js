@@ -418,19 +418,36 @@ function rangeBar(value, max, gradient) {
   </div>`;
 }
 
+// ── GRADIENT COLOR SAMPLER ────────────────────────
+// Returns an interpolated hex color at position pct (0–1) along the
+// same color stops used in the range bar gradients.
+function gradientColor(pct) {
+  pct = Math.min(1, Math.max(0, pct));
+  // Stops: green → lime → yellow → orange → red → pink → purple
+  const stops = [
+    [0,    [74,  222, 128]],   // #4ade80 green
+    [0.18, [163, 230,  53]],   // #a3e635 lime
+    [0.36, [251, 191,  36]],   // #fbbf24 yellow
+    [0.55, [251, 146,  60]],   // #fb923c orange
+    [0.73, [248, 113, 113]],   // #f87171 red
+    [1.0,  [192, 132, 252]],   // #c084fc purple
+  ];
+  let lo = stops[0], hi = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (pct >= stops[i][0] && pct <= stops[i+1][0]) { lo = stops[i]; hi = stops[i+1]; break; }
+  }
+  const t = lo[0] === hi[0] ? 0 : (pct - lo[0]) / (hi[0] - lo[0]);
+  const r = Math.round(lo[1][0] + t * (hi[1][0] - lo[1][0]));
+  const g = Math.round(lo[1][1] + t * (hi[1][1] - lo[1][1]));
+  const b = Math.round(lo[1][2] + t * (hi[1][2] - lo[1][2]));
+  return { hex: `rgb(${r},${g},${b})`, bg: `rgba(${r},${g},${b},0.12)`, border: `rgba(${r},${g},${b},0.35)` };
+}
+
 function aqiHTML(aq) {
-  const aqiColor = aq.categoryNum <= 1 ? 'var(--green)'
-    : aq.categoryNum === 2 ? 'var(--yellow)'
-    : aq.categoryNum === 3 ? 'var(--orange)'
-    : aq.categoryNum === 4 ? 'var(--red)'
-    : aq.categoryNum === 5 ? '#c084fc'
-    : '#f87171';
-  const aqiBg = aq.categoryNum <= 1 ? 'rgba(74,222,128,.1)'
-    : aq.categoryNum === 2 ? 'rgba(251,191,36,.1)'
-    : aq.categoryNum === 3 ? 'rgba(251,146,60,.1)'
-    : aq.categoryNum === 4 ? 'rgba(248,113,113,.1)'
-    : aq.categoryNum === 5 ? 'rgba(192,132,252,.1)'
-    : 'rgba(248,113,113,.15)';
+  const _aqiC  = gradientColor(Math.min(aq.aqi, 300) / 300);
+  const aqiColor = _aqiC.hex;
+  const aqiBg    = _aqiC.bg;
+  const aqiBorder = _aqiC.border;
   const pollCells = aq.pollutants.slice(0, 3).map(p => `
     <div class="aqi-cell">
       <span class="aqi-cell-lbl">${p.name}</span>
@@ -443,7 +460,7 @@ function aqiHTML(aq) {
     <div class="aqi-section-ttl">Air Quality</div>
     <div class="aqi-card">
       <div class="aqi-header">
-        <div class="aqi-icon-wrap" style="background:${aqiBg};border-color:${aqiColor}">
+        <div class="aqi-icon-wrap" style="background:${aqiBg};border-color:${aqiBorder}">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${aqiColor}" viewBox="0 0 16 16">
             <path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2h-5a.5.5 0 0 1 0-1h5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>
           </svg>
@@ -451,7 +468,7 @@ function aqiHTML(aq) {
         <div class="aqi-info">
           <div class="aqi-area">Open-Meteo · US AQI</div>
         </div>
-        <div class="aqi-badge" style="background:${aqiBg};color:${aqiColor};border:1px solid ${aqiColor}33">
+        <div class="aqi-badge" style="background:${aqiBg};color:${aqiColor};border:1px solid ${aqiBorder}">
           ${aq.category}
         </div>
         <div class="aqi-score" style="color:${aqiColor}">${aq.aqi}</div>
@@ -487,8 +504,10 @@ function renderUVSlot() {
   // UV index categories (WHO scale)
   const uvCat    = uv < 3 ? 'Low' : uv < 6 ? 'Moderate' : uv < 8 ? 'High' : uv < 11 ? 'Very High' : 'Extreme';
   const uvCatNum = uv < 3 ? 1     : uv < 6 ? 2           : uv < 8 ? 3      : uv < 11 ? 4            : 5;
-  const uvColor  = uvCatNum === 1 ? 'var(--green)' : uvCatNum === 2 ? 'var(--yellow)' : uvCatNum === 3 ? 'var(--orange)' : uvCatNum === 4 ? 'var(--red)' : '#c084fc';
-  const uvBg     = uvCatNum === 1 ? 'rgba(74,222,128,.1)' : uvCatNum === 2 ? 'rgba(251,191,36,.1)' : uvCatNum === 3 ? 'rgba(251,146,60,.1)' : uvCatNum === 4 ? 'rgba(248,113,113,.1)' : 'rgba(192,132,252,.1)';
+  const _uvC    = gradientColor(Math.min(uv, 11) / 11);
+  const uvColor  = _uvC.hex;
+  const uvBg     = _uvC.bg;
+  const uvBorder = _uvC.border;
 
   // Protection advice by category
   const advice   = uv < 3 ? 'No protection needed' : uv < 6 ? 'Wear sunscreen SPF 30+' : uv < 8 ? 'Seek shade midday' : uv < 11 ? 'Minimize sun 10am–4pm' : 'Avoid sun exposure';
@@ -499,7 +518,7 @@ function renderUVSlot() {
     <div class="aqi-section-ttl">UV Index</div>
     <div class="uv-card">
       <div class="uv-header">
-        <div class="uv-icon-wrap" style="background:${uvBg};border:1.5px solid ${uvColor}">
+        <div class="uv-icon-wrap" style="background:${uvBg};border:1.5px solid ${uvBorder}">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="${uvColor}" viewBox="0 0 16 16">
             <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>
           </svg>
@@ -507,7 +526,7 @@ function renderUVSlot() {
         <div class="uv-info">
           <div class="uv-area">Open-Meteo · WHO Scale</div>
         </div>
-        <div class="uv-badge" style="background:${uvBg};color:${uvColor};border:1px solid ${uvColor}33">${uvCat}</div>
+        <div class="uv-badge" style="background:${uvBg};color:${uvColor};border:1px solid ${uvBorder}">${uvCat}</div>
         <div class="uv-score" style="color:${uvColor}">${uvRounded}</div>
       </div>
       ${rangeBar(uv, 11, 'linear-gradient(to right, #4ade80 0%, #a3e635 18%, #fbbf24 36%, #fb923c 55%, #f87171 73%, #c084fc 100%)')}
