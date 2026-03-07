@@ -339,10 +339,12 @@ async function fetchNearby(lat, lon, stationsUrl) {
             </div>
             <div class="radar-dist">${miles} mi</div>
           </div>
-          <div class="radar-details">
+          <div class="radar-details" style="grid-template-columns:repeat(5,1fr)">
             <div class="rdt-item"><span class="rdt-label">ID</span><span class="rdt-val" style="color:var(--green);font-family:var(--mono)">${sid}</span></div>
             <div class="rdt-item"><span class="rdt-label">Type</span><span class="rdt-val">${stationType}</span></div>
-            <div class="rdt-item"><span class="rdt-label">Elevation</span><span class="rdt-val">${elevation}</span></div>
+            <div class="rdt-item"><span class="rdt-label">Elev</span><span class="rdt-val">${elevation}</span></div>
+            <div class="rdt-item"><span class="rdt-label">Lat</span><span class="rdt-val" style="font-family:var(--mono);font-size:11px">${rlat != null ? rlat.toFixed(2) : '—'}°</span></div>
+            <div class="rdt-item"><span class="rdt-label">Lon</span><span class="rdt-val" style="font-family:var(--mono);font-size:11px">${rlon != null ? rlon.toFixed(2) : '—'}°</span></div>
           </div>
           <a class="radar-link" href="${radarUrl}" target="_blank">
             <svg width="12" height="12" fill="currentColor"><use href="#bi-broadcast"/></svg>
