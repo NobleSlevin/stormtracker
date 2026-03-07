@@ -170,8 +170,18 @@ function renderForecast(periods){
   const box=document.getElementById('panelForecast');
   if(!periods.length){box.innerHTML='<div class="state-center"><div class="state-icon">🌤️</div><div class="state-ttl">No data</div></div>';return;}
   const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const days=[];
-  for(let i=0;i<periods.length&&days.length<7;i++)if(periods[i].isDaytime)days.push(periods[i]);
+  // Collect one representative period per calendar day (prefer daytime)
+  const dayMap = new Map();
+  for (const p of periods) {
+    const dt = new Date(p.startTime);
+    const key = dt.toDateString();
+    if (!dayMap.has(key)) {
+      dayMap.set(key, p); // first occurrence (could be night if evening)
+    } else if (p.isDaytime) {
+      dayMap.set(key, p); // prefer daytime if we see it later
+    }
+  }
+  const days = [...dayMap.values()].slice(0, 7);
   const now=new Date(),hero=days[0];
   const heroHTML=hero?`<div class="fc-hero">
     <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div><div class="fch-time">${now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div>
