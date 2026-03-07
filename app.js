@@ -527,7 +527,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
         <div class="section-ttl" style="margin-top:4px">State Alerts — ${curState}</div>
         <div class="state-alert-card">
           <div class="state-alert-header">
-            <div class="state-flag" style="background:${countColor}14;border-color:${countColor}33">${geoIcon}</div>
+            <div class="state-flag">${geoIcon}</div>
             <div class="state-name-block">
               <div class="state-name">${curState}</div>
               <div style="font-size:10px;color:var(--dim);font-family:var(--mono)">${abbr} · NWS Active Alerts</div>
