@@ -210,15 +210,11 @@ function renderForecast(periods){
   }
   const days = [hero_p, ...[...dayMap.values()].slice(0, 6)];
   const now=new Date(), hero=days[0];
-  // Use Open-Meteo current temp if available (actual conditions), fall back to NWS forecast period
-  const omC = omData?.current;
-  const dispTemp = omC?.temperature_2m != null ? Math.round(omC.temperature_2m) : hero?.temperature;
-  const dispUnit = omC?.temperature_2m != null ? 'F' : (hero?.temperatureUnit || 'F');
-  const dispFeels = omC?.apparent_temperature != null ? Math.round(omC.apparent_temperature) : null;
+  if (hero?.temperature) window._nwsHeroTemp = hero.temperature;
+  // Hero always renders with placeholder temp — OM patch fills in real current value
   const heroHTML=hero?`<div class="fc-hero">
     <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div><div class="fch-time">${now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div>
-    <div class="fch-temp">${dispTemp}<sup>°${dispUnit}</sup></div>
-    ${dispFeels != null ? `<div class="fch-feels">Feels like ${dispFeels}°</div>` : ''}
+    <div class="fch-temp">—<sup>°F</sup></div>
     <div class="fch-icon">${wxIcon(hero.shortForecast, 56)}</div>
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
   </div>`:'';
@@ -748,7 +744,14 @@ async function fetchOpenMeteo(lat, lon) {
       }
       feelsEl.textContent = `Feels like ${Math.round(omC.apparent_temperature)}°`;
     }
-  } catch(e) { console.warn('Open-Meteo error:', e); }
+  } catch(e) {
+    console.warn('Open-Meteo error:', e);
+    // Fallback: fill hero with NWS forecast temp if OM failed
+    const tempEl = document.querySelector('.fch-temp');
+    if (tempEl && tempEl.textContent.includes('—') && window._nwsHeroTemp) {
+      tempEl.innerHTML = `${window._nwsHeroTemp}<sup>°F</sup>`;
+    }
+  }
 }
 
 async function fetchForPoint(lat, lon) {
