@@ -352,6 +352,36 @@ function renderForecast(periods){
   });
 }
 
+
+// ── PATCH HOURLY TEMPS FROM OPEN-METEO ───────────
+// NWS hourly periods own everything except temperature — OM provides the accurate temp.
+// Called after renderHourly has already built the DOM cards.
+function patchHourlyTemps(omHourly) {
+  const times = omHourly?.time || [];
+  const temps = omHourly?.temperature_2m || [];
+  if (!times.length || !temps.length) return;
+
+  // Build a map of ISO hour string -> OM temp
+  const omTempByHour = {};
+  times.forEach((t, i) => {
+    // OM times are like "2026-03-07T14:00" — use as key
+    omTempByHour[t] = temps[i];
+  });
+
+  const cards = document.querySelectorAll('#hourlyTrack .hour-card');
+  cards.forEach(card => {
+    // Each card's data-time attribute holds the NWS startTime ISO string
+    const iso = card.dataset.time;
+    if (!iso) return;
+    // Truncate to hour to match OM key: "2026-03-07T14:00"
+    const hourKey = iso.slice(0, 16);
+    const omTemp = omTempByHour[hourKey];
+    if (omTemp == null) return;
+    const tempEl = card.querySelector('.hc-temp');
+    if (tempEl) tempEl.textContent = Math.round(omTemp) + '°';
+  });
+}
+
 function renderHourly(periods) {
   const track = document.getElementById('hourlyTrack');
   if (!track || !periods.length) return;
@@ -361,7 +391,7 @@ function renderHourly(periods) {
     const precip = p.probabilityOfPrecipitation?.value;
     const windNums = (p.windSpeed||'0').match(/\d+/g)||['0'];
     const windMax = Math.max(...windNums.map(Number));
-    return `<div class="hour-card">
+    return `<div class="hour-card" data-time="${p.startTime}">
       <span class="hc-time">${hr}</span>
       <span class="hc-icon">${wxIcon(p.shortForecast)}</span>
       <span class="hc-label">${wxLabel(p.shortForecast)}</span>
@@ -370,6 +400,8 @@ function renderHourly(periods) {
       <span class="hc-wind">${windMax}mph</span>
     </div>`;
   }).join('');
+  // If OM hourly data already arrived, patch temps immediately
+  if (typeof omData !== 'undefined' && omData?.hourly) patchHourlyTemps(omData.hourly);
 }
 
 // ── OBSERVATIONS ──────────────────────────────────
@@ -1228,7 +1260,7 @@ async function fetchOpenMeteo(lat, lon) {
         'uv_index','cloud_cover','precipitation','weather_code','is_day'
       ].join(','),
       hourly: [
-        'cape','lifted_index','convective_inhibition',
+        'temperature_2m','cape','lifted_index','convective_inhibition',
         'freezing_level_height','precipitation_probability'
       ].join(','),
       wind_speed_unit: 'mph',
@@ -1244,6 +1276,9 @@ async function fetchOpenMeteo(lat, lon) {
 
     const c = data.current;
     if (!c) return;
+
+    // Patch hourly card temps now if cards already exist; otherwise they'll be patched when rendered
+    if (data.hourly) patchHourlyTemps(data.hourly);
 
     // Enrich obs strip with Open-Meteo data (fills gaps NWS doesn't cover)
     const set = (id, val) => { if (val != null && document.getElementById(id)) document.getElementById(id).textContent = val; };
