@@ -442,7 +442,11 @@ async function fetchNearby(lat, lon, stationsUrl) {
             <audio id="nwr-audio-${nearest.call}" preload="none" style="display:none"></audio>
             <div class="nwr-top">
               <div class="nwr-icon">
-                <svg width="20" height="20" viewBox="0 0 16 16" fill="var(--blue)"><path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707zm2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708zm5.656-5.656a.5.5 0 0 1 .707-.707 8 8 0 0 1 0 11.314.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9zm-2.121 2.121a.5.5 0 0 1 .707-.707 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.657zM8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 0 0 0-8 4 4 0 0 0 0 8zm.5 1.5v-1a.5.5 0 0 0-1 0v1h-2a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1z"/></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="2" fill="var(--blue)" stroke="none"/>
+                  <path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 7.76a6 6 0 0 0 0 8.49"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+                </svg>
               </div>
               <div class="nwr-info">
                 <div class="nwr-name">${nearest.city}, ${nearest.st}</div>
@@ -518,12 +522,12 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const watches = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('watch')).length;
       const adv = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('advisory')).length;
       const countColor = sa.length >= 10 ? 'var(--red)' : sa.length >= 5 ? 'var(--orange)' : sa.length > 0 ? 'var(--yellow)' : 'var(--green)';
-      const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
+      const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
       sections.push(`
         <div class="section-ttl" style="margin-top:4px">State Alerts — ${curState}</div>
         <div class="state-alert-card">
           <div class="state-alert-header">
-            <div class="state-flag">${geoIcon}</div>
+            <div class="state-flag" style="background:${countColor}14;border-color:${countColor}33">${geoIcon}</div>
             <div class="state-name-block">
               <div class="state-name">${curState}</div>
               <div style="font-size:10px;color:var(--dim);font-family:var(--mono)">${abbr} · NWS Active Alerts</div>
