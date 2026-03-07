@@ -337,13 +337,11 @@ function compassSVG(windDeg, deviceDeg, arrowColor) {
     const rLbl = r - (isCard ? 26 : 24);
     const x = cx + rLbl * Math.sin(a), y = cy - rLbl * Math.cos(a);
     // Degree label just outside the ring for every 30°
-    let degLbl = '';
-    if (deg % 30 === 0) {
-      const rDeg = r + 18;
-      const dx = cx + rDeg * Math.sin(a), dy = cy - rDeg * Math.cos(a);
-      degLbl = `<text x="${dx.toFixed(1)}" y="${dy.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.3)" font-size="9" font-family="ui-monospace,monospace">${deg === 0 ? '360' : deg}</text>`;
-    }
-    return degLbl + `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${isCard?'rgba(255,255,255,.75)':'rgba(255,255,255,.38)'}" font-size="${isCard?13:9}" font-family="ui-monospace,monospace" font-weight="${isCard?700:500}">${lbl}</text>`;
+    // Degree label placed above/beside the direction label — generated in pts16 loop below
+    const rDeg = r + 18;
+    const dx = cx + rDeg * Math.sin(a), dy = cy - rDeg * Math.cos(a);
+    const degLabel = `<text x="${dx.toFixed(1)}" y="${(dy - (isCard?8:6)).toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.28)" font-size="8" font-family="ui-monospace,monospace">${deg}°</text>`;
+    return degLabel + `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${isCard?'rgba(255,255,255,.75)':'rgba(255,255,255,.38)'}" font-size="${isCard?13:9}" font-family="ui-monospace,monospace" font-weight="${isCard?700:500}">${lbl}</text>`;
   }).join('');
 
   // Wind arrow — spans full inner diameter
