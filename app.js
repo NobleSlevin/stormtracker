@@ -303,11 +303,11 @@ function beaufortFromMph(mph) {
   return { num: 12, desc: 'Hurricane Force', pct: 1.0 };
 }
 
-function compassSVG(windDeg, deviceDeg) {
+function compassSVG(windDeg, deviceDeg, arrowColor) {
   // windDeg  : degrees wind is FROM (meteorological: 0=N wind blowing south)
   // deviceDeg: current device compass heading (null if no permission)
   // Viewbox 260×260, compass ring at cx=130,cy=130,r=118
-  const cx = 130, cy = 130, r = 118;
+  const cx = 150, cy = 150, r = 118;
   const ticksHTML = [];
 
   // Tick marks — every 5°, with major at 22.5° (16-point) and mid at 10°
@@ -339,9 +339,9 @@ function compassSVG(windDeg, deviceDeg) {
     // Degree label just outside the ring for every 30°
     let degLbl = '';
     if (deg % 30 === 0) {
-      const rDeg = r + 12;
+      const rDeg = r + 18;
       const dx = cx + rDeg * Math.sin(a), dy = cy - rDeg * Math.cos(a);
-      degLbl = `<text x="${dx.toFixed(1)}" y="${dy.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.28)" font-size="8" font-family="ui-monospace,monospace">${deg}</text>`;
+      degLbl = `<text x="${dx.toFixed(1)}" y="${dy.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.3)" font-size="9" font-family="ui-monospace,monospace">${deg === 0 ? '360' : deg}</text>`;
     }
     return degLbl + `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${isCard?'rgba(255,255,255,.75)':'rgba(255,255,255,.38)'}" font-size="${isCard?13:9}" font-family="ui-monospace,monospace" font-weight="${isCard?700:500}">${lbl}</text>`;
   }).join('');
@@ -361,10 +361,11 @@ function compassSVG(windDeg, deviceDeg) {
     const hly = ly1 + headSize * Math.cos(wa) + headSize * 0.55 * perpY;
     const hrx = lx1 - headSize * Math.sin(wa) - headSize * 0.55 * perpX;
     const hry = ly1 + headSize * Math.cos(wa) - headSize * 0.55 * perpY;
+    const ac = arrowColor || 'white';
     windArrowHTML = `
-      <line x1="${lx2.toFixed(1)}" y1="${ly2.toFixed(1)}" x2="${lx1.toFixed(1)}" y2="${ly1.toFixed(1)}" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-      <polygon points="${lx1.toFixed(1)},${ly1.toFixed(1)} ${hlx.toFixed(1)},${hly.toFixed(1)} ${hrx.toFixed(1)},${hry.toFixed(1)}" fill="white"/>
-      <circle cx="${lx2.toFixed(1)}" cy="${ly2.toFixed(1)}" r="4.5" fill="none" stroke="white" stroke-width="2.2"/>
+      <line x1="${lx2.toFixed(1)}" y1="${ly2.toFixed(1)}" x2="${lx1.toFixed(1)}" y2="${ly1.toFixed(1)}" stroke="${ac}" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="${lx1.toFixed(1)},${ly1.toFixed(1)} ${hlx.toFixed(1)},${hly.toFixed(1)} ${hrx.toFixed(1)},${hry.toFixed(1)}" fill="${ac}"/>
+      <circle cx="${lx2.toFixed(1)}" cy="${ly2.toFixed(1)}" r="4.5" fill="none" stroke="${ac}" stroke-width="2.2"/>
     `;
   }
 
@@ -378,7 +379,7 @@ function compassSVG(windDeg, deviceDeg) {
     deviceHTML = `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#93c5fd" stroke-width="3" stroke-linecap="round"/>`;
   }
 
-  return `<svg class="wc-svg" viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+  return `<svg class="wc-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
     <!-- Ring stroke only, no fill -->
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
     <!-- Tick marks -->
@@ -409,7 +410,7 @@ function renderWindModal() {
   // ── Compass section ──
   const compassHTML = `
     <div class="wind-compass-wrap">
-      <div class="wind-compass">${compassSVG(dir, _compassHeading)}</div>
+      <div class="wind-compass">${compassSVG(dir, _compassHeading, bf ? gradientColor(bf.pct).hex : null)}</div>
     </div>`;
 
   // ── Main stats ──
@@ -536,7 +537,10 @@ function startCompass() {
       _compassHeading = heading;
       // Live-update just the compass SVG and status without full re-render
       const compassWrap = document.querySelector('.wind-compass');
-      if (compassWrap) compassWrap.innerHTML = compassSVG(window._windData?.direction ?? null, heading);
+      if (compassWrap) {
+        const _bfLive = window._windData?.speed != null ? beaufortFromMph(window._windData.speed) : null;
+        compassWrap.innerHTML = compassSVG(window._windData?.direction ?? null, heading, _bfLive ? gradientColor(_bfLive.pct).hex : null);
+      }
       const statusEl = document.querySelector('.wind-compass-status');
       if (statusEl) statusEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#93c5fd" viewBox="0 0 16 16"><path d="M8 16.016a7.5 7.5 0 0 0 1.962-14.74A1 1 0 0 0 9 0H7a1 1 0 0 0-.962 1.276A7.5 7.5 0 0 0 8 16.016m6.5-7.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0"/><path d="m6.94 7.44 4.95-2.83-2.83 4.95-4.949 2.83 2.828-4.95z"/></svg> Live compass · ${heading.toFixed(0)}° ${degToCard(heading)}`;
     }
