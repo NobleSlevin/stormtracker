@@ -613,33 +613,44 @@ function pointInPolygon(lat, lon, geojson) {
 }
 
 // ── AIR QUALITY INDEX (AirNow) ───────────────────
-async function fetchAQI(lat, lon) {
-  const url = `https://www.airnowapi.org/aq/observation/latLong/current/?format=application/json&latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&distance=50&API_KEY=${AIRNOW_KEY}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('AirNow ' + r.status);
-  const data = await r.json();
-  if (!Array.isArray(data) || !data.length) return null;
+// AirNow doesn't send CORS headers, so we use JSONP to bypass the restriction.
+function fetchAQI(lat, lon) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_airnowCb_' + Date.now();
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      script.remove();
+      reject(new Error('AirNow timeout'));
+    }, 8000);
 
-  // AirNow returns one entry per pollutant — find the highest AQI (overall air quality)
-  const sorted = data.slice().sort((a, b) => b.AQI - a.AQI);
-  const primary = sorted[0];
+    window[cbName] = (data) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      script.remove();
+      if (!Array.isArray(data) || !data.length) { resolve(null); return; }
+      const sorted = data.slice().sort((a, b) => b.AQI - a.AQI);
+      const primary = sorted[0];
+      const pollutants = sorted.map(d => ({
+        name: d.ParameterName,
+        aqi: d.AQI,
+        category: d.Category?.Name || ''
+      }));
+      resolve({
+        aqi: primary.AQI,
+        category: primary.Category?.Name || 'Unknown',
+        categoryNum: primary.Category?.Number || 1,
+        dominant: primary.ParameterName,
+        reportingArea: primary.ReportingArea || '',
+        stateCode: primary.StateCode || '',
+        pollutants
+      });
+    };
 
-  // Build a map of all pollutants
-  const pollutants = sorted.map(d => ({
-    name: d.ParameterName,
-    aqi: d.AQI,
-    category: d.Category?.Name || ''
-  }));
-
-  return {
-    aqi: primary.AQI,
-    category: primary.Category?.Name || 'Unknown',
-    categoryNum: primary.Category?.Number || 1,
-    dominant: primary.ParameterName,
-    reportingArea: primary.ReportingArea || '',
-    stateCode: primary.StateCode || '',
-    pollutants
-  };
+    const script = document.createElement('script');
+    script.src = `https://www.airnowapi.org/aq/observation/latLong/current/?format=application/json&latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&distance=50&API_KEY=${AIRNOW_KEY}&callback=${cbName}`;
+    script.onerror = () => { clearTimeout(timeout); delete window[cbName]; reject(new Error('AirNow script error')); };
+    document.head.appendChild(script);
+  });
 }
 
 async function fetchNearby(lat, lon, stationsUrl) {
