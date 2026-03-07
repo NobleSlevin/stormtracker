@@ -24,6 +24,7 @@ const OM  = 'https://api.open-meteo.com/v1/forecast';
 let allAlerts = [], activeFilter = 'all', refreshTimer = null;
 let curLat = null, curLon = null, curMode = null, curState = null;
 let omData = null; // Open-Meteo current data
+let lastPeriods = null; // for re-rendering hero after OM loads
 
 // ── TABS ──────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(btn => {
@@ -184,6 +185,7 @@ async function fetchForecast(lat, lon) {
     if(pp.forecast){
       const fc=await nwsFetch(pp.forecast);
       results.periods=fc.properties?.periods||[];
+      lastPeriods = results.periods;
       renderForecast(results.periods);
     }
     if(pp.forecastHourly){
@@ -210,9 +212,15 @@ function renderForecast(periods){
   }
   const days = [hero_p, ...[...dayMap.values()].slice(0, 6)];
   const now=new Date(), hero=days[0];
+  // Use Open-Meteo current temp if available (actual conditions), fall back to NWS forecast period
+  const omC = omData?.current;
+  const dispTemp = omC?.temperature_2m != null ? Math.round(omC.temperature_2m) : hero?.temperature;
+  const dispUnit = omC?.temperature_2m != null ? 'F' : (hero?.temperatureUnit || 'F');
+  const dispFeels = omC?.apparent_temperature != null ? Math.round(omC.apparent_temperature) : null;
   const heroHTML=hero?`<div class="fc-hero">
     <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div><div class="fch-time">${now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div>
-    <div class="fch-temp">${hero.temperature}<sup>°${hero.temperatureUnit}</sup></div>
+    <div class="fch-temp">${dispTemp}<sup>°${dispUnit}</sup></div>
+    ${dispFeels != null ? `<div class="fch-feels">Feels like ${dispFeels}°</div>` : ''}
     <div class="fch-icon">${wxIcon(hero.shortForecast, 56)}</div>
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
   </div>`:'';
@@ -726,6 +734,9 @@ async function fetchOpenMeteo(lat, lon) {
       set('obsWind', Math.round(c.wind_speed_10m));
 
     document.getElementById('obsStrip').classList.add('show');
+
+    // Re-render forecast hero with real current temp now that OM data is available
+    if (lastPeriods?.length) renderForecast(lastPeriods);
   } catch(e) { console.warn('Open-Meteo error:', e); }
 }
 
