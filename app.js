@@ -268,6 +268,283 @@ function updateTicker(alerts) {
     return`<span style="color:${sevColor(p.severity,p.event)}">⚠ ${p.event}</span> — ${(p.areaDesc||'').split(';')[0].trim()}`;
   }).join('<span class="tsep">///</span>');
 }
+// ══════════════════════════════════════════════
+// WIND MODAL
+// ══════════════════════════════════════════════
+let _compassActive = false;
+let _compassHeading = null;
+let _compassHandler = null;
+
+function degToCard(d) {
+  if (d == null) return '—';
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  return dirs[Math.round(d / 22.5) % 16];
+}
+
+function beaufortFromMph(mph) {
+  const scale = [
+    [1,   0,  'Calm',             0  ],
+    [3,   1,  'Light Air',        0.05],
+    [7,   2,  'Light Breeze',     0.10],
+    [12,  3,  'Gentle Breeze',    0.20],
+    [18,  4,  'Moderate Breeze',  0.30],
+    [24,  5,  'Fresh Breeze',     0.42],
+    [31,  6,  'Strong Breeze',    0.54],
+    [38,  7,  'Near Gale',        0.62],
+    [46,  8,  'Gale',             0.70],
+    [54,  9,  'Severe Gale',      0.78],
+    [63, 10,  'Storm',            0.86],
+    [72, 11,  'Violent Storm',    0.93],
+    [999,12,  'Hurricane Force',  1.0 ],
+  ];
+  for (const [max, num, desc, pct] of scale) {
+    if (mph <= max) return { num, desc, pct };
+  }
+  return { num: 12, desc: 'Hurricane Force', pct: 1.0 };
+}
+
+function compassSVG(windDeg, deviceDeg) {
+  // windDeg  : degrees wind is FROM (meteorological: 0=N wind blowing south)
+  // deviceDeg: current device compass heading (null if no permission)
+  const cx = 110, cy = 110, r = 100;
+  const ticksHTML = [];
+
+  // Tick marks around the ring
+  for (let i = 0; i < 72; i++) {
+    const a = (i * 5) * Math.PI / 180;
+    const isMajor = i % 9 === 0; // every 45°
+    const isMid   = i % 3 === 0; // every 15°
+    const rOuter = r;
+    const rInner = isMajor ? r - 14 : isMid ? r - 9 : r - 5;
+    const x1 = cx + rOuter * Math.sin(a), y1 = cy - rOuter * Math.cos(a);
+    const x2 = cx + rInner * Math.sin(a), y2 = cy - rInner * Math.cos(a);
+    ticksHTML.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,${isMajor?'.35':isMid?'.18':'.1'})" stroke-width="${isMajor?1.5:1}"/>`);
+  }
+
+  // Cardinal labels
+  const cardinals = [['N',0],['E',90],['S',180],['W',270]];
+  const cardHTML = cardinals.map(([lbl, deg]) => {
+    const a = deg * Math.PI / 180;
+    const rLbl = r - 22;
+    const x = cx + rLbl * Math.sin(a), y = cy - rLbl * Math.cos(a);
+    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.5)" font-size="11" font-family="ui-monospace,monospace" font-weight="600">${lbl}</text>`;
+  }).join('');
+
+  // Wind direction arrow (points TO where wind is going, FROM windDeg)
+  // Arrow points in the direction wind travels: windDeg + 180
+  const windArrowDeg = (windDeg != null) ? windDeg : null;
+  let windArrowHTML = '';
+  if (windArrowDeg != null) {
+    const wa = windArrowDeg * Math.PI / 180;
+    const arrowLen = 68;
+    const tailLen  = 20;
+    const ax = cx + arrowLen * Math.sin(wa), ay = cy - arrowLen * Math.cos(wa);
+    const tx = cx - tailLen * Math.sin(wa), ty = cy + tailLen * Math.cos(wa);
+    // Arrowhead points
+    const headSize = 9;
+    const perpX =  Math.cos(wa), perpY = Math.sin(wa);
+    const lx = ax - headSize * Math.sin(wa) + (headSize*0.6) * perpX;
+    const ly = ay + headSize * Math.cos(wa) + (headSize*0.6) * perpY;
+    const rx = ax - headSize * Math.sin(wa) - (headSize*0.6) * perpX;
+    const ry = ay + headSize * Math.cos(wa) - (headSize*0.6) * perpY;
+    windArrowHTML = `
+      <line x1="${tx.toFixed(1)}" y1="${ty.toFixed(1)}" x2="${ax.toFixed(1)}" y2="${ay.toFixed(1)}" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="${ax.toFixed(1)},${ay.toFixed(1)} ${lx.toFixed(1)},${ly.toFixed(1)} ${rx.toFixed(1)},${ry.toFixed(1)}" fill="white"/>
+    `;
+  }
+
+  // Device heading indicator (blue triangle at rim)
+  let deviceHTML = '';
+  if (deviceDeg != null) {
+    const da = deviceDeg * Math.PI / 180;
+    const dr = r - 3;
+    const dx = cx + dr * Math.sin(da), dy = cy - dr * Math.cos(da);
+    const p1x = cx + (r+4) * Math.sin(da), p1y = cy - (r+4) * Math.cos(da);
+    const perp = 5;
+    const p2x = dx + perp * Math.cos(da), p2y = dy + perp * Math.sin(da);
+    const p3x = dx - perp * Math.cos(da), p3y = dy - perp * Math.sin(da);
+    deviceHTML = `<polygon points="${p1x.toFixed(1)},${p1y.toFixed(1)} ${p2x.toFixed(1)},${p2y.toFixed(1)} ${p3x.toFixed(1)},${p3y.toFixed(1)}" fill="#93c5fd" opacity=".9"/>`;
+  }
+
+  // Center circle + dot
+  const centerHTML = `
+    <circle cx="${cx}" cy="${cy}" r="32" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+    <circle cx="${cx}" cy="${cy}" r="4" fill="rgba(255,255,255,.3)"/>
+  `;
+
+  return `<svg class="wc-svg" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+    <!-- Outer ring -->
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
+    <!-- Tick marks -->
+    ${ticksHTML.join('')}
+    <!-- Cardinals -->
+    ${cardHTML}
+    <!-- Wind arrow -->
+    ${windArrowHTML}
+    <!-- Device indicator -->
+    ${deviceHTML}
+    <!-- Center -->
+    ${centerHTML}
+  </svg>`;
+}
+
+function renderWindModal() {
+  const body = document.getElementById('windModalBody');
+  if (!body) return;
+  const wd = window._windData || {};
+  const speed = wd.speed ?? null;
+  const gust  = wd.gust  ?? null;
+  const dir   = wd.direction ?? null;
+  const cardDir = degToCard(dir);
+  const bf = speed != null ? beaufortFromMph(speed) : null;
+
+  // ── Compass section ──
+  const compassHTML = `
+    <div class="wind-compass-wrap">
+      <div class="wind-compass">${compassSVG(dir, _compassHeading)}</div>
+    </div>`;
+
+  // ── Main stats ──
+  const statsHTML = `
+    <div class="wind-stats">
+      <div class="wind-stat-card">
+        <span class="wind-stat-lbl">Wind Speed</span>
+        <span class="wind-stat-val">${speed ?? '—'}</span>
+        <span class="wind-stat-unit">mph</span>
+        <span class="wind-stat-sub">${bf ? bf.desc : ''}</span>
+      </div>
+      <div class="wind-stat-card">
+        <span class="wind-stat-lbl">Gusts</span>
+        <span class="wind-stat-val" style="color:${gust != null && gust > 30 ? 'var(--orange)' : gust != null && gust > 45 ? 'var(--red)' : 'var(--text)'}">${gust ?? '—'}</span>
+        <span class="wind-stat-unit">mph</span>
+        <span class="wind-stat-sub">${gust != null && gust > 45 ? 'Dangerous gusts' : gust != null && gust > 30 ? 'Elevated gusts' : 'Light gusts'}</span>
+      </div>
+      <div class="wind-stat-card">
+        <span class="wind-stat-lbl">Direction</span>
+        <span class="wind-stat-val" style="font-size:26px;padding-top:4px">${dir != null ? dir + '°' : '—'}</span>
+        <span class="wind-stat-unit">${cardDir}</span>
+        <span class="wind-stat-sub">wind from ${cardDir}</span>
+      </div>
+      <div class="wind-stat-card">
+        <span class="wind-stat-lbl">Beaufort</span>
+        <span class="wind-stat-val">${bf ? bf.num : '—'}</span>
+        <span class="wind-stat-unit">/ 12</span>
+        <span class="wind-stat-sub">${bf ? bf.desc : ''}</span>
+      </div>
+    </div>`;
+
+  // ── Beaufort bar ──
+  const beaufortHTML = bf ? `
+    <div class="wind-beaufort">
+      <div class="wind-section-ttl">Beaufort Scale</div>
+      <div class="beaufort-bar-wrap">
+        <div class="beaufort-bar-track">
+          <div class="beaufort-bar-dot" style="left:${(bf.pct*100).toFixed(1)}%"></div>
+        </div>
+      </div>
+      <div class="beaufort-info">
+        <div>
+          <div class="beaufort-scale">${bf.desc}</div>
+          <div class="beaufort-desc">Force ${bf.num} of 12</div>
+        </div>
+        <div class="beaufort-num">${bf.num}</div>
+      </div>
+    </div>` : '';
+
+  // ── Device compass ──
+  const compassPermHTML = _compassActive
+    ? `<div class="wind-compass-status">📡 Live compass active · You are facing ${_compassHeading != null ? _compassHeading.toFixed(0)+'° '+degToCard(_compassHeading) : '…'}</div>`
+    : `<button class="wind-compass-btn" onclick="requestCompass()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/><path d="m5.904 6.523.94 2.555.938-2.555L10.338 5.5l-2.556.94L6.844 5.5l-.94 2.023zm2.598 3.168-1.11-3.015L4.378 7.566l3.014-1.11 1.11 3.015 3.015-1.11-3.015 1.11z"/></svg>
+        Enable Live Compass
+      </button>
+      <div class="wind-compass-status">Tap to overlay your heading on the compass</div>`;
+
+  // ── Hourly wind sparkline ──
+  let hourlyHTML = '';
+  const oh = window._omHourly;
+  if (oh && oh.time && oh.wind_speed_10m) {
+    const now = Date.now();
+    const cards = oh.time.map((t, i) => {
+      const ms = new Date(t).getTime();
+      if (ms < now - 3600000 || i > 23) return null;
+      const spd = oh.wind_speed_10m[i] != null ? Math.round(oh.wind_speed_10m[i]) : null;
+      const gst = oh.wind_gusts_10m?.[i]  != null ? Math.round(oh.wind_gusts_10m[i])  : null;
+      const wdir = oh.wind_direction_10m?.[i] ?? null;
+      const hr = new Date(t).toLocaleTimeString([],{hour:'numeric'});
+      // Arrow emoji by direction
+      const arrowMap = ['↑','↗','→','↘','↓','↙','←','↖'];
+      const arrow = wdir != null ? arrowMap[Math.round(wdir/45)%8] : '·';
+      const color = spd != null && spd > 30 ? 'var(--orange)' : spd != null && spd > 20 ? 'var(--yellow)' : 'var(--text)';
+      return `<div class="wind-hour-card">
+        <span class="whc-time">${hr}</span>
+        <span class="whc-arrow" title="${wdir != null ? wdir+'° '+degToCard(wdir) : ''}">${arrow}</span>
+        <span class="whc-speed" style="color:${color}">${spd ?? '—'}</span>
+        <span class="whc-gust">${gst != null ? 'G'+gst : ''}</span>
+      </div>`;
+    }).filter(Boolean);
+    if (cards.length) {
+      hourlyHTML = `<div class="wind-hourly">
+        <div class="wind-section-ttl">Hourly Forecast</div>
+        <div class="wind-hourly-scroll"><div class="wind-hourly-track">${cards.join('')}</div></div>
+      </div>`;
+    }
+  }
+
+  body.innerHTML = compassHTML + statsHTML + beaufortHTML + compassPermHTML + hourlyHTML;
+}
+
+function openWindModal() {
+  document.getElementById('windModal').classList.add('open');
+  renderWindModal();
+}
+
+function closeWindModal() {
+  document.getElementById('windModal').classList.remove('open');
+  stopCompass();
+}
+
+function requestCompass() {
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then(state => {
+      if (state === 'granted') startCompass();
+      else { alert('Compass access denied. You can re-enable it in iOS Settings → Safari → Motion & Orientation Access.'); }
+    }).catch(err => { console.warn('Compass permission error:', err); });
+  } else {
+    // Non-iOS or already granted
+    startCompass();
+  }
+}
+
+function startCompass() {
+  if (_compassHandler) window.removeEventListener('deviceorientation', _compassHandler);
+  _compassActive = true;
+  _compassHandler = (e) => {
+    // webkitCompassHeading is iOS-specific true north heading (0–360)
+    const heading = e.webkitCompassHeading ?? (e.alpha != null ? (360 - e.alpha) % 360 : null);
+    if (heading != null) {
+      _compassHeading = heading;
+      // Live-update just the compass SVG and status without full re-render
+      const compassWrap = document.querySelector('.wind-compass');
+      if (compassWrap) compassWrap.innerHTML = compassSVG(window._windData?.direction ?? null, heading);
+      const statusEl = document.querySelector('.wind-compass-status');
+      if (statusEl) statusEl.textContent = `📡 Live compass · ${heading.toFixed(0)}° ${degToCard(heading)}`;
+    }
+  };
+  window.addEventListener('deviceorientation', _compassHandler, true);
+  renderWindModal(); // re-render to show active state
+}
+
+function stopCompass() {
+  if (_compassHandler) {
+    window.removeEventListener('deviceorientation', _compassHandler);
+    _compassHandler = null;
+  }
+  _compassActive = false;
+  _compassHeading = null;
+}
+
+
 function gotoAlertsFiltered(keyword) {
   // Switch to Alerts tab and filter by keyword ('warning', 'watch', 'advisory')
   const tabBtn = document.querySelector('.tab[data-tab="alerts"]');
@@ -472,6 +749,7 @@ function aqiHTML(aq) {
           <div class="aqi-category" style="color:${aqiColor}">${aq.category}</div>
           <div class="aqi-area">Open-Meteo · US AQI</div>
         </div>
+        <div class="aqi-badge" style="background:${aqiBg};color:${aqiColor};border:1px solid ${aqiBorder}">${aq.category}</div>
         <div class="aqi-score" style="color:${aqiColor}">${aq.aqi}</div>
       </div>
       ${rangeBar(aq.aqi, 300, 'linear-gradient(to right, #4ade80 0%, #a3e635 12%, #fbbf24 25%, #fb923c 40%, #f87171 55%, #c084fc 75%, #7c3aed 100%)')}
@@ -530,6 +808,7 @@ function renderUVSlot() {
           <div class="uv-category" style="color:${uvColor}">${uvCat}</div>
           <div class="uv-area">Open-Meteo · WHO Scale</div>
         </div>
+        <div class="uv-badge" style="background:${uvBg};color:${uvColor};border:1px solid ${uvBorder}">${uvCat}</div>
         <div class="uv-score" style="color:${uvColor}">${uvRounded}</div>
       </div>
       ${rangeBar(uv, 11, 'linear-gradient(to right, #4ade80 0%, #a3e635 18%, #fbbf24 36%, #fb923c 55%, #f87171 73%, #c084fc 100%)')}
@@ -1493,7 +1772,10 @@ async function fetchOpenMeteo(lat, lon) {
     if (!c) return;
 
     // Patch hourly card temps now if cards already exist; otherwise they'll be patched when rendered
-    if (data.hourly) patchHourlyTemps(data.hourly);
+    if (data.hourly) {
+      patchHourlyTemps(data.hourly);
+      window._omHourly = data.hourly; // cache for wind modal sparkline
+    }
 
     // Enrich obs strip with Open-Meteo data (fills gaps NWS doesn't cover)
     const set = (id, val) => { if (val != null && document.getElementById(id)) document.getElementById(id).textContent = val; };
@@ -1503,6 +1785,13 @@ async function fetchOpenMeteo(lat, lon) {
 
     // Wind gust
     if (c.wind_gusts_10m != null) set('obsGust', Math.round(c.wind_gusts_10m));
+
+    // Store wind data for Wind modal
+    window._windData = {
+      speed:     c.wind_speed_10m   != null ? Math.round(c.wind_speed_10m)   : null,
+      gust:      c.wind_gusts_10m   != null ? Math.round(c.wind_gusts_10m)   : null,
+      direction: c.wind_direction_10m != null ? Math.round(c.wind_direction_10m) : null,
+    };
 
     // UV index
     if (c.uv_index != null) {
