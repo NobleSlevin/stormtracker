@@ -458,15 +458,17 @@ function renderWindModal() {
       </div>
     </div>` : '';
 
-  // ── Device compass ──
+  // ── Device compass — always render both, toggle visibility by state ──
   const compassSVGIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#93c5fd" viewBox="0 0 16 16"><path d="M8 16.016a7.5 7.5 0 0 0 1.962-14.74A1 1 0 0 0 9 0H7a1 1 0 0 0-.962 1.276A7.5 7.5 0 0 0 8 16.016m6.5-7.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0"/><path d="m6.94 7.44 4.95-2.83-2.83 4.95-4.949 2.83 2.828-4.95z"/></svg>`;
-  const compassPermHTML = _compassActive
-    ? `<div class="wind-compass-status" id="windCompassStatus" style="display:flex;align-items:center;gap:6px;justify-content:center">${compassSVGIcon} Live compass · ${_compassHeading != null ? _compassHeading.toFixed(0)+'° '+degToCard(_compassHeading) : '…'}</div>`
-    : `<button class="wind-compass-btn" id="windCompassBtn" onclick="requestCompass()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/><path d="m5.904 6.523.94 2.555.938-2.555L10.338 5.5l-2.556.94L6.844 5.5l-.94 2.023zm2.598 3.168-1.11-3.015L4.378 7.566l3.014-1.11 1.11 3.015 3.015-1.11-3.015 1.11z"/></svg>
-        Enable Live Compass
-      </button>
-      <div class="wind-compass-status" id="windCompassStatus">Tap to overlay your heading on the compass</div>`;
+  const headingTxt = _compassHeading != null ? `${_compassHeading.toFixed(0)}° ${degToCard(_compassHeading)}` : '…';
+  const compassPermHTML = `
+    <button class="wind-compass-btn" id="windCompassBtn" onclick="requestCompass()" style="display:${_compassActive ? 'none' : 'flex'}">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/><path d="m5.904 6.523.94 2.555.938-2.555L10.338 5.5l-2.556.94L6.844 5.5l-.94 2.023zm2.598 3.168-1.11-3.015L4.378 7.566l3.014-1.11 1.11 3.015 3.015-1.11-3.015 1.11z"/></svg>
+      Enable Live Compass
+    </button>
+    <div class="wind-compass-status" id="windCompassStatus" style="display:${_compassActive ? 'flex' : 'flex'}">
+      ${_compassActive ? compassSVGIcon + ' Live compass · ' + headingTxt : 'Tap to overlay your heading on the compass'}
+    </div>`;
 
   // ── Hourly wind sparkline ──
   let hourlyHTML = '';
