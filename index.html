@@ -275,6 +275,24 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 @keyframes ticker { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
 .tsep { color: var(--blue); margin: 0 14px; }
 .ticker-credit { flex-shrink: 0; padding: 0 12px; font-family: var(--mono); font-size: 8px; letter-spacing: 1.5px; color: #fbbf24; border-left: 1px solid var(--border); height: 28px; display: flex; align-items: center; white-space: nowrap; }
+.ticker-info-btn { flex-shrink: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-left: 1px solid var(--border); color: var(--dim); cursor: pointer; padding: 0; -webkit-appearance: none; }
+.ticker-info-btn:active { color: var(--blue); }
+/* Info Modal */
+.info-modal { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; }
+.info-modal.open { display: flex; }
+.info-sheet { background: var(--card); border-radius: 20px 20px 0 0; width: 100%; max-height: 85vh; display: flex; flex-direction: column; border-top: 1px solid var(--border2); }
+.info-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.info-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: .2px; }
+.info-close { width: 32px; height: 32px; border-radius: 50%; background: var(--card2); border: 1px solid var(--border); color: var(--dim); display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-appearance: none; }
+.info-close:active { background: var(--card3); }
+.info-body { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 18px 32px; }
+.info-section-ttl { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+.info-row { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+.info-row-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.info-row-url { font-size: 10px; font-family: var(--mono); color: var(--blue); margin-bottom: 6px; }
+.info-row-desc { font-size: 11px; color: var(--dim); line-height: 1.6; }
+.info-blurb { font-size: 12px; color: var(--dim); line-height: 1.7; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+.info-footer { font-size: 10px; color: var(--muted); text-align: center; margin-top: 24px; font-family: var(--mono); letter-spacing: .5px; }
 
 /* ── TOOLTIP ── */
 #tipbox { position: fixed; background: var(--card2); border: 1px solid var(--border2); border-radius: var(--rsm); padding: 10px 13px; font-size: 12px; line-height: 1.6; pointer-events: none; opacity: 0; transition: opacity .15s; max-width: 210px; z-index: 9999; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
@@ -491,10 +509,77 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   <div class="ticker" style="padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:content-box">
     <div class="ticker-lbl">NWS</div>
     <div class="ticker-track"><div class="ticker-inner" id="tickerInner">Loading…</div></div>
+    <button class="ticker-info-btn" onclick="document.getElementById('infoModal').classList.add('open')" aria-label="About StormWatch">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
+    </button>
     <div class="ticker-credit">BUILT BY TREY</div>
   </div>
 
 </div>
+
+<!-- Info Modal -->
+<div id="infoModal" class="info-modal">
+  <div class="info-sheet">
+    <div class="info-header">
+      <div class="info-title">About StormWatch</div>
+      <button class="info-close" onclick="document.getElementById('infoModal').classList.remove('open')" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></svg>
+      </button>
+    </div>
+    <div class="info-body">
+
+      <div class="info-section-ttl">Data Sources</div>
+
+      <div class="info-row">
+        <div class="info-row-name">National Weather Service</div>
+        <div class="info-row-url">api.weather.gov</div>
+        <div class="info-row-desc">Alerts, watches &amp; warnings · 7-day forecast · Hourly forecast · Current observations · Radar station metadata · Point metadata (grid, zone, county)</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-row-name">Open-Meteo</div>
+        <div class="info-row-url">api.open-meteo.com</div>
+        <div class="info-row-desc">Real-time temperature, humidity, dewpoint, wind, gusts, UV index, cloud cover · CAPE &amp; CIN for tornado risk scoring · Hourly gap-filling when NWS data is unavailable · No API key required</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-row-name">Iowa State Mesonet (IEM)</div>
+        <div class="info-row-url">mesonet.agron.iastate.edu</div>
+        <div class="info-row-desc">NEXRAD composite radar tiles (RIDGE II) · 11-frame loop (~50 min of history) · 5-minute auto-refresh · No zoom cap</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-row-name">NOAA Weather Radio</div>
+        <div class="info-row-url">wxradio.org · weatherusa.net</div>
+        <div class="info-row-desc">Live audio streams of 86 NOAA All Hazards Radio stations · Location-matched to nearest transmitter · Volunteer-operated Icecast streams · Not for life-safety use</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-row-name">Nominatim / OpenStreetMap</div>
+        <div class="info-row-url">nominatim.openstreetmap.org</div>
+        <div class="info-row-desc">ZIP code and city name geocoding to lat/lon coordinates</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-row-name">ip-api.com</div>
+        <div class="info-row-url">ip-api.com</div>
+        <div class="info-row-desc">Approximate location fallback based on IP address when GPS is unavailable</div>
+      </div>
+
+      <div class="info-section-ttl" style="margin-top:20px">Tornado Risk Model</div>
+      <div class="info-blurb">The Risk tab scores 8 atmospheric factors using a combination of NWS forecast text (wind, hail, tornado mentions), real CAPE/CIN values from Open-Meteo, active alert counts, and time-of-day weighting. It is a supplemental awareness tool — always follow official NWS guidance.</div>
+
+      <div class="info-section-ttl" style="margin-top:20px">Map</div>
+      <div class="info-blurb">Radar map rendered with Leaflet.js using CartoDB dark basemap tiles and IEM NEXRAD radar overlay. Your location is shown as a yellow dot.</div>
+
+      <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
+      <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
+
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; Data from NOAA/NWS</div>
+    </div>
+  </div>
+</div>
+
 <div id="tipbox"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="app.js"></script>
