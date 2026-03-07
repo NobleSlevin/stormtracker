@@ -20,8 +20,10 @@ window.addEventListener('load', () => {
 });
 
 const NWS = 'https://api.weather.gov';
+const OM  = 'https://api.open-meteo.com/v1/forecast';
 let allAlerts = [], activeFilter = 'all', refreshTimer = null;
 let curLat = null, curLon = null, curMode = null, curState = null;
+let omData = null; // Open-Meteo current data
 
 // ── TABS ──────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(btn => {
@@ -407,16 +409,43 @@ function parseForecastSignals(periods, lat, alerts) {
   if (tornadoAlerts.length > 0) srhScore = Math.min(srhScore + 0.40 + tornadoAlerts.length * 0.08, 1.0);
   const srhRaw = tornadoAlerts.length > 0 ? `${tornadoAlerts.length} tornado alert(s) active` : allText.includes('tornado') ? 'Tornado language in forecast' : 'No rotation indicators';
 
+  // ── CAPE: use real Open-Meteo value if available, else infer from text ──
   let capeScore = 0.05;
-  if (tempF >= 85) capeScore += 0.20; else if (tempF >= 75) capeScore += 0.12; else if (tempF >= 65) capeScore += 0.06;
-  if (allText.includes('thunder'))   capeScore = Math.min(capeScore + 0.30, 1.0);
-  if (allText.includes('severe'))    capeScore = Math.min(capeScore + 0.25, 1.0);
-  if (allText.includes('storm'))     capeScore = Math.min(capeScore + 0.15, 1.0);
-  if (allText.includes('humid'))     capeScore = Math.min(capeScore + 0.10, 1.0);
-  if (allText.includes('unstable'))  capeScore = Math.min(capeScore + 0.20, 1.0);
-  if (allText.includes('explosive')) capeScore = Math.min(capeScore + 0.30, 1.0);
-  if (allText.includes('cape'))      capeScore = Math.min(capeScore + 0.25, 1.0);
-  const capeRaw = `${tempF}°F · ${allText.includes('thunder')?'Thunderstorms forecast':'No thunder forecast'}`;
+  let capeRaw, realCape = null, realLI = null, realCIN = null;
+  if (omData?.hourly) {
+    // Take max CAPE over next 6 hours
+    const capes = omData.hourly.cape || [];
+    const lis   = omData.hourly.lifted_index || [];
+    const cins  = omData.hourly.convective_inhibition || [];
+    realCape = capes.length ? Math.max(...capes.filter(v => v != null)) : null;
+    realLI   = lis.length   ? Math.min(...lis.filter(v => v != null))   : null; // most unstable = lowest LI
+    realCIN  = cins.length  ? Math.min(...cins.filter(v => v != null))  : null;
+    if (realCape != null) {
+      // CAPE thresholds: <500 weak, 500–1500 moderate, 1500–2500 strong, >2500 extreme
+      if      (realCape >= 2500) capeScore = 0.95;
+      else if (realCape >= 1500) capeScore = 0.75;
+      else if (realCape >= 1000) capeScore = 0.55;
+      else if (realCape >= 500)  capeScore = 0.35;
+      else if (realCape >= 200)  capeScore = 0.20;
+      else                       capeScore = 0.08;
+      // Lifted Index reinforcement: LI < -6 = extreme instability
+      if (realLI != null) {
+        if      (realLI <= -6) capeScore = Math.min(capeScore + 0.15, 1.0);
+        else if (realLI <= -4) capeScore = Math.min(capeScore + 0.10, 1.0);
+        else if (realLI <= -2) capeScore = Math.min(capeScore + 0.05, 1.0);
+      }
+      capeRaw = `CAPE ${Math.round(realCape)} J/kg${realLI != null ? ' · LI ' + realLI.toFixed(1) : ''}${realCIN != null ? ' · CIN ' + Math.round(realCIN) : ''}`;
+    }
+  }
+  if (realCape == null) {
+    // Fallback: text inference
+    if (tempF >= 85) capeScore += 0.20; else if (tempF >= 75) capeScore += 0.12; else if (tempF >= 65) capeScore += 0.06;
+    if (allText.includes('thunder'))   capeScore = Math.min(capeScore + 0.30, 1.0);
+    if (allText.includes('severe'))    capeScore = Math.min(capeScore + 0.25, 1.0);
+    if (allText.includes('unstable'))  capeScore = Math.min(capeScore + 0.20, 1.0);
+    if (allText.includes('explosive')) capeScore = Math.min(capeScore + 0.30, 1.0);
+    capeRaw = `${tempF}°F · ${allText.includes('thunder') ? 'Thunderstorms forecast' : 'No thunder forecast'} (estimated)`;
+  }
 
   let llj = 0.10;
   const inAlley = lat >= 25 && lat <= 45 && (allText.includes('south') || allText.includes('southwest'));
@@ -457,13 +486,25 @@ function parseForecastSignals(periods, lat, alerts) {
   const pressureRaw = `${windMph} mph surface winds · ${allText.includes('low pressure')?'Low pressure system noted':'Surface analysis inferred'}`;
 
   let capping = 0.10;
-  if (allText.includes('cap') || allText.includes('capping')) capping = Math.min(capping + 0.45, 1.0);
-  if (allText.includes('clearing') && precip > 20) capping = Math.min(capping + 0.20, 1.0);
-  if (allText.includes('thunder') && !allText.includes('all day')) capping = Math.min(capping + 0.30, 1.0);
-  if (allText.includes('mostly sunny') || allText.includes('partly cloudy')) {
-    if (precip > 30) capping = Math.min(capping + 0.25, 1.0);
+  let cappingRaw;
+  if (realCIN != null) {
+    // CIN: 0 = no cap, -50 = weak, -100 = moderate (ideal for supercells), -200+ = strong/inhibiting
+    const absCIN = Math.abs(realCIN);
+    if      (absCIN >= 200) capping = 0.85; // Strong cap — very explosive if broken
+    else if (absCIN >= 100) capping = 0.65; // Moderate cap — classic supercell setup
+    else if (absCIN >= 50)  capping = 0.45; // Weak-moderate cap
+    else if (absCIN >= 20)  capping = 0.25; // Weak cap
+    else                    capping = 0.10; // No meaningful cap
+    cappingRaw = `CIN ${Math.round(realCIN)} J/kg · ${absCIN >= 100 ? 'Strong capping present' : absCIN >= 50 ? 'Moderate cap' : 'Weak/no cap'}`;
+  } else {
+    if (allText.includes('cap') || allText.includes('capping')) capping = Math.min(capping + 0.45, 1.0);
+    if (allText.includes('clearing') && precip > 20) capping = Math.min(capping + 0.20, 1.0);
+    if (allText.includes('thunder') && !allText.includes('all day')) capping = Math.min(capping + 0.30, 1.0);
+    if (allText.includes('mostly sunny') || allText.includes('partly cloudy')) {
+      if (precip > 30) capping = Math.min(capping + 0.25, 1.0);
+    }
+    cappingRaw = allText.includes('cap') ? 'Capping layer mentioned in forecast (estimated)' : `${precip}% precip prob · ${short0} (estimated)`;
   }
-  const cappingRaw = allText.includes('cap') ? 'Capping layer mentioned in forecast' : `${precip}% precip prob · ${short0}`;
 
   return [
     { label:'Wind\nShear',       name:'Wind Shear',             live:windShearScore, ideal:0.95, tier:windShearScore>0.7?'tier-crit':windShearScore>0.45?'tier-high':'tier-mod', raw:windShearRaw, unit:'Speed & directional veering', detail:'Speed & directional shear creates the horizontal rotation that updrafts tilt into a mesocyclone.' },
@@ -630,13 +671,72 @@ function buildFactorList(factors) {
 }
 
 // ── LOCATION & ORCHESTRATION ─────────────────────
+// ── OPEN-METEO (no key required) ──────────────────
+async function fetchOpenMeteo(lat, lon) {
+  try {
+    const params = new URLSearchParams({
+      latitude: lat.toFixed(4),
+      longitude: lon.toFixed(4),
+      current: [
+        'temperature_2m','apparent_temperature','relative_humidity_2m',
+        'dew_point_2m','wind_speed_10m','wind_gusts_10m','wind_direction_10m',
+        'uv_index','cloud_cover','precipitation','weather_code','is_day'
+      ].join(','),
+      hourly: [
+        'cape','lifted_index','convective_inhibition',
+        'freezing_level_height','precipitation_probability'
+      ].join(','),
+      wind_speed_unit: 'mph',
+      temperature_unit: 'fahrenheit',
+      forecast_days: 1,
+      forecast_hours: 6,
+      timezone: 'auto'
+    });
+    const res = await fetch(`${OM}?${params}`);
+    if (!res.ok) throw new Error(`OM ${res.status}`);
+    const data = await res.json();
+    omData = data;
+
+    const c = data.current;
+    if (!c) return;
+
+    // Enrich obs strip with Open-Meteo data (fills gaps NWS doesn't cover)
+    const set = (id, val) => { if (val != null && document.getElementById(id)) document.getElementById(id).textContent = val; };
+
+    // Feels like
+    if (c.apparent_temperature != null) set('obsFeels', Math.round(c.apparent_temperature));
+
+    // Wind gust
+    if (c.wind_gusts_10m != null) set('obsGust', Math.round(c.wind_gusts_10m));
+
+    // UV index
+    if (c.uv_index != null) set('obsUV', c.uv_index.toFixed(1));
+
+    // Cloud cover %
+    if (c.cloud_cover != null) set('obsCloud', c.cloud_cover);
+
+    // Fill temp/humid/dew from OM if NWS obs hasn't populated them yet
+    if (document.getElementById('obsTemp').textContent === '—' && c.temperature_2m != null)
+      set('obsTemp', Math.round(c.temperature_2m));
+    if (document.getElementById('obsHumid').textContent === '—' && c.relative_humidity_2m != null)
+      set('obsHumid', Math.round(c.relative_humidity_2m));
+    if (document.getElementById('obsDew').textContent === '—' && c.dew_point_2m != null)
+      set('obsDew', Math.round(c.dew_point_2m));
+    if (document.getElementById('obsWind').textContent === '—' && c.wind_speed_10m != null)
+      set('obsWind', Math.round(c.wind_speed_10m));
+
+    document.getElementById('obsStrip').classList.add('show');
+  } catch(e) { console.warn('Open-Meteo error:', e); }
+}
+
 async function fetchForPoint(lat, lon) {
   const [fc] = await Promise.all([
     fetchForecast(lat, lon),
-    fetchAlerts(`${NWS}/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`)
+    fetchAlerts(`${NWS}/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`),
+    fetchOpenMeteo(lat, lon)
   ]);
   const { periods, stationUrl } = fc;
-  // Run obs + nearby + tornado in parallel after forecast resolves
+  // Run obs + nearby in parallel after forecast resolves
   await Promise.all([
     fetchObservations(stationUrl),
     fetchNearby(lat, lon, stationUrl)

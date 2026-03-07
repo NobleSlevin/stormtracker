@@ -60,7 +60,7 @@ header { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px 10p
 .cbtn.primary { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.3); color: var(--blue); }
 
 /* ── OBS STRIP ── */
-.obs-strip { display: grid; grid-template-columns: repeat(6,1fr); border-bottom: 1px solid var(--border); background: var(--card2); flex-shrink: 0; overflow: hidden; max-height: 0; transition: max-height .3s ease; }
+.obs-strip { display: grid; grid-template-columns: repeat(8,1fr); border-bottom: 1px solid var(--border); background: var(--card2); flex-shrink: 0; overflow: hidden; max-height: 0; transition: max-height .3s ease; }
 .obs-strip.show { max-height: 60px; }
 .obs-item { padding: 6px 4px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 1px; align-items: center; }
 .obs-item:last-child { border-right: none; }
@@ -341,11 +341,13 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   <!-- Observation strip — hidden until GPS/ZIP used -->
   <div class="obs-strip" id="obsStrip">
     <div class="obs-item"><span class="obs-label">Temp</span><span class="obs-val" id="obsTemp">—</span><span class="obs-unit">°F</span></div>
+    <div class="obs-item"><span class="obs-label">Feels</span><span class="obs-val" id="obsFeels">—</span><span class="obs-unit">°F</span></div>
     <div class="obs-item"><span class="obs-label">Humid</span><span class="obs-val" id="obsHumid">—</span><span class="obs-unit">%</span></div>
     <div class="obs-item"><span class="obs-label">Dewpt</span><span class="obs-val" id="obsDew">—</span><span class="obs-unit">°F</span></div>
     <div class="obs-item"><span class="obs-label">Wind</span><span class="obs-val" id="obsWind">—</span><span class="obs-unit">mph</span></div>
-    <div class="obs-item"><span class="obs-label">Press</span><span class="obs-val" id="obsPress">—</span><span class="obs-unit">mb</span></div>
-    <div class="obs-item"><span class="obs-label">Visib</span><span class="obs-val" id="obsVis">—</span><span class="obs-unit">mi</span></div>
+    <div class="obs-item"><span class="obs-label">Gust</span><span class="obs-val" id="obsGust">—</span><span class="obs-unit">mph</span></div>
+    <div class="obs-item"><span class="obs-label">UV</span><span class="obs-val" id="obsUV">—</span><span class="obs-unit">idx</span></div>
+    <div class="obs-item"><span class="obs-label">Cloud</span><span class="obs-val" id="obsCloud">—</span><span class="obs-unit">%</span></div>
   </div>
 
   <div class="stat-strip">
