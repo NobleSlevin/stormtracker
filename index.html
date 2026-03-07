@@ -249,6 +249,21 @@ header { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px 10p
 .hurr-cell-lbl { font-size: 8px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
 .hurr-cell-val { font-size: 14px; font-weight: 500; line-height: 1.2; }
 .hurr-threat { padding: 10px 14px; background: rgba(251,146,60,.06); border-top: 1px solid var(--border); font-size: 11px; color: var(--orange); font-family: var(--mono); display: flex; align-items: center; gap: 7px; }
+/* ── AQI Card ── */
+.aqi-section-ttl { font-size: 9px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; }
+.aqi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 4px; }
+.aqi-header { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-bottom: 1px solid var(--border); }
+.aqi-icon-wrap { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.aqi-info { flex: 1; min-width: 0; }
+.aqi-category { font-size: 14px; font-weight: 700; letter-spacing: .3px; }
+.aqi-area { font-size: 10px; color: var(--dim); font-family: var(--mono); margin-top: 2px; }
+.aqi-score { font-family: var(--mono); font-size: 32px; font-weight: 600; letter-spacing: -1px; flex-shrink: 0; line-height: 1; }
+.aqi-cells { display: grid; grid-template-columns: repeat(3, 1fr); }
+.aqi-cell { padding: 9px 10px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
+.aqi-cell:last-child { border-right: none; }
+.aqi-cell-lbl { font-size: 8px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.aqi-cell-val { font-size: 18px; font-weight: 300; line-height: 1.1; color: var(--text); }
+.aqi-cell-sub { font-size: 9px; color: var(--dim); font-family: var(--mono); }
 /* Nearby placeholder uses .state-center */
 
 /* ── TORNADO TAB ── */
@@ -609,6 +624,12 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         <div class="info-row-desc">Active tropical storm and hurricane tracks, forecast cone, wind radii, and movement data · Updated every 6 hours · No API key required</div>
       </div>
 
+      <div class="info-row">
+        <div class="info-row-name">EPA AirNow</div>
+        <div class="info-row-url">airnowapi.org</div>
+        <div class="info-row-desc">Real-time Air Quality Index from 2,500+ monitoring stations · PM2.5, PM10, ozone, CO, SO₂, NO₂ · Updated hourly</div>
+      </div>
+
       <div class="info-section-ttl" style="margin-top:20px">Tornado Risk Model</div>
       <div class="info-blurb">The Risk tab scores 8 atmospheric factors using a combination of NWS forecast text (wind, hail, tornado mentions), real CAPE/CIN values from Open-Meteo, active alert counts, and time-of-day weighting. It is a supplemental awareness tool — always follow official NWS guidance.</div>
 
@@ -618,7 +639,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.1.3</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.1.5</div>
     </div>
   </div>
 </div>

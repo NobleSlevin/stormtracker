@@ -20,6 +20,7 @@ window.addEventListener('load', () => {
 });
 
 const NWS = 'https://api.weather.gov';
+const AIRNOW_KEY = 'BB809EBB-E72D-4D0D-89E7-6C5904BA166E';
 
 const NWR_STATIONS=[
   {st:"TX",city:"Fort Worth",call:"KEC55",freq:162.55,url:"https://wxradio.org/TX-FortWorth-KEC55",lat:32.7555,lon:-97.3308},
@@ -345,6 +346,7 @@ function renderForecast(periods){
   box.innerHTML=heroHTML
     +'<div class="hourly-toggle" id="hourlyToggle"><span class="hourly-toggle-lbl"><svg width="12" height="12" fill="currentColor"><use href="#bi-sun"/></svg> Hourly Forecast</span><span class="hourly-toggle-chevron"><svg width="10" height="10" fill="currentColor"><use href="#bi-chevron-right"/></svg></span></div>'
     +'<div class="hourly-scroll" id="hourlyScroll"><div class="hourly-track" id="hourlyTrack"></div></div>'
+    +'<div id="aqiSlot"></div>'
     +'<div class="fc-days">'+rows+'</div>';
   document.getElementById('hourlyToggle').addEventListener('click', () => {
     document.getElementById('hourlyToggle').classList.toggle('open');
@@ -380,6 +382,53 @@ function patchHourlyTemps(omHourly) {
     const tempEl = card.querySelector('.hc-temp');
     if (tempEl) tempEl.textContent = Math.round(omTemp) + '°';
   });
+}
+
+// ── RENDER AQI INTO FORECAST TAB ─────────────────
+async function renderAQISlot(lat, lon) {
+  const slot = document.getElementById('aqiSlot');
+  if (!slot) return;
+  try {
+    const aq = await fetchAQI(lat, lon);
+    if (!aq) return;
+    const aqiColor = aq.categoryNum <= 1 ? 'var(--green)'
+      : aq.categoryNum === 2 ? 'var(--yellow)'
+      : aq.categoryNum === 3 ? 'var(--orange)'
+      : aq.categoryNum === 4 ? 'var(--red)'
+      : aq.categoryNum === 5 ? '#c084fc'
+      : '#f87171';
+    const aqiBg = aq.categoryNum <= 1 ? 'rgba(74,222,128,.1)'
+      : aq.categoryNum === 2 ? 'rgba(251,191,36,.1)'
+      : aq.categoryNum === 3 ? 'rgba(251,146,60,.1)'
+      : aq.categoryNum === 4 ? 'rgba(248,113,113,.1)'
+      : aq.categoryNum === 5 ? 'rgba(192,132,252,.1)'
+      : 'rgba(248,113,113,.15)';
+    const pollCells = aq.pollutants.slice(0, 3).map(p => `
+      <div class="aqi-cell">
+        <span class="aqi-cell-lbl">${p.name}</span>
+        <span class="aqi-cell-val">${p.aqi}</span>
+        <span class="aqi-cell-sub">${p.category}</span>
+      </div>`).join('');
+    const padCells = aq.pollutants.length < 3
+      ? Array(3 - aq.pollutants.length).fill('<div class="aqi-cell"></div>').join('') : '';
+    slot.innerHTML = `
+      <div class="aqi-section-ttl">Air Quality</div>
+      <div class="aqi-card">
+        <div class="aqi-header">
+          <div class="aqi-icon-wrap" style="background:${aqiBg};border-color:${aqiColor}33">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${aqiColor}" viewBox="0 0 16 16">
+              <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+            </svg>
+          </div>
+          <div class="aqi-info">
+            <div class="aqi-category" style="color:${aqiColor}">${aq.category}</div>
+            <div class="aqi-area">AirNow · ${aq.reportingArea}${aq.stateCode ? ', ' + aq.stateCode : ''}</div>
+          </div>
+          <div class="aqi-score" style="color:${aqiColor}">${aq.aqi}</div>
+        </div>
+        <div class="aqi-cells">${pollCells}${padCells}</div>
+      </div>`;
+  } catch(e) { console.warn('AQI slot error:', e); }
 }
 
 function renderHourly(periods) {
@@ -561,6 +610,36 @@ function pointInPolygon(lat, lon, geojson) {
     }
   }
   return false;
+}
+
+// ── AIR QUALITY INDEX (AirNow) ───────────────────
+async function fetchAQI(lat, lon) {
+  const url = `https://www.airnowapi.org/aq/observation/latLong/current/?format=application/json&latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&distance=50&API_KEY=${AIRNOW_KEY}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('AirNow ' + r.status);
+  const data = await r.json();
+  if (!Array.isArray(data) || !data.length) return null;
+
+  // AirNow returns one entry per pollutant — find the highest AQI (overall air quality)
+  const sorted = data.slice().sort((a, b) => b.AQI - a.AQI);
+  const primary = sorted[0];
+
+  // Build a map of all pollutants
+  const pollutants = sorted.map(d => ({
+    name: d.ParameterName,
+    aqi: d.AQI,
+    category: d.Category?.Name || ''
+  }));
+
+  return {
+    aqi: primary.AQI,
+    category: primary.Category?.Name || 'Unknown',
+    categoryNum: primary.Category?.Number || 1,
+    dominant: primary.ParameterName,
+    reportingArea: primary.ReportingArea || '',
+    stateCode: primary.StateCode || '',
+    pollutants
+  };
 }
 
 async function fetchNearby(lat, lon, stationsUrl) {
@@ -751,7 +830,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
     }
   } catch(e) { console.warn('Hurricane fetch error:', e); }
 
-    // ── 2. State alert count ──
+      // ── 2. State alert count ──
   try {
     if (curState) {
       const stateMap = {'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA','Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD','Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT','Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY'};
@@ -1345,7 +1424,8 @@ async function fetchForPoint(lat, lon) {
   const { periods, stationUrl } = fc;
   await Promise.all([
     fetchObservations(stationUrl),
-    fetchNearby(lat, lon, stationUrl)
+    fetchNearby(lat, lon, stationUrl),
+    renderAQISlot(lat, lon)
   ]);
   if (periods && periods.length) computeTornadoRisk(periods, lat, lon, allAlerts);
 
