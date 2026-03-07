@@ -756,7 +756,7 @@ function initRadar(lat, lon) {
     // Init Leaflet map
     rvMap = L.map('radarMap', {
       center: [lat, lon],
-      zoom: 7,
+      zoom: 8,
       zoomControl: true,
       attributionControl: false
     });
@@ -787,7 +787,7 @@ function initRadar(lat, lon) {
     rvInited = true;
   } else {
     // Already inited — just re-center
-    rvMap.setView([lat, lon], 7);
+    rvMap.setView([lat, lon], 8);
     document.querySelector('.leaflet-marker-pane')?.querySelectorAll('*').forEach(e => e.remove());
     L.circleMarker([lat, lon], {
       radius: 6, color: '#fbbf24', fillColor: '#fbbf24',
@@ -801,36 +801,45 @@ function initRadar(lat, lon) {
 async function rvLoadFrames() {
   try {
     document.getElementById('rvTimestamp').textContent = 'Loading…';
-    const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-    const data = await res.json();
-    const past = data.radar?.past || [];
-    if (!past.length) { document.getElementById('rvTimestamp').textContent = 'No data'; return; }
+
+    // IEM provides 11 frames: t-50min to now, in 5-min steps
+    const offsets = ['m50m','m45m','m40m','m35m','m30m','m25m','m20m','m15m','m10m','m05m','0'];
+    const IEM = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913';
+
+    // Build frame objects with approximate wall-clock labels
+    const now = new Date();
+    rvFrames = offsets.map((token, i) => {
+      const minsAgo = (offsets.length - 1 - i) * 5;
+      const t = new Date(now.getTime() - minsAgo * 60000);
+      const h = t.getHours(), m = t.getMinutes();
+      const label = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+      return { token, label };
+    });
 
     // Clear old layers
     rvLayers.forEach(l => { if (rvMap.hasLayer(l)) rvMap.removeLayer(l); });
     rvLayers = [];
-    rvFrames = past;
 
-    const host = data.host;
-    // Pre-create tile layers (hidden)
-    rvFrames.forEach(frame => {
-      const url = `${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
-      const layer = L.tileLayer(url, { opacity: 0, maxZoom: 7, tileSize: 256 });
+    // Pre-create tile layers (hidden) — IEM has no zoom cap
+    rvFrames.forEach((frame, i) => {
+      // Latest frame uses no offset suffix
+      const suffix = frame.token === '0' ? '' : `-${frame.token}`;
+      const url = `${IEM}${suffix}/{z}/{x}/{y}.png`;
+      const layer = L.tileLayer(url, { opacity: 0, tileSize: 256 });
       rvLayers.push(layer);
       layer.addTo(rvMap);
     });
 
-    rvPos = rvFrames.length - 1; // start at most recent
+    rvPos = rvFrames.length - 1;
     rvShowFrame(rvPos);
     document.getElementById('rvFrameLabel').textContent = `${rvFrames.length}f`;
 
-    // Auto-play
     rvPlay();
 
-    // Refresh frames every 5 min
+    // Refresh every 5 min to pull newest frame
     setTimeout(rvLoadFrames, 5 * 60 * 1000);
   } catch(e) {
-    console.warn('RainViewer error:', e);
+    console.warn('IEM radar error:', e);
     if (document.getElementById('rvTimestamp')) document.getElementById('rvTimestamp').textContent = 'Error';
   }
 }
@@ -841,11 +850,8 @@ function rvShowFrame(idx) {
   // Hide all, show current
   rvLayers.forEach((l, i) => l.setOpacity(i === idx ? 0.65 : 0));
   rvPos = idx;
-  // Timestamp
-  const ts = new Date(rvFrames[idx].time * 1000);
-  const h = ts.getHours(), m = ts.getMinutes();
-  const label = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
-  if (document.getElementById('rvTimestamp')) document.getElementById('rvTimestamp').textContent = label;
+  // Timestamp — IEM frames carry a pre-computed label
+  if (document.getElementById('rvTimestamp')) document.getElementById('rvTimestamp').textContent = rvFrames[idx].label;
   // Timeline fill
   const pct = rvFrames.length > 1 ? (idx / (rvFrames.length - 1)) * 100 : 100;
   if (document.getElementById('rvFill')) document.getElementById('rvFill').style.width = pct + '%';
