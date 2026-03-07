@@ -220,7 +220,35 @@ header { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px 10p
 .nwr-status { font-size: 11px; color: var(--dim); padding: 0 14px 10px; font-family: var(--mono); }
 .nwr-disclaimer { font-size: 9px; color: var(--muted); padding: 8px 14px; border-top: 1px solid var(--border); line-height: 1.5; }
 
-/* Nearby placeholder */
+/* ── River Gauge Card ── */
+.gauge-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 4px; }
+.gauge-header { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.gauge-icon { width: 40px; height: 40px; border-radius: 50%; background: rgba(147,197,253,.1); border: 1.5px solid rgba(147,197,253,.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.gauge-info { flex: 1; min-width: 0; }
+.gauge-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gauge-meta { font-size: 10px; color: var(--dim); font-family: var(--mono); margin-top: 2px; }
+.gauge-badge { font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 6px; flex-shrink: 0; }
+.gauge-readings { display: grid; grid-template-columns: repeat(3,1fr); }
+.gauge-cell { padding: 9px 10px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
+.gauge-cell:last-child { border-right: none; }
+.gauge-cell-lbl { font-size: 8px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.gauge-cell-val { font-size: 18px; font-weight: 300; line-height: 1.1; }
+.gauge-cell-sub { font-size: 9px; color: var(--dim); font-family: var(--mono); }
+.gauge-trend-up { color: var(--red); } .gauge-trend-down { color: var(--blue); } .gauge-trend-steady { color: var(--dim); }
+/* ── Hurricane Card ── */
+.hurr-card { background: var(--card); border: 1px solid rgba(251,146,60,.3); border-radius: var(--r); overflow: hidden; margin-bottom: 4px; }
+.hurr-header { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-bottom: 1px solid var(--border); background: rgba(251,146,60,.05); }
+.hurr-icon { width: 40px; height: 40px; border-radius: 50%; background: rgba(251,146,60,.12); border: 1.5px solid rgba(251,146,60,.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.hurr-info { flex: 1; min-width: 0; }
+.hurr-name { font-size: 14px; font-weight: 700; color: var(--orange); letter-spacing: .5px; }
+.hurr-type { font-size: 10px; color: var(--dim); font-family: var(--mono); margin-top: 2px; }
+.hurr-badge { font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 6px; flex-shrink: 0; background: rgba(251,146,60,.15); color: var(--orange); border: 1px solid rgba(251,146,60,.3); }
+.hurr-details { display: grid; grid-template-columns: repeat(3,1fr); }
+.hurr-cell { padding: 9px 10px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
+.hurr-cell:last-child { border-right: none; }
+.hurr-cell-lbl { font-size: 8px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.hurr-cell-val { font-size: 14px; font-weight: 500; line-height: 1.2; }
+.hurr-threat { padding: 10px 14px; background: rgba(251,146,60,.06); border-top: 1px solid var(--border); font-size: 11px; color: var(--orange); font-family: var(--mono); display: flex; align-items: center; gap: 7px; }
 /* Nearby placeholder uses .state-center */
 
 /* ── TORNADO TAB ── */
@@ -569,6 +597,18 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         <div class="info-row-desc">Approximate location fallback based on IP address when GPS is unavailable</div>
       </div>
 
+      <div class="info-row">
+        <div class="info-row-name">USGS Water Services</div>
+        <div class="info-row-url">waterservices.usgs.gov</div>
+        <div class="info-row-desc">Real-time stream gauge data for rivers and creeks near your location · Gage height readings every 15 min · No API key required</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-row-name">NOAA National Hurricane Center</div>
+        <div class="info-row-url">mapservices.weather.noaa.gov</div>
+        <div class="info-row-desc">Active tropical storm and hurricane tracks, forecast cone, wind radii, and movement data · Updated every 6 hours · No API key required</div>
+      </div>
+
       <div class="info-section-ttl" style="margin-top:20px">Tornado Risk Model</div>
       <div class="info-blurb">The Risk tab scores 8 atmospheric factors using a combination of NWS forecast text (wind, hail, tornado mentions), real CAPE/CIN values from Open-Meteo, active alert counts, and time-of-day weighting. It is a supplemental awareness tool — always follow official NWS guidance.</div>
 
@@ -578,7 +618,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.0.2</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.1.0</div>
     </div>
   </div>
 </div>

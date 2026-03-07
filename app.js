@@ -419,6 +419,122 @@ async function fetchObservations(stationsUrl) {
 }
 
 // ── NEARBY TAB ────────────────────────────────────
+// ── RIVER GAUGES (USGS) ───────────────────────────
+async function fetchRiverGauges(lat, lon) {
+  const pad = 0.5; // ~35 mile radius
+  const bbox = `${(lon-pad).toFixed(4)},${(lat-pad).toFixed(4)},${(lon+pad).toFixed(4)},${(lat+pad).toFixed(4)}`;
+  const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&bBox=${bbox}&parameterCd=00065&siteType=ST&siteStatus=active`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('USGS ' + r.status);
+  const data = await r.json();
+  const series = data?.value?.timeSeries || [];
+  if (!series.length) return null;
+
+  // Calculate distance for each site, keep nearest 3
+  const sites = series.map(ts => {
+    const siteInfo = ts.sourceInfo || {};
+    const geo = siteInfo.geoLocation?.geogLocation || {};
+    const slat = parseFloat(geo.latitude);
+    const slon = parseFloat(geo.longitude);
+    const dist = (isNaN(slat)||isNaN(slon)) ? 9999 :
+      Math.round(Math.sqrt(Math.pow((slat-lat)*69,2) + Math.pow((slon-lon)*54.6,2)));
+    const vals = ts.values?.[0]?.value || [];
+    const latest = vals[vals.length - 1];
+    const prev   = vals.length > 1 ? vals[vals.length - 4] : null; // ~1hr ago
+    const gage   = latest ? parseFloat(latest.value) : null;
+    const prevGage = prev ? parseFloat(prev.value) : null;
+    let trend = 'steady', trendClass = 'gauge-trend-steady', trendArrow = '→';
+    if (gage != null && prevGage != null) {
+      const delta = gage - prevGage;
+      if (delta > 0.1)       { trend = 'Rising';  trendClass = 'gauge-trend-up';    trendArrow = '↑'; }
+      else if (delta < -0.1) { trend = 'Falling'; trendClass = 'gauge-trend-down';  trendArrow = '↓'; }
+      else                   { trend = 'Steady';  trendClass = 'gauge-trend-steady'; trendArrow = '→'; }
+    }
+    // Flood stage thresholds from variable description if available
+    const varDesc = (ts.variable?.variableDescription || '').toLowerCase();
+    const siteName = (siteInfo.siteName || 'Unknown Gauge')
+      .replace(/,?\s*(at|near|above|below)\s+/i, ' @ ')
+      .replace(/\s+/g, ' ').trim();
+    return { siteName, dist, gage, trend, trendClass, trendArrow, slat, slon, siteCode: siteInfo.siteCode?.[0]?.value };
+  }).filter(s => s.gage != null && s.dist < 9999)
+    .sort((a,b) => a.dist - b.dist)
+    .slice(0, 3);
+
+  if (!sites.length) return null;
+  return sites;
+}
+
+// ── HURRICANE TRACKING (NHC ArcGIS) ──────────────
+async function fetchHurricanes() {
+  // Query Forecast Points for all Atlantic storm slots (AT1-AT5)
+  // Layer 6=AT1, 32=AT2, 58=AT3, 84=AT4, 110=AT5 Forecast Points
+  const BASE = 'https://mapservices.weather.noaa.gov/tropical/rest/services/tropical/NHC_tropical_weather/MapServer';
+  const forecastPointLayers = [6, 32, 58, 84, 110]; // AT1-AT5 Forecast Points
+  const coneLayers          = [8, 34, 60, 86, 112]; // AT1-AT5 Forecast Cone
+  const storms = [];
+
+  await Promise.all(forecastPointLayers.map(async (layerId, idx) => {
+    try {
+      const url = `${BASE}/${layerId}/query?where=1%3D1&outFields=*&f=geojson`;
+      const r = await fetch(url);
+      if (!r.ok) return;
+      const data = await r.json();
+      const features = data.features || [];
+      if (!features.length) return;
+
+      // Get current position (FORECAST_HOUR = 0 or first point)
+      const current = features.find(f => (f.properties.FORECAST_HOUR || f.properties.TAU) === 0)
+                   || features[0];
+      const props = current.properties;
+      const name     = props.STORMNAME || props.STORM_NAME || props.NAME || 'Unknown';
+      const type     = props.STORMTYPE || props.STORM_TYPE || props.SSNUM || '';
+      const winds    = props.MAXWIND   || props.MAX_WIND   || props.INTENSITY || '—';
+      const pressure = props.MSLP      || props.MINP       || props.PRESSURE  || '—';
+
+      // Get 120hr forecast point for movement
+      const far = features.find(f => (f.properties.FORECAST_HOUR || f.properties.TAU) === 120)
+               || features[features.length - 1];
+      const farProps = far?.properties || {};
+      const movement = props.MOVEDIR ? `${props.MOVEDIR} @ ${props.MOVESPD || '?'} mph` : '—';
+
+      // Fetch cone polygon to check if user is inside
+      let coneGeoJson = null;
+      try {
+        const coneUrl = `${BASE}/${coneLayers[idx]}/query?where=1%3D1&outFields=*&f=geojson`;
+        const cr = await fetch(coneUrl);
+        if (cr.ok) coneGeoJson = await cr.json();
+      } catch(e) {}
+
+      storms.push({ name, type, winds, pressure, movement, coneGeoJson, layerIdx: idx });
+    } catch(e) {}
+  }));
+
+  return storms.filter(s => s.name && s.name !== 'Unknown');
+}
+
+// Helper: point-in-polygon (ray casting)
+function pointInPolygon(lat, lon, geojson) {
+  if (!geojson?.features?.length) return false;
+  for (const feat of geojson.features) {
+    const geom = feat.geometry;
+    if (!geom) continue;
+    const polys = geom.type === 'Polygon' ? [geom.coordinates]
+                : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+    for (const poly of polys) {
+      const ring = poly[0];
+      if (!ring) continue;
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+        if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi))
+          inside = !inside;
+      }
+      if (inside) return true;
+    }
+  }
+  return false;
+}
+
 async function fetchNearby(lat, lon, stationsUrl) {
   const box = document.getElementById('panelNearby');
   box.innerHTML = `<div class="state-center"><div class="spinner"></div><div class="state-sub" style="margin-top:10px">Loading nearby data…</div></div>`;
@@ -463,6 +579,53 @@ async function fetchNearby(lat, lon, stationsUrl) {
       }
     }
   } catch(e) { console.warn('NWR error:', e); }
+
+  // ── 1. River Gauges (USGS) ──
+  try {
+    if (lat && lon) {
+      const gauges = await fetchRiverGauges(lat, lon);
+      if (gauges && gauges.length) {
+        const cards = gauges.map(g => {
+          const floodColor = g.gage > 20 ? 'var(--red)' : g.gage > 12 ? 'var(--orange)' : g.gage > 8 ? 'var(--yellow)' : 'var(--blue)';
+          const floodLabel = g.gage > 20 ? 'FLOOD' : g.gage > 12 ? 'WATCH' : g.gage > 8 ? 'ELEVATED' : 'NORMAL';
+          const badgeBg = g.gage > 20 ? 'rgba(248,113,113,.15)' : g.gage > 12 ? 'rgba(251,146,60,.15)' : g.gage > 8 ? 'rgba(251,191,36,.12)' : 'rgba(147,197,253,.1)';
+          return `
+          <div class="gauge-card">
+            <div class="gauge-header">
+              <div class="gauge-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3" fill="var(--blue)" stroke="none"/>
+                </svg>
+              </div>
+              <div class="gauge-info">
+                <div class="gauge-name">${g.siteName}</div>
+                <div class="gauge-meta">USGS · ${g.dist} mi away · Stream Gauge</div>
+              </div>
+              <div class="gauge-badge" style="background:${badgeBg};color:${floodColor};border:1px solid ${floodColor}33">${floodLabel}</div>
+            </div>
+            <div class="gauge-readings">
+              <div class="gauge-cell">
+                <span class="gauge-cell-lbl">Gage Ht</span>
+                <span class="gauge-cell-val" style="color:${floodColor}">${g.gage.toFixed(2)}<span style="font-size:10px;color:var(--dim)"> ft</span></span>
+                <span class="gauge-cell-sub">above datum</span>
+              </div>
+              <div class="gauge-cell">
+                <span class="gauge-cell-lbl">Trend</span>
+                <span class="gauge-cell-val ${g.trendClass}" style="font-size:22px">${g.trendArrow}</span>
+                <span class="gauge-cell-sub">${g.trend}</span>
+              </div>
+              <div class="gauge-cell">
+                <span class="gauge-cell-lbl">Distance</span>
+                <span class="gauge-cell-val">${g.dist}<span style="font-size:10px;color:var(--dim)"> mi</span></span>
+                <span class="gauge-cell-sub">from you</span>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+        sections.push(`<div class="section-ttl">River Gauges</div>${cards}`);
+      }
+    }
+  } catch(e) { console.warn('River gauges error:', e); }
 
     // ── 1. Nearest radar station ──
   try {
@@ -511,7 +674,56 @@ async function fetchNearby(lat, lon, stationsUrl) {
     }
   } catch(e) { console.warn('Radar stations error:', e); }
 
-  // ── 2. State alert count ──
+  // ── 2b. Hurricane Tracking (NHC) ──
+  try {
+    if (lat && lon) {
+      const storms = await fetchHurricanes();
+      if (storms && storms.length) {
+        const cards = storms.map(s => {
+          const inCone = pointInPolygon(lat, lon, s.coneGeoJson);
+          const typeLabel = (s.type || '').toString();
+          const cat = parseInt(typeLabel);
+          const stormLabel = !isNaN(cat) && cat >= 1 ? `Category ${cat} Hurricane`
+            : typeLabel.toLowerCase().includes('ts') ? 'Tropical Storm'
+            : typeLabel.toLowerCase().includes('td') ? 'Tropical Depression'
+            : 'Tropical Cyclone';
+          return `
+          <div class="hurr-card">
+            <div class="hurr-header">
+              <div class="hurr-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8a4 4 0 1 0 4 4"/><path d="M12 2v2M2 12h2"/>
+                </svg>
+              </div>
+              <div class="hurr-info">
+                <div class="hurr-name">${s.name}</div>
+                <div class="hurr-type">${stormLabel} · NHC Active Advisory</div>
+              </div>
+              ${inCone ? '<div class="hurr-badge">IN CONE</div>' : ''}
+            </div>
+            <div class="hurr-details">
+              <div class="hurr-cell">
+                <span class="hurr-cell-lbl">Max Winds</span>
+                <span class="hurr-cell-val" style="color:var(--orange)">${s.winds}<span style="font-size:10px;color:var(--dim)"> kt</span></span>
+              </div>
+              <div class="hurr-cell">
+                <span class="hurr-cell-lbl">Pressure</span>
+                <span class="hurr-cell-val">${s.pressure}<span style="font-size:10px;color:var(--dim)"> mb</span></span>
+              </div>
+              <div class="hurr-cell">
+                <span class="hurr-cell-lbl">Movement</span>
+                <span class="hurr-cell-val" style="font-size:11px">${s.movement}</span>
+              </div>
+            </div>
+            ${inCone ? '<div class="hurr-threat"><svg width="12" height="12" viewBox="0 0 16 16" fill="var(--orange)"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-3.5a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5m0 6a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5"/></svg> Your location is within the forecast cone</div>' : ''}
+          </div>`;
+        }).join('');
+        sections.push(`<div class="section-ttl">Active Tropical Storms</div>${cards}`);
+      }
+    }
+  } catch(e) { console.warn('Hurricane fetch error:', e); }
+
+    // ── 2. State alert count ──
   try {
     if (curState) {
       const stateMap = {'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA','Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD','Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT','Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY'};
