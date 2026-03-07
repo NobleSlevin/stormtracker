@@ -728,12 +728,14 @@ function aqiHTML(aq) {
   const aqiColor = _aqiC.hex;
   const aqiBg    = _aqiC.bg;
   const aqiBorder = _aqiC.border;
-  const pollCells = aq.pollutants.slice(0, 3).map(p => `
-    <div class="aqi-cell">
+  const pollCells = aq.pollutants.slice(0, 3).map(p => {
+    const pc = gradientColor(Math.min(p.aqi, 300) / 300);
+    return `<div class="aqi-cell">
       <span class="aqi-cell-lbl">${p.name}</span>
-      <span class="aqi-cell-val">${p.aqi}</span>
+      <span class="aqi-cell-val" style="color:${pc.hex}">${p.aqi}</span>
       <span class="aqi-cell-sub">${p.category}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   const padCells = aq.pollutants.length < 3
     ? Array(3 - aq.pollutants.length).fill('<div class="aqi-cell"></div>').join('') : '';
   return `
@@ -746,7 +748,6 @@ function aqiHTML(aq) {
           </svg>
         </div>
         <div class="aqi-info">
-          <div class="aqi-category" style="color:${aqiColor}">${aq.category}</div>
           <div class="aqi-area">Open-Meteo · US AQI</div>
         </div>
         <div class="aqi-badge" style="background:${aqiBg};color:${aqiColor};border:1px solid ${aqiBorder}">${aq.category}</div>
@@ -805,7 +806,6 @@ function renderUVSlot() {
           </svg>
         </div>
         <div class="uv-info">
-          <div class="uv-category" style="color:${uvColor}">${uvCat}</div>
           <div class="uv-area">Open-Meteo · WHO Scale</div>
         </div>
         <div class="uv-badge" style="background:${uvBg};color:${uvColor};border:1px solid ${uvBorder}">${uvCat}</div>
