@@ -365,6 +365,9 @@ function renderForecast(periods){
     +'<div id="aqiSlot"></div>'
     +'<div id="uvSlot"></div>'
     +'<div class="fc-days">'+rows+'</div>';
+  // Repaint cached AQI + UV immediately so slots never appear blank on re-render
+  if (_aqiCache) { const s=document.getElementById('aqiSlot'); if(s) s.innerHTML=aqiHTML(_aqiCache); }
+  if (window._uvData != null) renderUVSlot();
   document.getElementById('hourlyToggle').addEventListener('click', () => {
     document.getElementById('hourlyToggle').classList.toggle('open');
     document.getElementById('hourlyScroll').classList.toggle('open');
@@ -466,10 +469,8 @@ function aqiHTML(aq) {
           </svg>
         </div>
         <div class="aqi-info">
+          <div class="aqi-category" style="color:${aqiColor}">${aq.category}</div>
           <div class="aqi-area">Open-Meteo · US AQI</div>
-        </div>
-        <div class="aqi-badge" style="background:${aqiBg};color:${aqiColor};border:1px solid ${aqiBorder}">
-          ${aq.category}
         </div>
         <div class="aqi-score" style="color:${aqiColor}">${aq.aqi}</div>
       </div>
@@ -479,15 +480,17 @@ function aqiHTML(aq) {
 }
 
 async function renderAQISlot(lat, lon) {
-  const slot = document.getElementById('aqiSlot');
-  if (!slot) return;
-  // Paint cached result immediately to prevent flicker on refresh
-  if (_aqiCache) slot.innerHTML = aqiHTML(_aqiCache);
+  // Paint cache first (already done by renderForecast, but safe to repeat)
+  const paintSlot = (aq) => {
+    const slot = document.getElementById('aqiSlot');
+    if (slot) slot.innerHTML = aqiHTML(aq);
+  };
+  if (_aqiCache) paintSlot(_aqiCache);
   try {
     const aq = await fetchAQI(lat, lon);
     if (!aq) return;
     _aqiCache = aq;
-    slot.innerHTML = aqiHTML(aq);
+    paintSlot(aq); // only update when real data arrives — no blank flash
   } catch(e) { console.warn('AQI slot error:', e); }
 }
 
@@ -524,9 +527,9 @@ function renderUVSlot() {
           </svg>
         </div>
         <div class="uv-info">
+          <div class="uv-category" style="color:${uvColor}">${uvCat}</div>
           <div class="uv-area">Open-Meteo · WHO Scale</div>
         </div>
-        <div class="uv-badge" style="background:${uvBg};color:${uvColor};border:1px solid ${uvBorder}">${uvCat}</div>
         <div class="uv-score" style="color:${uvColor}">${uvRounded}</div>
       </div>
       ${rangeBar(uv, 11, 'linear-gradient(to right, #4ade80 0%, #a3e635 18%, #fbbf24 36%, #fb923c 55%, #f87171 73%, #c084fc 100%)')}
