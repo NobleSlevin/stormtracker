@@ -400,18 +400,14 @@ async function fetchObservations(stationsUrl) {
     const pressMb = paToMb(p.barometricPressure?.value);
     const visMi  = mToMi(p.visibility?.value);
     const set = (id, val) => { if (val != null) document.getElementById(id).textContent = val; };
-    set('obsTemp',  tempF);
+    // NWS obs provides station-level detail fields only.
+    // Open-Meteo owns obsTemp, the hero temp, and feels-like — it is spatially accurate and never stale.
+    // NWS obs station can be 20-40 mi away and report an hour behind, so we never use it for temp display.
     set('obsHumid', humid);
     set('obsDew',   dewF);
     set('obsWind',  windMph);
     set('obsPress', pressMb);
     set('obsVis',   visMi);
-    // Flag that NWS obs has a real temp — hero should show this, not OM's estimate
-    if (tempF != null) {
-      window._nwsObsTemp = tempF;
-      const tempEl = document.querySelector('.fch-temp');
-      if (tempEl) tempEl.innerHTML = `${tempF}<sup>°F</sup>`;
-    }
     document.getElementById('obsStrip').classList.add('show');
     // Store station id for Nearby tab
     return { stationId, name: st.features?.[0]?.properties?.name || stationId };
@@ -1264,9 +1260,7 @@ async function fetchOpenMeteo(lat, lon) {
     // Cloud cover %
     if (c.cloud_cover != null) set('obsCloud', c.cloud_cover);
 
-    // Fill temp/humid/dew from OM if NWS obs hasn't populated them yet
-    if (document.getElementById('obsTemp').textContent === '—' && c.temperature_2m != null)
-      set('obsTemp', Math.round(c.temperature_2m));
+    // Fill humid/dew from OM if NWS obs hasn't populated them yet
     if (document.getElementById('obsHumid').textContent === '—' && c.relative_humidity_2m != null)
       set('obsHumid', Math.round(c.relative_humidity_2m));
     if (document.getElementById('obsDew').textContent === '—' && c.dew_point_2m != null)
@@ -1276,17 +1270,13 @@ async function fetchOpenMeteo(lat, lon) {
 
     document.getElementById('obsStrip').classList.add('show');
 
-    // Patch hero temp — only use OM if NWS obs station hasn't provided a real reading
+    // Open-Meteo owns the hero temp — it is spatially accurate and up-to-the-hour.
+    // NWS obs stations can be miles away and report stale readings; they do not set the hero.
     const tempEl = document.querySelector('.fch-temp');
     if (tempEl) {
-      if (window._nwsObsTemp != null) {
-        // NWS obs already won — ensure hero shows it (OM shouldn't override)
-        if (tempEl.textContent.includes('—')) {
-          tempEl.innerHTML = `${window._nwsObsTemp}<sup>°F</sup>`;
-        }
-      } else if (c?.temperature_2m != null) {
-        // No NWS obs yet — use OM as best available
+      if (c?.temperature_2m != null) {
         tempEl.innerHTML = `${Math.round(c.temperature_2m)}<sup>°F</sup>`;
+        set('obsTemp', Math.round(c.temperature_2m));
       } else if (window._nwsHeroTemp) {
         tempEl.innerHTML = `${window._nwsHeroTemp}<sup>°F</sup>`;
       }
@@ -1312,7 +1302,6 @@ async function fetchOpenMeteo(lat, lon) {
 }
 
 async function fetchForPoint(lat, lon) {
-  window._nwsObsTemp = null; // reset so new location doesn't inherit stale obs temp
   const [fc] = await Promise.all([
     fetchForecast(lat, lon),
     fetchAlerts(`${NWS}/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`),
