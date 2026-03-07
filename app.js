@@ -24,7 +24,6 @@ const OM  = 'https://api.open-meteo.com/v1/forecast';
 let allAlerts = [], activeFilter = 'all', refreshTimer = null;
 let curLat = null, curLon = null, curMode = null, curState = null;
 let omData = null; // Open-Meteo current data
-let lastPeriods = null; // for re-rendering hero after OM loads
 
 // ── TABS ──────────────────────────────────────────
 document.querySelectorAll('.tab').forEach(btn => {
@@ -185,7 +184,6 @@ async function fetchForecast(lat, lon) {
     if(pp.forecast){
       const fc=await nwsFetch(pp.forecast);
       results.periods=fc.properties?.periods||[];
-      lastPeriods = results.periods;
       renderForecast(results.periods);
     }
     if(pp.forecastHourly){
@@ -735,8 +733,21 @@ async function fetchOpenMeteo(lat, lon) {
 
     document.getElementById('obsStrip').classList.add('show');
 
-    // Re-render forecast hero with real current temp now that OM data is available
-    if (lastPeriods?.length) renderForecast(lastPeriods);
+    // Patch hero temp in-place — avoid full re-render which destroys hourly toggle state
+    const tempEl = document.querySelector('.fch-temp');
+    if (tempEl && omC?.temperature_2m != null) {
+      tempEl.innerHTML = `${Math.round(omC.temperature_2m)}<sup>°F</sup>`;
+    }
+    // Insert feels-like line if not already present
+    if (omC?.apparent_temperature != null) {
+      let feelsEl = document.querySelector('.fch-feels');
+      if (!feelsEl) {
+        feelsEl = document.createElement('div');
+        feelsEl.className = 'fch-feels';
+        tempEl?.insertAdjacentElement('afterend', feelsEl);
+      }
+      feelsEl.textContent = `Feels like ${Math.round(omC.apparent_temperature)}°`;
+    }
   } catch(e) { console.warn('Open-Meteo error:', e); }
 }
 
