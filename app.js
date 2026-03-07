@@ -286,7 +286,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const adv = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('advisory')).length;
       const countColor = sa.length >= 10 ? 'var(--red)' : sa.length >= 5 ? 'var(--orange)' : sa.length > 0 ? 'var(--yellow)' : 'var(--green)';
       const stateFlags = {'AL':'AL','AK':'AK','AZ':'AZ','AR':'AR','CA':'CA','CO':'CO','CT':'CT','DE':'DE','FL':'FL','GA':'GA','HI':'HI','ID':'ID','IL':'IL','IN':'IN','IA':'IA','KS':'KS','KY':'KY','LA':'LA','ME':'ME','MD':'MD','MA':'MA','MI':'MI','MN':'MN','MS':'MS','MO':'MO','MT':'MT','NE':'NE','NV':'NV','NH':'NH','NJ':'NJ','NM':'NM','NY':'NY','NC':'NC','ND':'ND','OH':'OH','OK':'OK','OR':'OR','PA':'PA','RI':'RI','SC':'SC','SD':'SD','TN':'TN','TX':'TX','UT':'UT','VT':'VT','VA':'VA','WA':'WA','WV':'WV','WI':'WI','WY':'WY'};
-      const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
+      const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
       sections.push(`
         <div class="section-ttl">State Alerts — ${curState}</div>
         <div class="state-alert-card">
