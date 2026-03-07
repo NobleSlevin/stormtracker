@@ -38,29 +38,9 @@ document.querySelectorAll('.tab').forEach(btn => {
     // Leaflet needs size invalidation when its container becomes visible
     if (t === 'radar') {
       if (!rvInited && curLat) {
-        // First time — init the map
         initRadar(curLat, curLon);
       } else if (rvMap) {
-        setTimeout(() => {
-          const mapEl = document.getElementById('radarMap');
-          if (mapEl) {
-            const bar = document.querySelector('.radar-bar');
-            const barH = bar ? bar.offsetHeight : 44;
-            const tabsEl = document.querySelector('.tabs');
-            const tabsH = tabsEl ? tabsEl.offsetHeight : 44;
-            const obsEl = document.getElementById('obsStrip');
-            const obsH = (obsEl && obsEl.classList.contains('show')) ? obsEl.offsetHeight : 0;
-            const statsEl = document.querySelector('.stat-bar');
-            const statsH = statsEl ? statsEl.offsetHeight : 56;
-            const hdrEl = document.querySelector('.hdr');
-            const hdrH = hdrEl ? hdrEl.offsetHeight : 88;
-            const tickerEl = document.querySelector('.ticker');
-            const tickerH = tickerEl ? tickerEl.offsetHeight : 28;
-            const available = window.innerHeight - hdrH - obsH - statsH - tabsH - barH - tickerH - 2;
-            mapEl.style.height = Math.max(200, available) + 'px';
-          }
-          rvMap.invalidateSize();
-        }, 60);
+        setTimeout(() => rvMap.invalidateSize(), 60);
       }
     }
   });
@@ -758,28 +738,7 @@ function initRadar(lat, lon) {
         </div>
       </div>`;
 
-    // Size the map to fill available space
-    function sizeRadarMap() {
-      const mapEl = document.getElementById('radarMap');
-      if (!mapEl) return;
-      // Total viewport minus: obs strip, stat bar, tab bar, radar-bar (~44px), ticker (~28px)
-      const bar = document.querySelector('.radar-bar');
-      const barH = bar ? bar.offsetHeight : 44;
-      const tabsEl = document.querySelector('.tabs');
-      const tabsH = tabsEl ? tabsEl.offsetHeight : 44;
-      const obsEl = document.getElementById('obsStrip');
-      const obsH = (obsEl && obsEl.classList.contains('show')) ? obsEl.offsetHeight : 0;
-      const statsEl = document.querySelector('.stat-bar');
-      const statsH = statsEl ? statsEl.offsetHeight : 56;
-      const hdrEl = document.querySelector('.hdr');
-      const hdrH = hdrEl ? hdrEl.offsetHeight : 88;
-      const tickerEl = document.querySelector('.ticker');
-      const tickerH = tickerEl ? tickerEl.offsetHeight : 28;
-      const available = window.innerHeight - hdrH - obsH - statsH - tabsH - barH - tickerH - 2;
-      mapEl.style.height = Math.max(200, available) + 'px';
-    }
-    sizeRadarMap();
-    window.addEventListener('resize', () => { sizeRadarMap(); if (rvMap) rvMap.invalidateSize(); });
+    window.addEventListener('resize', () => { if (rvMap) rvMap.invalidateSize(); });
 
     // Init Leaflet map
     rvMap = L.map('radarMap', {
