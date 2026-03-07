@@ -1601,6 +1601,7 @@ function initRadar(lat, lon) {
 
   // Build map container if not yet created
   if (!rvInited) {
+    panel.style.cssText = 'flex:1;min-height:0;display:flex;flex-direction:column;';
     panel.innerHTML = `
       <div id="radarMap"></div>
       <div class="radar-bar">
