@@ -20,6 +20,96 @@ window.addEventListener('load', () => {
 });
 
 const NWS = 'https://api.weather.gov';
+
+const NWR_STATIONS=[
+  {st:"TX",city:"Fort Worth",call:"KEC55",freq:162.55,url:"https://radio.weatherusa.net/NWR/KEC55.mp3",lat:32.7555,lon:-97.3308},
+  {st:"TX",city:"Dallas",call:"KEC56",freq:162.4,url:"https://radio.weatherusa.net/NWR/KEC56.mp3",lat:32.7767,lon:-96.797},
+  {st:"TX",city:"Austin",call:"WXK27",freq:162.4,url:"https://radio.weatherusa.net/NWR/WXK27.mp3",lat:30.2672,lon:-97.7431},
+  {st:"TX",city:"Waco",call:"WXK35",freq:162.475,url:"https://radio.weatherusa.net/NWR/WXK35.mp3",lat:31.5493,lon:-97.1467},
+  {st:"TX",city:"Corsicana",call:"KXI87",freq:162.525,url:"https://radio.weatherusa.net/NWR/KXI87.mp3",lat:32.0954,lon:-96.4689},
+  {st:"TX",city:"Palestine",call:"KWN34",freq:162.45,url:"https://radio.weatherusa.net/NWR/KWN34.mp3",lat:31.7621,lon:-95.6307},
+  {st:"TX",city:"Galveston",call:"KHB40",freq:162.55,url:"https://radio.weatherusa.net/NWR/KHB40.mp3",lat:29.3013,lon:-94.7977},
+  {st:"TX",city:"Houston",call:"KGG68",freq:162.4,url:"https://radio.weatherusa.net/NWR/KGG68.mp3",lat:29.7604,lon:-95.3698},
+  {st:"TX",city:"Tyler",call:"WXK36",freq:162.475,url:"https://radio.weatherusa.net/NWR/WXK36.mp3",lat:32.3513,lon:-95.3011},
+  {st:"TX",city:"College Station",call:"WXK30",freq:162.4,url:"https://radio.weatherusa.net/NWR/WXK30.mp3",lat:30.628,lon:-96.3344},
+  {st:"TX",city:"Corpus Christi",call:"KHB41",freq:162.55,url:"https://radio.weatherusa.net/NWR/KHB41.mp3",lat:27.8006,lon:-97.3964},
+  {st:"TX",city:"Amarillo",call:"WXK38",freq:162.4,url:"https://radio.weatherusa.net/NWR/WXK38.mp3",lat:35.222,lon:-101.8313},
+  {st:"TX",city:"Odessa",call:"WXK32",freq:162.4,url:"https://radio.weatherusa.net/NWR/WXK32.mp3",lat:31.8457,lon:-102.3676},
+  {st:"OK",city:"Oklahoma City",call:"WXK85",freq:162.4,url:"https://radio.weatherusa.net/NWR/WXK85.mp3",lat:35.4676,lon:-97.5164},
+  {st:"OK",city:"Tulsa",call:"KIH27",freq:162.55,url:"https://radio.weatherusa.net/NWR/KIH27.mp3",lat:36.154,lon:-95.9928},
+  {st:"OK",city:"Lawton",call:"WXK86",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXK86.mp3",lat:34.6036,lon:-98.3959},
+  {st:"OK",city:"Stillwater",call:"WNG654",freq:162.5,url:"https://radio.weatherusa.net/NWR/WNG654.mp3",lat:36.1156,lon:-97.0584},
+  {st:"LA",city:"Shreveport",call:"WXJ97",freq:162.4,url:"https://wxradio.org/LA-Shreveport-WXJ97",lat:32.5252,lon:-93.7502},
+  {st:"LA",city:"Baton Rouge",call:"KHB46",freq:162.4,url:"https://radio.weatherusa.net/NWR/KHB46.mp3",lat:30.4515,lon:-91.1871},
+  {st:"LA",city:"Monroe",call:"WXJ96",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXJ96_2.mp3",lat:32.5093,lon:-92.1193},
+  {st:"LA",city:"Lafayette",call:"WXK80",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXK80.mp3",lat:30.2241,lon:-92.0198},
+  {st:"TN",city:"Memphis",call:"WXK49",freq:162.475,url:"https://radio.weatherusa.net/NWR/WXK49.mp3",lat:35.1495,lon:-90.049},
+  {st:"TN",city:"Nashville",call:"KIG79",freq:162.55,url:"https://radio.weatherusa.net/NWR/KIG79.mp3",lat:36.1627,lon:-86.7816},
+  {st:"GA",city:"Atlanta",call:"KEC80",freq:162.55,url:"https://wxradio.org/GA-Atlanta-KEC80",lat:33.749,lon:-84.388},
+  {st:"GA",city:"Athens",call:"WXK56",freq:162.4,url:"https://wxradio.org/GA-Athens-WXK56",lat:33.9519,lon:-83.3576},
+  {st:"FL",city:"Miami",call:"KHB34",freq:162.55,url:"https://radio.weatherusa.net/NWR/KHB34.mp3",lat:25.7617,lon:-80.1918},
+  {st:"FL",city:"Tampa Bay",call:"KHB32",freq:162.55,url:"https://wxradio.org/FL-TampaBay-KHB32",lat:27.9506,lon:-82.4572},
+  {st:"FL",city:"Orlando",call:"KIH63",freq:162.475,url:"https://wxradio.org/FL-Orlando-KIH63",lat:28.5384,lon:-81.3789},
+  {st:"FL",city:"Tallahassee",call:"KIH24",freq:162.4,url:"https://wxradio.org/FL-Tallahassee-KIH24",lat:30.4383,lon:-84.2807},
+  {st:"AL",city:"Mobile",call:"KEC61",freq:162.55,url:"https://radio.weatherusa.net/NWR/KEC61_2.mp3",lat:30.6954,lon:-88.0399},
+  {st:"MS",city:"Tupelo",call:"KIH53",freq:162.4,url:"https://radio.weatherusa.net/NWR/KIH53.mp3",lat:34.2576,lon:-88.7034},
+  {st:"SC",city:"Greer",call:"WXJ21",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXJ21.mp3",lat:34.9387,lon:-82.2271},
+  {st:"NC",city:"Charlotte",call:"WXL70",freq:162.475,url:"https://wxradio.org/NC-Charlotte-WXL70",lat:35.2271,lon:-80.8431},
+  {st:"VA",city:"Manassas",call:"KHB36",freq:162.55,url:"https://radio.weatherusa.net/NWR/KHB36.mp3",lat:38.7509,lon:-77.4753},
+  {st:"MD",city:"Baltimore",call:"KEC83",freq:162.4,url:"https://radio.weatherusa.net/NWR/KEC83_3.mp3",lat:39.2904,lon:-76.6122},
+  {st:"MD",city:"Hagerstown",call:"WXM42",freq:162.475,url:"https://noaa-manassas-radio.from-va.com/Hagerstown.mp3",lat:39.6418,lon:-77.7199},
+  {st:"PA",city:"Philadelphia",call:"KIH28",freq:162.475,url:"https://radio.weatherusa.net/NWR/KIH28.mp3",lat:39.9526,lon:-75.1652},
+  {st:"PA",city:"Pittsburgh",call:"KIH35",freq:162.55,url:"https://radio.weatherusa.net/NWR/KIH35.mp3",lat:40.4406,lon:-79.9959},
+  {st:"PA",city:"Harrisburg",call:"WXL40",freq:162.55,url:"https://wxradio.org/PA-Harrisburg-WXL40",lat:40.2732,lon:-76.8867},
+  {st:"NY",city:"New York City",call:"KWO35",freq:162.55,url:"https://www.saucci.net:8443/audio3.ogg",lat:40.7128,lon:-74.006},
+  {st:"NY",city:"Albany",call:"WXL34",freq:162.55,url:"https://wxradio.org/NY-Albany-WXL34",lat:42.6526,lon:-73.7562},
+  {st:"NY",city:"Rochester",call:"KHA53",freq:162.4,url:"https://wxradio.org/NY-Rochester-KHA53",lat:43.1566,lon:-77.6088},
+  {st:"NY",city:"Syracuse",call:"WXL31",freq:162.55,url:"https://wxradio.org/NY-Syracuse-WXL31",lat:43.0481,lon:-76.1474},
+  {st:"NY",city:"Buffalo",call:"KEB98",freq:162.55,url:"https://radio.weatherusa.net/NWR/KEB98.mp3",lat:42.8864,lon:-78.8784},
+  {st:"MA",city:"Boston",call:"KHB35",freq:162.475,url:"https://radio.weatherusa.net/NWR/KHB35_3.mp3",lat:42.3601,lon:-71.0589},
+  {st:"MA",city:"Worcester",call:"WXL93",freq:162.55,url:"https://wxradio.org/MA-Worcester-WXL93",lat:42.2626,lon:-71.8023},
+  {st:"CT",city:"Meriden",call:"WXJ42",freq:162.4,url:"https://wxradio.org/CT-Meriden-WXJ42",lat:41.5382,lon:-72.7898},
+  {st:"OH",city:"Columbus",call:"KIG86",freq:162.55,url:"https://radio.weatherusa.net/NWR/KIG86.mp3",lat:39.9612,lon:-82.9988},
+  {st:"OH",city:"Toledo",call:"WXL51",freq:162.5,url:"https://radio.weatherusa.net/NWR/WXL51.mp3",lat:41.6639,lon:-83.5552},
+  {st:"OH",city:"Grafton",call:"WNG698",freq:162.5,url:"https://wxradio.org/OH-Grafton-WNG698",lat:41.2778,lon:-82.0224},
+  {st:"MI",city:"Detroit",call:"KEC63",freq:162.55,url:"https://radio.weatherusa.net/NWR/KEC63.mp3",lat:42.3314,lon:-83.0458},
+  {st:"MI",city:"Hesperia",call:"WWF36",freq:162.475,url:"https://wxradio.org/MI-Hesperia-WWF36",lat:43.5686,lon:-85.9908},
+  {st:"IN",city:"Indianapolis",call:"KEC74",freq:162.55,url:"https://wxradio.org/IN-Indianapolis-KEC74",lat:39.7684,lon:-86.1581},
+  {st:"IN",city:"South Bend",call:"WXJ57",freq:162.4,url:"https://wxradio.org/IN-SouthBend-WXJ57",lat:41.6764,lon:-86.252},
+  {st:"IL",city:"Chicago",call:"KWO39",freq:162.55,url:"https://radio.weatherusa.net/NWR/KWO39.mp3",lat:41.8781,lon:-87.6298},
+  {st:"IL",city:"Champaign",call:"WXJ76",freq:162.55,url:"https://wxradio.org/IL-Champaign-WXJ76",lat:40.1164,lon:-88.2434},
+  {st:"IL",city:"Peoria",call:"WXJ71",freq:162.475,url:"https://wxradio.org/IL-Peoria-WXJ71",lat:40.6936,lon:-89.589},
+  {st:"WI",city:"Green Bay",call:"KIG65",freq:162.55,url:"https://radio.weatherusa.net/NWR/KIG65.mp3",lat:44.5133,lon:-88.0133},
+  {st:"WI",city:"Menomonie",call:"WXJ88",freq:162.4,url:"https://wxradio.org/WI-Menomonie-WXJ88",lat:44.8758,lon:-91.9193},
+  {st:"MN",city:"Minneapolis",call:"KEC65",freq:162.55,url:"https://radio.weatherusa.net/NWR/KEC65.mp3",lat:44.9778,lon:-93.265},
+  {st:"MN",city:"La Crescent",call:"WXJ86",freq:162.55,url:"https://wxradio.org/MN-LaCrescent-WXJ86",lat:43.8286,lon:-91.2999},
+  {st:"MO",city:"St. Louis",call:"KDO89",freq:162.55,url:"https://wxradio.org/MO-StLouis-KDO89",lat:38.627,lon:-90.1994},
+  {st:"MO",city:"Kansas City",call:"KID77",freq:162.55,url:"https://radio.weatherusa.net/NWR/KID77_3.mp3",lat:39.0997,lon:-94.5786},
+  {st:"MO",city:"Springfield",call:"WXL46",freq:162.4,url:"https://wxradio.org/MO-Springfield-WXL46",lat:37.209,lon:-93.2923},
+  {st:"KS",city:"Topeka",call:"WXK91",freq:162.475,url:"https://wxradio.org/KS-Topeka-WXK91-alt1",lat:39.0473,lon:-95.6752},
+  {st:"NE",city:"Omaha",call:"KIH61",freq:162.4,url:"https://radio.weatherusa.net/NWR/KIH61.mp3",lat:41.2565,lon:-95.9345},
+  {st:"NE",city:"Lincoln",call:"WXM20",freq:162.475,url:"https://wxradio.org/NE-Lincoln-WXM20-alt1",lat:40.8136,lon:-96.7026},
+  {st:"NE",city:"Grand Island",call:"WXL74",freq:162.4,url:"https://wxradio.org/NE-GrandIsland-WXL74",lat:40.925,lon:-98.342},
+  {st:"IA",city:"Sioux City",call:"WXL62",freq:162.475,url:"https://wxradio.org/IA-Sioux_City-WXL62",lat:42.4999,lon:-96.4003},
+  {st:"IA",city:"Des Moines",call:"WXL57",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXL57.mp3",lat:41.5868,lon:-93.625},
+  {st:"ND",city:"Bismarck",call:"WXL78",freq:162.475,url:"https://wxradio.org/ND-Bismarck-WXL78",lat:46.8083,lon:-100.7837},
+  {st:"KY",city:"Frankfort",call:"WZ2523",freq:162.5,url:"https://wxradio.org/KY-Frankfort-WZ2523",lat:38.2009,lon:-84.8733},
+  {st:"KY",city:"Owenton",call:"KZZ48",freq:162.45,url:"https://wxradio.org/KY-Owenton-KZZ48",lat:38.5373,lon:-84.8388},
+  {st:"WV",city:"Parkersburg",call:"WXM70",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXM70.mp3",lat:39.2667,lon:-81.5615},
+  {st:"NM",city:"Farmington",call:"WXJ37",freq:162.475,url:"https://radio.weatherusa.net/NWR/WXJ37.mp3",lat:36.7281,lon:-108.2087},
+  {st:"NM",city:"Albuquerque",call:"WXJ34",freq:162.4,url:"https://radio.weatherusa.net/NWR/WXJ34.mp3",lat:35.0844,lon:-106.6504},
+  {st:"AZ",city:"Phoenix",call:"KEC94",freq:162.55,url:"https://wxradio.org/AZ-Phoenix-KEC94",lat:33.4484,lon:-112.074},
+  {st:"AZ",city:"Globe",call:"WWG42",freq:162.5,url:"https://wxradio.org/AZ-Globe-WWG42",lat:33.3942,lon:-110.786},
+  {st:"NV",city:"Reno",call:"WXK58",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXK58.mp3",lat:39.5296,lon:-119.8138},
+  {st:"CA",city:"San Diego",call:"KEC62",freq:162.4,url:"https://radio.weatherusa.net/NWR/KEC62_2.mp3",lat:32.7157,lon:-117.1611},
+  {st:"CA",city:"Fresno",call:"KIH62",freq:162.4,url:"https://radio.weatherusa.net/NWR/KIH62_2.mp3",lat:36.7378,lon:-119.7871},
+  {st:"CA",city:"San Francisco",call:"KEC49",freq:162.55,url:"https://wxradio.org/CA-Monterey-KEC49",lat:37.7749,lon:-122.4194},
+  {st:"HI",city:"Maui",call:"WWG75",freq:162.4,url:"https://wxradio.org/HI-Maui-WWG75",lat:20.7984,lon:-156.3319},
+  {st:"ME",city:"Dresden",call:"WSM60",freq:162.475,url:"https://wxradio.org/ME-Dresden-WSM60",lat:44.0787,lon:-69.7442}
+];
+
+// 84 stations
+
 const OM  = 'https://api.open-meteo.com/v1/forecast';
 let allAlerts = [], activeFilter = 'all', refreshTimer = null;
 let curLat = null, curLon = null, curMode = null, curState = null;
@@ -35,6 +125,8 @@ document.querySelectorAll('.tab').forEach(btn => {
     const map = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby', radar:'tabRadar', tornado:'tabTornado'};
     document.getElementById(map[t]).classList.add('on');
     document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
+    const bodyEl = document.getElementById('body');
+    if (bodyEl) bodyEl.classList.toggle('radar-active', t === 'radar');
     // Leaflet needs size invalidation when its container becomes visible
     if (t === 'radar') {
       if (!rvInited && curLat) {
@@ -333,7 +425,41 @@ async function fetchNearby(lat, lon, stationsUrl) {
 
   const sections = [];
 
-  // ── 1. Nearest radar station ──
+  // ── 0. Nearest NOAA Weather Radio station ──
+  try {
+    if (lat && lon) {
+      let nearest = null, nearestDist = Infinity;
+      for (const s of NWR_STATIONS) {
+        const dist = Math.sqrt(Math.pow(s.lat - lat, 2) + Math.pow(s.lon - lon, 2));
+        if (dist < nearestDist) { nearestDist = dist; nearest = s; }
+      }
+      if (nearest) {
+        const miles = Math.round(Math.sqrt(Math.pow((nearest.lat-lat)*69,2) + Math.pow((nearest.lon-lon)*54,2)));
+        const sid = `nwr-${nearest.call}`;
+        sections.push(`
+          <div class="section-ttl">NOAA Weather Radio</div>
+          <div class="nwr-card" id="nwrCard-${nearest.call}">
+            <div class="nwr-top">
+              <div class="nwr-icon">
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="var(--blue)"><path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-5.656a.5.5 0 0 1 .707-.707 8 8 0 0 1 0 11.314.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9m-2.121 2.121a.5.5 0 0 1 .707-.707 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.657zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></svg>
+              </div>
+              <div class="nwr-info">
+                <div class="nwr-name">${nearest.city}, ${nearest.st}</div>
+                <div class="nwr-meta">${nearest.call} &nbsp;·&nbsp; ${nearest.freq.toFixed(3)} MHz &nbsp;·&nbsp; ${miles} mi away</div>
+              </div>
+              <button class="nwr-play-btn" id="${sid}" onclick="nwrToggle('${nearest.call}','${nearest.url.replace(/'/g,"\\'")}',this)" aria-label="Play weather radio">
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" class="nwr-play-icon"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/></svg>
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" class="nwr-stop-icon" style="display:none"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5m5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5"/></svg>
+              </button>
+            </div>
+            <div class="nwr-status" id="nwr-status-${nearest.call}">Tap to listen live</div>
+            <div class="nwr-disclaimer">⚠ Do not rely on internet streams for life-safety alerts. Use a dedicated NOAA weather radio receiver.</div>
+          </div>`);
+      }
+    }
+  } catch(e) { console.warn('NWR error:', e); }
+
+    // ── 1. Nearest radar station ──
   try {
     const radars = await nwsFetch(`${NWS}/radar/stations`);
     const stations = radars.features || [];
@@ -1071,3 +1197,77 @@ window.addEventListener('load',()=>{
   document.querySelectorAll('.cmb').forEach(b=>b.addEventListener('click',()=>applySpiderMode(b.dataset.cm)));
   doNational();
 });
+
+// ── NOAA Weather Radio player ──────────────────────────────────────────────
+let nwrAudio = null;
+let nwrActiveCall = null;
+
+function nwrToggle(callsign, url, btn) {
+  const statusEl = document.getElementById(`nwr-status-${callsign}`);
+  const playIcon = btn.querySelector('.nwr-play-icon');
+  const stopIcon = btn.querySelector('.nwr-stop-icon');
+
+  // If already playing this station — stop
+  if (nwrActiveCall === callsign && nwrAudio && !nwrAudio.paused) {
+    nwrAudio.pause();
+    nwrAudio.src = '';
+    nwrActiveCall = null;
+    playIcon.style.display = '';
+    stopIcon.style.display = 'none';
+    btn.classList.remove('playing');
+    if (statusEl) statusEl.textContent = 'Tap to listen live';
+    return;
+  }
+
+  // Stop any previous stream
+  if (nwrAudio) { nwrAudio.pause(); nwrAudio.src = ''; }
+  // Reset any previous button
+  if (nwrActiveCall && nwrActiveCall !== callsign) {
+    const prevBtn = document.getElementById(`nwr-${nwrActiveCall}`);
+    if (prevBtn) {
+      prevBtn.querySelector('.nwr-play-icon').style.display = '';
+      prevBtn.querySelector('.nwr-stop-icon').style.display = 'none';
+      prevBtn.classList.remove('playing');
+    }
+    const prevStatus = document.getElementById(`nwr-status-${nwrActiveCall}`);
+    if (prevStatus) prevStatus.textContent = 'Tap to listen live';
+  }
+
+  // Start new stream
+  if (statusEl) statusEl.textContent = 'Connecting…';
+  btn.classList.add('loading');
+  nwrAudio = new Audio(url);
+  nwrAudio.preload = 'none';
+  nwrActiveCall = callsign;
+
+  nwrAudio.addEventListener('playing', () => {
+    btn.classList.remove('loading');
+    btn.classList.add('playing');
+    playIcon.style.display = 'none';
+    stopIcon.style.display = '';
+    if (statusEl) statusEl.textContent = '🔴 LIVE — Broadcasting';
+  });
+  nwrAudio.addEventListener('error', () => {
+    btn.classList.remove('loading', 'playing');
+    playIcon.style.display = '';
+    stopIcon.style.display = 'none';
+    nwrActiveCall = null;
+    if (statusEl) statusEl.textContent = '⚠ Stream unavailable — try again later';
+  });
+  nwrAudio.addEventListener('stalled', () => {
+    if (statusEl) statusEl.textContent = 'Buffering…';
+  });
+  nwrAudio.addEventListener('ended', () => {
+    btn.classList.remove('playing');
+    playIcon.style.display = '';
+    stopIcon.style.display = 'none';
+    nwrActiveCall = null;
+    if (statusEl) statusEl.textContent = 'Stream ended';
+  });
+
+  nwrAudio.play().catch(() => {
+    btn.classList.remove('loading');
+    if (statusEl) statusEl.textContent = '⚠ Could not start stream';
+    nwrActiveCall = null;
+  });
+}
