@@ -125,7 +125,7 @@ function wxIcon(s, size=18) {
     // cloudy / overcast / default
     path = `<path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.476A5.5 5.5 0 0 1 4.406 3.342"/>`;
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="currentColor" viewBox="0 0 16 16" style="overflow:visible">${path}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="currentColor" viewBox="-1 -1 18 18" style="overflow:visible">${path}</svg>`;
 }
 function wxLabel(s) {
   s = (s||'').toLowerCase();
@@ -742,15 +742,20 @@ function initRadar(lat, lon) {
     panel.innerHTML = `
       <div id="radarMap"></div>
       <div class="radar-bar">
-        <button class="radar-play-btn" id="rvPlayBtn">
-          <svg id="rvPlayIcon" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
-          </svg>
-        </button>
-        <div class="radar-timeline" id="rvTimeline">
-          <div class="radar-timeline-fill" id="rvFill" style="width:0%"></div>
+        <div class="radar-bar-top">
+          <button class="radar-play-btn" id="rvPlayBtn">
+            <svg id="rvPlayIcon" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
+            </svg>
+          </button>
+          <div class="radar-timeline-wrap">
+            <div class="radar-ticks" id="rvTicks"></div>
+            <div class="radar-timeline" id="rvTimeline">
+              <div class="radar-timeline-fill" id="rvFill" style="width:0%"></div>
+            </div>
+          </div>
+          <span class="radar-timestamp" id="rvTimestamp">Loading…</span>
         </div>
-        <span class="radar-timestamp" id="rvTimestamp">Loading…</span>
       </div>`;
 
     // Size the map to fill available space
