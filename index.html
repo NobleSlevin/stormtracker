@@ -269,7 +269,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
 /* ── TICKER ── */
 .ticker { flex-shrink: 0; background: var(--card); border-top: 1px solid var(--border); height: 28px; display: flex; align-items: center; overflow: hidden; }
-.ticker-wrap { flex-shrink: 0; background: var(--card); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.ticker-wrap { flex-shrink: 0; background: var(--bg); padding-bottom: env(safe-area-inset-bottom, 0px); }
 .ticker-lbl { background: var(--blue); color: #000; font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 0 12px; height: 28px; display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
 .ticker-track { overflow: hidden; flex: 1; height: 28px; display: flex; align-items: center; }
 .ticker-inner { font-family: var(--mono); font-size: 10px; color: var(--dim); white-space: nowrap; animation: ticker 40s linear infinite; letter-spacing: .5px; }
@@ -282,7 +282,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .info-modal { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; }
 .info-modal.open { display: flex; }
 .info-sheet { background: var(--card); border-radius: 20px 20px 0 0; width: 100%; height: 100vh; display: flex; flex-direction: column; border-top: 1px solid var(--border2); }
-.info-header { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top, 0px) + 18px) 18px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.info-header { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top, 0px) + 64px) 18px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .info-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: .2px; }
 .info-close { width: 32px; height: 32px; border-radius: 50%; background: var(--card2); border: 1px solid var(--border); color: var(--dim); display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-appearance: none; }
 .info-close:active { background: var(--card3); }
@@ -578,7 +578,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.0.1</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.0.2</div>
     </div>
   </div>
 </div>
