@@ -952,9 +952,9 @@ async function fetchNearby(lat, lon, stationsUrl) {
             <div class="state-count-badge" style="background:${sa.length>0?'rgba(248,113,113,.12)':'rgba(74,222,128,.08)'};color:${countColor};border:1px solid ${countColor}33">${sa.length} alert${sa.length!==1?'s':''}</div>
           </div>
           <div class="state-breakdown">
-            <div class="sbd-item" onclick="gotoAlertsFiltered('warning')" title="View warnings"><span class="sbd-label">Warnings</span><span class="sbd-val sv-red">${warns}</span></div>
-            <div class="sbd-item" onclick="gotoAlertsFiltered('watch')" title="View watches"><span class="sbd-label">Watches</span><span class="sbd-val sv-orange">${watches}</span></div>
-            <div class="sbd-item" onclick="gotoAlertsFiltered('advisory')" title="View advisories"><span class="sbd-label">Advisories</span><span class="sbd-val sv-blue">${adv}</span></div>
+            <div class="sbd-item"><span class="sbd-label">Warnings</span><span class="sbd-val sv-red">${warns}</span></div>
+            <div class="sbd-item"><span class="sbd-label">Watches</span><span class="sbd-val sv-orange">${watches}</span></div>
+            <div class="sbd-item"><span class="sbd-label">Advisories</span><span class="sbd-val sv-blue">${adv}</span></div>
           </div>
         </div>`);
     }
