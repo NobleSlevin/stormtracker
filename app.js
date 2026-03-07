@@ -161,9 +161,10 @@ async function fetchForecast(lat, lon) {
     const city=pp.relativeLocation?.properties;
     if(city){
       document.getElementById('locName').textContent=city.city;
-      document.getElementById('locSub').textContent=city.state;
-      // Extract state abbreviation for Nearby tab
-      curState = city.state;
+      document.getElementById('locSub').textContent = city.state;
+      // city.state is the abbreviation from NWS — reverse-lookup full name for display
+      const stateNames = {'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming'};
+      curState = stateNames[city.state] || city.state;
     }
     const results = { periods: [], hourly: [], stationUrl: pp.observationStations };
     if(pp.forecast){
