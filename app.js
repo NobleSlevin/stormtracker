@@ -32,9 +32,13 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
     btn.classList.add('on');
-    const map = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby', tornado:'tabTornado'};
+    const map = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby', radar:'tabRadar', tornado:'tabTornado'};
     document.getElementById(map[t]).classList.add('on');
     document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
+    // Leaflet needs size invalidation when its container becomes visible
+    if (t === 'radar' && rvMap) {
+      setTimeout(() => rvMap.invalidateSize(), 50);
+    }
   });
 });
 
@@ -673,6 +677,159 @@ function buildFactorList(factors) {
 }
 
 // ── LOCATION & ORCHESTRATION ─────────────────────
+// ── RADAR (RainViewer) ────────────────────────────
+let rvMap = null, rvFrames = [], rvLayers = [], rvPos = 0, rvTimer = null, rvPlaying = false, rvInited = false;
+
+function initRadar(lat, lon) {
+  const panel = document.getElementById('panelRadar');
+
+  // Build map container if not yet created
+  if (!rvInited) {
+    panel.innerHTML = `
+      <div id="radarMap"></div>
+      <div class="radar-bar">
+        <button class="radar-play-btn" id="rvPlayBtn">
+          <svg id="rvPlayIcon" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
+          </svg>
+        </button>
+        <div class="radar-timeline" id="rvTimeline">
+          <div class="radar-timeline-fill" id="rvFill" style="width:0%"></div>
+        </div>
+        <span class="radar-timestamp" id="rvTimestamp">Loading…</span>
+        <span class="radar-frames-label" id="rvFrameLabel"></span>
+      </div>`;
+
+    // Init Leaflet map
+    rvMap = L.map('radarMap', {
+      center: [lat, lon],
+      zoom: 7,
+      zoomControl: true,
+      attributionControl: false
+    });
+
+    // Dark base map tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 7,
+      subdomains: 'abcd'
+    }).addTo(rvMap);
+
+    // Location marker
+    L.circleMarker([lat, lon], {
+      radius: 6, color: '#fbbf24', fillColor: '#fbbf24',
+      fillOpacity: 1, weight: 2
+    }).addTo(rvMap);
+
+    // Play/pause button
+    document.getElementById('rvPlayBtn').addEventListener('click', rvTogglePlay);
+
+    // Timeline scrub
+    document.getElementById('rvTimeline').addEventListener('click', (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      rvStop();
+      rvShowFrame(Math.round(pct * (rvFrames.length - 1)));
+    });
+
+    rvInited = true;
+  } else {
+    // Already inited — just re-center
+    rvMap.setView([lat, lon], 7);
+    document.querySelector('.leaflet-marker-pane')?.querySelectorAll('*').forEach(e => e.remove());
+    L.circleMarker([lat, lon], {
+      radius: 6, color: '#fbbf24', fillColor: '#fbbf24',
+      fillOpacity: 1, weight: 2
+    }).addTo(rvMap);
+  }
+
+  rvLoadFrames();
+}
+
+async function rvLoadFrames() {
+  try {
+    document.getElementById('rvTimestamp').textContent = 'Loading…';
+    const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+    const data = await res.json();
+    const past = data.radar?.past || [];
+    if (!past.length) { document.getElementById('rvTimestamp').textContent = 'No data'; return; }
+
+    // Clear old layers
+    rvLayers.forEach(l => { if (rvMap.hasLayer(l)) rvMap.removeLayer(l); });
+    rvLayers = [];
+    rvFrames = past;
+
+    const host = data.host;
+    // Pre-create tile layers (hidden)
+    rvFrames.forEach(frame => {
+      const url = `${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+      const layer = L.tileLayer(url, { opacity: 0, maxZoom: 7, tileSize: 256 });
+      rvLayers.push(layer);
+      layer.addTo(rvMap);
+    });
+
+    rvPos = rvFrames.length - 1; // start at most recent
+    rvShowFrame(rvPos);
+    document.getElementById('rvFrameLabel').textContent = `${rvFrames.length}f`;
+
+    // Auto-play
+    rvPlay();
+
+    // Refresh frames every 5 min
+    setTimeout(rvLoadFrames, 5 * 60 * 1000);
+  } catch(e) {
+    console.warn('RainViewer error:', e);
+    if (document.getElementById('rvTimestamp')) document.getElementById('rvTimestamp').textContent = 'Error';
+  }
+}
+
+function rvShowFrame(idx) {
+  if (!rvFrames.length) return;
+  idx = Math.max(0, Math.min(rvFrames.length - 1, idx));
+  // Hide all, show current
+  rvLayers.forEach((l, i) => l.setOpacity(i === idx ? 0.65 : 0));
+  rvPos = idx;
+  // Timestamp
+  const ts = new Date(rvFrames[idx].time * 1000);
+  const h = ts.getHours(), m = ts.getMinutes();
+  const label = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+  if (document.getElementById('rvTimestamp')) document.getElementById('rvTimestamp').textContent = label;
+  // Timeline fill
+  const pct = rvFrames.length > 1 ? (idx / (rvFrames.length - 1)) * 100 : 100;
+  if (document.getElementById('rvFill')) document.getElementById('rvFill').style.width = pct + '%';
+}
+
+function rvPlay() {
+  rvPlaying = true;
+  rvUpdatePlayIcon();
+  rvTimer = setInterval(() => {
+    const next = (rvPos + 1) % rvFrames.length;
+    rvShowFrame(next);
+  }, 600);
+}
+
+function rvStop() {
+  rvPlaying = false;
+  rvUpdatePlayIcon();
+  clearInterval(rvTimer);
+  rvTimer = null;
+}
+
+function rvTogglePlay() {
+  if (rvPlaying) rvStop(); else rvPlay();
+}
+
+function rvUpdatePlayIcon() {
+  const btn = document.getElementById('rvPlayIcon');
+  if (!btn) return;
+  if (rvPlaying) {
+    // Pause icon
+    btn.innerHTML = '<path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5m5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5"/>';
+  } else {
+    // Play icon
+    btn.innerHTML = '<path d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z"/>';
+  }
+}
+
 // ── OPEN-METEO (no key required) ──────────────────
 async function fetchOpenMeteo(lat, lon) {
   try {
@@ -761,12 +918,13 @@ async function fetchForPoint(lat, lon) {
     fetchOpenMeteo(lat, lon)
   ]);
   const { periods, stationUrl } = fc;
-  // Run obs + nearby in parallel after forecast resolves
   await Promise.all([
     fetchObservations(stationUrl),
     fetchNearby(lat, lon, stationUrl)
   ]);
   if (periods && periods.length) computeTornadoRisk(periods, lat, lon, allAlerts);
+  // Init radar (deferred — only loads fully when tab is visible)
+  initRadar(lat, lon);
 }
 
 async function geoMe() {

@@ -10,6 +10,7 @@
 <title>StormWatch</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -94,9 +95,10 @@ header { display: flex; flex-direction: column; gap: 8px; padding: 10px 16px 10p
 .alert-badge { margin-left: auto; font-family: var(--mono); font-size: 9px; padding: 2px 8px; border-radius: 5px; flex-shrink: 0; background: rgba(248,113,113,.1); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
 
 /* ── BODY ── */
-#body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
+#body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; display: flex; flex-direction: column; }
 .tab-panel { display: none; }
 .tab-panel.on { display: block; }
+#tabRadar.on { display: flex; flex-direction: column; height: 100%; }
 
 /* ── ALERTS ── */
 #panelAlerts { padding: 12px 14px; }
@@ -268,6 +270,18 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .install-text { flex: 1; font-size: 12px; color: var(--text); }
 .install-text b { color: var(--yellow); }
 .install-close { background: none; border: none; color: var(--dim); font-size: 18px; cursor: pointer; padding: 0 4px; -webkit-appearance: none; }
+
+/* ── RADAR TAB ── */
+#tabRadar { padding: 0; display: flex; flex-direction: column; }
+#radarMap { flex: 1; min-height: 0; width: 100%; background: var(--bg); }
+.radar-bar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--card); border-top: 1px solid var(--border); flex-shrink: 0; }
+.radar-play-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); background: var(--card2); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; -webkit-appearance: none; }
+.radar-play-btn:active { background: var(--card3); }
+.radar-timeline { flex: 1; position: relative; height: 4px; background: var(--card3); border-radius: 2px; cursor: pointer; }
+.radar-timeline-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width .1s; pointer-events: none; }
+.radar-timestamp { font-size: 11px; color: var(--dim); font-family: var(--mono); flex-shrink: 0; min-width: 64px; text-align: right; }
+.radar-frames-label { font-size: 9px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
+.leaflet-tile-pane { filter: saturate(1.3) brightness(0.9); }
 </style>
 </head>
 <body>
@@ -368,6 +382,9 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
     <button class="tab" data-tab="nearby">
       <svg width="11" height="11" fill="currentColor"><use href="#bi-broadcast"/></svg> Nearby
     </button>
+    <button class="tab" data-tab="radar">
+      <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/><path d="M8 3a5 5 0 1 0 0 10A5 5 0 0 0 8 3m0 1a4 4 0 1 1 0 8 4 4 0 0 1 0-8"/><path d="M8 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4m0 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/><path d="M8 7.5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0V8a.5.5 0 0 1 .5-.5"/><path d="M8.354 4.146a.5.5 0 0 1 0 .708l-5 5a.5.5 0 0 1-.708-.708l5-5a.5.5 0 0 1 .708 0"/></svg> Radar
+    </button>
     <button class="tab" data-tab="tornado">
       <svg width="11" height="11" fill="currentColor"><use href="#bi-tornado"/></svg> Risk
     </button>
@@ -407,6 +424,16 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
           <div class="state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="var(--dim)" viewBox="0 0 16 16"><path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708m2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></svg></div>
           <div class="state-ttl">No Location</div>
           <div class="state-sub">Search a city or use GPS to see nearby data</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tabRadar">
+      <div id="panelRadar">
+        <div class="state-center">
+          <div class="state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="var(--dim)" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/><path d="M8 3a5 5 0 1 0 0 10A5 5 0 0 0 8 3m0 1a4 4 0 1 1 0 8 4 4 0 0 1 0-8"/><path d="M8 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4m0 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg></div>
+          <div class="state-ttl">No Location</div>
+          <div class="state-sub">Search a city or use GPS to load radar</div>
         </div>
       </div>
     </div>
@@ -455,6 +482,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
 </div>
 <div id="tipbox"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
