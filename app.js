@@ -404,6 +404,20 @@ function patchHourlyTemps(omHourly) {
 // ── RENDER AQI INTO FORECAST TAB ─────────────────
 let _aqiCache = null; // persist last result so slot can repaint instantly on refresh
 
+// ── RANGE BAR ─────────────────────────────────────
+// Renders a full-width gradient track with a white dot indicator.
+// value    : current numeric value
+// max      : right-edge value (scale max)
+// gradient : CSS gradient string for the track
+function rangeBar(value, max, gradient) {
+  const pct = Math.min(100, Math.max(0, (value / max) * 100));
+  return `<div class="range-bar-wrap">
+    <div class="range-bar-track" style="background:${gradient}">
+      <div class="range-bar-dot" style="left:${pct}%"></div>
+    </div>
+  </div>`;
+}
+
 function aqiHTML(aq) {
   const aqiColor = aq.categoryNum <= 1 ? 'var(--green)'
     : aq.categoryNum === 2 ? 'var(--yellow)'
@@ -442,6 +456,7 @@ function aqiHTML(aq) {
         </div>
         <div class="aqi-score" style="color:${aqiColor}">${aq.aqi}</div>
       </div>
+      ${rangeBar(aq.aqi, 300, 'linear-gradient(to right, #4ade80 0%, #a3e635 12%, #fbbf24 25%, #fb923c 40%, #f87171 55%, #c084fc 75%, #7c3aed 100%)')}
       <div class="aqi-cells">${pollCells}${padCells}</div>
     </div>`;
 }
@@ -495,6 +510,7 @@ function renderUVSlot() {
         <div class="uv-badge" style="background:${uvBg};color:${uvColor};border:1px solid ${uvColor}33">${uvCat}</div>
         <div class="uv-score" style="color:${uvColor}">${uvRounded}</div>
       </div>
+      ${rangeBar(uv, 11, 'linear-gradient(to right, #4ade80 0%, #a3e635 18%, #fbbf24 36%, #fb923c 55%, #f87171 73%, #c084fc 100%)')}
       <div class="uv-cells">
         <div class="uv-cell">
           <span class="uv-cell-lbl">Index</span>

@@ -1,4 +1,4 @@
-const CACHE = 'stormwatch-v1.3.1';
+const CACHE = 'stormwatch-v1.3.2';
 const ASSETS = ['/', '/index.html', '/app.js', '/icon.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
