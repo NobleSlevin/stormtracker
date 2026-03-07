@@ -71,19 +71,31 @@ function fmt(iso) {
   if (!iso) return '—';
   try { return new Date(iso).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); } catch { return iso; }
 }
-function wxIcon(s) {
+function wxIcon(s, size=18) {
   s = (s||'').toLowerCase();
-  const ico = s.includes('tornado') ? 'bi-tornado'
-    : (s.includes('thunder')||s.includes('tstm')) ? 'bi-cloud-lightning'
-    : (s.includes('blizzard')||s.includes('snow')||s.includes('sleet')||s.includes('ice')) ? 'bi-snow'
-    : (s.includes('rain')||s.includes('shower')||s.includes('drizzle')) ? 'bi-cloud-rain'
-    : (s.includes('fog')||s.includes('mist')) ? 'bi-fog'
-    : s.includes('wind') ? 'bi-wind'
-    : s.includes('partly') ? 'bi-cloud-sun'
-    : (s.includes('cloud')||s.includes('overcast')) ? 'bi-clouds'
-    : (s.includes('sunny')||s.includes('clear')) ? 'bi-sun'
-    : 'bi-cloud-sun';
-  return `<svg width="18" height="18" fill="currentColor"><use href="#${ico}"/></svg>`;
+  // All paths inline — no <use> references which clip at small sizes
+  let path;
+  if (s.includes('tornado')) {
+    path = `<path d="M1.125 2.45A.9.9 0 0 1 1 2c0-.26.116-.474.258-.634a1.9 1.9 0 0 1 .513-.389c.387-.21.913-.385 1.52-.525C4.514.17 6.18 0 8 0c1.821 0 3.486.17 4.709.452.607.14 1.133.314 1.52.525.193.106.374.233.513.389.141.16.258.374.258.634 0 1.011-.35 1.612-.634 2.102l-.116.203a2.6 2.6 0 0 0-.313.809 3 3 0 0 0-.011.891.5.5 0 0 1 .428.849q-.091.09-.215.195c.204 1.116.088 1.99-.3 2.711-.453.84-1.231 1.383-2.02 1.856q-.307.183-.62.364c-1.444.832-2.928 1.689-3.735 3.706a.5.5 0 0 1-.748.226l-.001-.001-.002-.001-.004-.003-.01-.008a2 2 0 0 1-.147-.115 4.1 4.1 0 0 1-1.179-1.656 3.8 3.8 0 0 1-.247-1.296A.5.5 0 0 1 5 12.5v-.018l.008-.079a.73.73 0 0 1 .188-.386c.09-.489.272-1.014.573-1.574a.5.5 0 0 1 .073-.918 3.3 3.3 0 0 1 .617-.144l.15-.193c.285-.356.404-.639.437-.861a.95.95 0 0 0-.122-.619c-.249-.455-.815-.903-1.613-1.43q-.291-.19-.609-.394l-.119-.076a12 12 0 0 1-1.241-.334.5.5 0 0 1-.285-.707l-.23-.18C2.117 4.01 1.463 3.32 1.125 2.45"/>`;
+  } else if (s.includes('thunder') || s.includes('tstm')) {
+    path = `<path d="M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1M7.053 11.276A.5.5 0 0 1 7.5 11h2a.5.5 0 0 1 .473.664l-.334 1H11a.5.5 0 0 1 .39.812l-4 5a.5.5 0 0 1-.871-.464l.853-3.41H5.5a.5.5 0 0 1-.447-.724z"/>`;
+  } else if (s.includes('blizzard') || s.includes('snow') || s.includes('sleet') || s.includes('ice')) {
+    path = `<path d="M8 16a.5.5 0 0 1-.5-.5v-1.293l-.646.647a.5.5 0 0 1-.707-.708L7.5 12.793V8.866l-3.4 1.963-.496 1.85a.5.5 0 1 1-.966-.26l.237-.882-1.12.646a.5.5 0 0 1-.5-.866l1.12-.646-.884-.237a.5.5 0 1 1 .26-.966l1.848.495L7 8 3.6 6.037l-1.85.495a.5.5 0 0 1-.258-.966l.883-.237-1.12-.646a.5.5 0 1 1 .5-.866l1.12.646-.237-.883a.5.5 0 1 1 .966-.258l.495 1.849L7.5 7.134V3.207L6.147 1.854a.5.5 0 1 1 .707-.708l.646.647V.5a.5.5 0 1 1 1 0v1.293l.647-.647a.5.5 0 1 1 .707.708L8.5 3.207v3.927l3.4-1.963.496-1.85a.5.5 0 1 1 .966.26l-.236.882 1.12-.646a.5.5 0 0 1 .5.866l-1.12.646.883.237a.5.5 0 1 1-.26.966l-1.848-.495L9 8l3.4 1.963 1.849-.495a.5.5 0 0 1 .259.966l-.883.237 1.12.646a.5.5 0 0 1-.5.866l-1.12-.646.236.883a.5.5 0 1 1-.966.258l-.495-1.849-3.4-1.963v3.927l1.353 1.353a.5.5 0 0 1-.707.708l-.647-.647V15.5a.5.5 0 0 1-.5.5"/>`;
+  } else if (s.includes('rain') || s.includes('shower') || s.includes('drizzle')) {
+    path = `<path d="M4.158 12.025a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .633-.317zM4 1a3.5 3.5 0 0 1 3.5 3.5.5.5 0 0 0 .5.5 1.5 1.5 0 0 1 1.5 1.5v.5h.5a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 1 0-5H2v-.5A3.5 3.5 0 0 1 4 1z"/>`;
+  } else if (s.includes('fog') || s.includes('mist') || s.includes('haz')) {
+    path = `<path d="M4 12.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m2 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1"/>`;
+  } else if (s.includes('wind') || s.includes('breezy') || s.includes('blustery')) {
+    path = `<path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2H.5a.5.5 0 0 1 0-1H6.5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>`;
+  } else if (s.includes('sunny') || s.includes('clear')) {
+    path = `<path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>`;
+  } else if (s.includes('partly') || s.includes('mostly sunny') || s.includes('mostly clear')) {
+    path = `<path d="M7 8a3.5 3.5 0 0 1 3.5 3.555.5.5 0 0 0 .624.492A1.503 1.503 0 0 1 13 13.5a1.5 1.5 0 0 1-1.5 1.5H3A2.5 2.5 0 0 1 3 9h.5A3.5 3.5 0 0 1 7 8m2 .276a4.5 4.5 0 0 0-4.5 3.5.5.5 0 0 1-.5.5A1.5 1.5 0 0 0 3 14h8.5a.5.5 0 0 0 0-1 .5.5 0 0 1-.5-.5 4.5 4.5 0 0 0-2-.724M10.5 2.5a.5.5 0 0 0-1 0v1a.5.5 0 0 0 1 0zm3 1.5a.5.5 0 0 0-.707-.707l-.707.707A.5.5 0 0 0 12.793 5zM10 5.5A2.5 2.5 0 1 0 15 5.5a2.5 2.5 0 0 0-5 0m2.5-1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3m3.457 2.707a.5.5 0 1 0-.707-.707l-.707.707a.5.5 0 0 0 .707.707zm-5.457 0a.5.5 0 0 0 .707.707l.707-.707A.5.5 0 0 0 10.5 6.5zm5-2.207a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1z"/>`;
+  } else {
+    // cloudy / overcast / default
+    path = `<path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.476A5.5 5.5 0 0 1 4.406 3.342"/>`;
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="currentColor" viewBox="0 0 16 16">${path}</svg>`;
 }
 function tempClass(t) {
   if(t>=95)return't-hot'; if(t>=80)return't-warm'; if(t>=60)return't-mild'; if(t>=40)return't-cool'; return't-cold';
@@ -196,14 +208,10 @@ function renderForecast(periods){
   }
   const days = [hero_p, ...[...dayMap.values()].slice(0, 6)];
   const now=new Date(), hero=days[0];
-  const heroIcon = (s) => {
-    s=(s||'').toLowerCase();
-    return s.includes('tornado')?'bi-tornado':s.includes('thunder')?'bi-cloud-lightning':s.includes('snow')?'bi-snow':s.includes('rain')?'bi-cloud-rain':s.includes('clear')||s.includes('sunny')?'bi-sun':'bi-cloud-sun';
-  };
   const heroHTML=hero?`<div class="fc-hero">
     <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div><div class="fch-time">${now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div>
     <div class="fch-temp">${hero.temperature}<sup>°${hero.temperatureUnit}</sup></div>
-    <div class="fch-icon"><svg width="56" height="56" fill="rgba(147,197,253,0.35)"><use href="#${heroIcon(hero.shortForecast)}"/></svg></div>
+    <div class="fch-icon">${wxIcon(hero.shortForecast, 56)}</div>
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
   </div>`:'';
   const rows=days.slice(1,7).map(d=>{const dt=new Date(d.startTime);return`<div class="fc-day-row"><span class="fdr-name">${dn[dt.getDay()]}</span><span class="fdr-icon">${wxIcon(d.shortForecast)}</span><span class="fdr-desc">${d.shortForecast}</span><span class="fdr-temp ${tempClass(d.temperature)}">${d.temperature}°</span></div>`;}).join('');
@@ -250,7 +258,17 @@ async function fetchObservations(stationsUrl) {
     const tempF = cToF(p.temperature?.value);
     const dewF  = cToF(p.dewpoint?.value);
     const humid = p.relativeHumidity?.value != null ? Math.round(p.relativeHumidity.value) : null;
-    const windMph = msToMph(p.windSpeed?.value);
+    // NWS observations windSpeed unitCode is wmoUnit:km_h-1 (km/h), not m/s
+    const windUnit = p.windSpeed?.unitCode || '';
+    let windMph = null;
+    if (p.windSpeed?.value != null) {
+      if (windUnit.includes('km_h') || windUnit.includes('km/h')) {
+        windMph = Math.round(p.windSpeed.value * 0.621);
+      } else {
+        // fallback: assume m/s
+        windMph = msToMph(p.windSpeed.value);
+      }
+    }
     const pressMb = paToMb(p.barometricPressure?.value);
     const visMi  = mToMi(p.visibility?.value);
     const set = (id, val) => { if (val != null) document.getElementById(id).textContent = val; };
@@ -273,10 +291,56 @@ async function fetchNearby(lat, lon, stationsUrl) {
 
   const sections = [];
 
-  // ── 1. State alert count ──
+  // ── 1. Nearest radar station ──
+  try {
+    const radars = await nwsFetch(`${NWS}/radar/stations`);
+    const stations = radars.features || [];
+    let nearest = null, nearestDist = Infinity;
+    for (const s of stations) {
+      const [slon, slat] = s.geometry?.coordinates || [];
+      if (slat == null) continue;
+      const dist = Math.sqrt(Math.pow(slat - lat, 2) + Math.pow(slon - lon, 2));
+      if (dist < nearestDist) { nearestDist = dist; nearest = s; }
+    }
+    if (nearest) {
+      const sp = nearest.properties;
+      const sid = sp.stationIdentifier || nearest.id?.split('/').pop() || '—';
+      const [rlon, rlat] = nearest.geometry?.coordinates || [];
+      const miles = Math.round(Math.sqrt(Math.pow((rlat-lat)*69,2) + Math.pow((rlon-lon)*54,2)));
+      const stationType = sp.stationType || 'NEXRAD';
+      const elevation = sp.elevation?.value != null ? Math.round(sp.elevation.value * 3.281) + ' ft' : '—';
+      const radarUrl = `https://radar.weather.gov/station/${sid}/standard`;
+      sections.push(`
+        <div class="section-ttl">Nearest Radar Station</div>
+        <div class="radar-card">
+          <div class="radar-header">
+            <div class="radar-pulse">
+              <svg width="16" height="16" fill="var(--green)"><use href="#bi-broadcast"/></svg>
+            </div>
+            <div class="radar-info">
+              <div class="radar-name">${sp.name || sid}</div>
+              <div class="radar-meta">${sp.timeZone || ''}</div>
+            </div>
+            <div class="radar-dist">${miles} mi</div>
+          </div>
+          <div class="radar-details" style="grid-template-columns:repeat(5,1fr)">
+            <div class="rdt-item"><span class="rdt-label">ID</span><span class="rdt-val" style="color:var(--green);font-family:var(--mono)">${sid}</span></div>
+            <div class="rdt-item"><span class="rdt-label">Type</span><span class="rdt-val">${stationType}</span></div>
+            <div class="rdt-item"><span class="rdt-label">Elev</span><span class="rdt-val">${elevation}</span></div>
+            <div class="rdt-item"><span class="rdt-label">Lat</span><span class="rdt-val">${rlat != null ? rlat.toFixed(2) : '—'}°</span></div>
+            <div class="rdt-item"><span class="rdt-label">Lon</span><span class="rdt-val">${rlon != null ? rlon.toFixed(2) : '—'}°</span></div>
+          </div>
+          <a class="radar-link" href="${radarUrl}" target="_blank">
+            <svg width="12" height="12" fill="currentColor"><use href="#bi-broadcast"/></svg>
+            View Live Radar →
+          </a>
+        </div>`);
+    }
+  } catch(e) { console.warn('Radar stations error:', e); }
+
+  // ── 2. State alert count ──
   try {
     if (curState) {
-      // Map state name to abbreviation
       const stateMap = {'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA','Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD','Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT','Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY'};
       const abbr = stateMap[curState] || curState;
       const stateAlerts = await nwsFetch(`${NWS}/alerts/active?area=${abbr}`);
@@ -285,10 +349,9 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const watches = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('watch')).length;
       const adv = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('advisory')).length;
       const countColor = sa.length >= 10 ? 'var(--red)' : sa.length >= 5 ? 'var(--orange)' : sa.length > 0 ? 'var(--yellow)' : 'var(--green)';
-      const stateFlags = {'AL':'AL','AK':'AK','AZ':'AZ','AR':'AR','CA':'CA','CO':'CO','CT':'CT','DE':'DE','FL':'FL','GA':'GA','HI':'HI','ID':'ID','IL':'IL','IN':'IN','IA':'IA','KS':'KS','KY':'KY','LA':'LA','ME':'ME','MD':'MD','MA':'MA','MI':'MI','MN':'MN','MS':'MS','MO':'MO','MT':'MT','NE':'NE','NV':'NV','NH':'NH','NJ':'NJ','NM':'NM','NY':'NY','NC':'NC','ND':'ND','OH':'OH','OK':'OK','OR':'OR','PA':'PA','RI':'RI','SC':'SC','SD':'SD','TN':'TN','TX':'TX','UT':'UT','VT':'VT','VA':'VA','WA':'WA','WV':'WV','WI':'WI','WY':'WY'};
       const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
       sections.push(`
-        <div class="section-ttl">State Alerts — ${curState}</div>
+        <div class="section-ttl" style="margin-top:4px">State Alerts — ${curState}</div>
         <div class="state-alert-card">
           <div class="state-alert-header">
             <div class="state-flag">${geoIcon}</div>
@@ -306,54 +369,6 @@ async function fetchNearby(lat, lon, stationsUrl) {
         </div>`);
     }
   } catch(e) { console.warn('State alerts error:', e); }
-
-  // ── 2. Nearest radar station ──
-  try {
-    const radars = await nwsFetch(`${NWS}/radar/stations`);
-    const stations = radars.features || [];
-    // Find closest by distance
-    let nearest = null, nearestDist = Infinity;
-    for (const s of stations) {
-      const [slon, slat] = s.geometry?.coordinates || [];
-      if (slat == null) continue;
-      const dist = Math.sqrt(Math.pow(slat - lat, 2) + Math.pow(slon - lon, 2));
-      if (dist < nearestDist) { nearestDist = dist; nearest = s; }
-    }
-    if (nearest) {
-      const sp = nearest.properties;
-      const sid = sp.stationIdentifier || nearest.id?.split('/').pop() || '—';
-      const [rlon, rlat] = nearest.geometry?.coordinates || [];
-      const miles = Math.round(Math.sqrt(Math.pow((rlat-lat)*69,2) + Math.pow((rlon-lon)*54,2)));
-      const stationType = sp.stationType || 'NEXRAD';
-      const elevation = sp.elevation?.value != null ? Math.round(sp.elevation.value * 3.281) + ' ft' : '—';
-      const radarUrl = `https://radar.weather.gov/station/${sid}/standard`;
-      sections.push(`
-        <div class="section-ttl" style="margin-top:4px">Nearest Radar Station</div>
-        <div class="radar-card">
-          <div class="radar-header">
-            <div class="radar-pulse">
-              <svg width="16" height="16" fill="var(--green)"><use href="#bi-broadcast"/></svg>
-            </div>
-            <div class="radar-info">
-              <div class="radar-name">${sp.name || sid}</div>
-              <div class="radar-meta">${sp.timeZone || ''}</div>
-            </div>
-            <div class="radar-dist">${miles} mi</div>
-          </div>
-          <div class="radar-details" style="grid-template-columns:repeat(5,1fr)">
-            <div class="rdt-item"><span class="rdt-label">ID</span><span class="rdt-val" style="color:var(--green);font-family:var(--mono)">${sid}</span></div>
-            <div class="rdt-item"><span class="rdt-label">Type</span><span class="rdt-val">${stationType}</span></div>
-            <div class="rdt-item"><span class="rdt-label">Elev</span><span class="rdt-val">${elevation}</span></div>
-            <div class="rdt-item"><span class="rdt-label">Lat</span><span class="rdt-val" style="font-family:var(--mono);font-size:11px">${rlat != null ? rlat.toFixed(2) : '—'}°</span></div>
-            <div class="rdt-item"><span class="rdt-label">Lon</span><span class="rdt-val" style="font-family:var(--mono);font-size:11px">${rlon != null ? rlon.toFixed(2) : '—'}°</span></div>
-          </div>
-          <a class="radar-link" href="${radarUrl}" target="_blank">
-            <svg width="12" height="12" fill="currentColor"><use href="#bi-broadcast"/></svg>
-            View Live Radar →
-          </a>
-        </div>`);
-    }
-  } catch(e) { console.warn('Radar stations error:', e); }
 
   if (sections.length) {
     box.innerHTML = sections.join('');
