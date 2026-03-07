@@ -268,6 +268,23 @@ function updateTicker(alerts) {
     return`<span style="color:${sevColor(p.severity,p.event)}">⚠ ${p.event}</span> — ${(p.areaDesc||'').split(';')[0].trim()}`;
   }).join('<span class="tsep">///</span>');
 }
+function gotoAlertsFiltered(keyword) {
+  // Switch to Alerts tab and filter by keyword ('warning', 'watch', 'advisory')
+  const tabBtn = document.querySelector('.tab[data-tab="alerts"]');
+  if (tabBtn) tabBtn.click();
+  // Map keyword to existing filter buttons
+  const filterMap = { warning: 'sev', watch: 'sev', advisory: 'min' };
+  const f = filterMap[keyword] || 'all';
+  setFilter(f);
+  // Further filter displayed alerts by keyword within the chosen severity
+  setTimeout(() => {
+    const box = document.getElementById('panelAlerts');
+    if (!box) return;
+    const filtered = allAlerts.filter(a => (a.properties.event || '').toLowerCase().includes(keyword));
+    if (filtered.length) renderAlerts(filtered);
+  }, 50);
+}
+
 function setFilter(f){
   activeFilter=f;
   document.querySelectorAll('.fbtn').forEach(b=>{b.classList.remove('on');if(b.dataset.f===f)b.classList.add('on');});
@@ -346,6 +363,7 @@ function renderForecast(periods){
     +'<div class="hourly-toggle" id="hourlyToggle"><span class="hourly-toggle-lbl"><svg width="12" height="12" fill="currentColor"><use href="#bi-sun"/></svg> Hourly Forecast</span><span class="hourly-toggle-chevron"><svg width="10" height="10" fill="currentColor"><use href="#bi-chevron-right"/></svg></span></div>'
     +'<div class="hourly-scroll" id="hourlyScroll"><div class="hourly-track" id="hourlyTrack"></div></div>'
     +'<div id="aqiSlot"></div>'
+    +'<div id="uvSlot"></div>'
     +'<div class="fc-days">'+rows+'</div>';
   document.getElementById('hourlyToggle').addEventListener('click', () => {
     document.getElementById('hourlyToggle').classList.toggle('open');
@@ -441,6 +459,63 @@ async function renderAQISlot(lat, lon) {
   } catch(e) { console.warn('AQI slot error:', e); }
 }
 
+// ── RENDER UV INDEX INTO FORECAST TAB ────────────
+// UV data comes from Open-Meteo current block (already fetched in fetchOpenMeteo).
+// We cache it in window._uvData when OM runs, then renderUVSlot reads it.
+function renderUVSlot() {
+  const slot = document.getElementById('uvSlot');
+  if (!slot) return;
+  const uv = window._uvData;
+  if (uv == null) return;
+
+  const uvRounded = Math.round(uv * 10) / 10;
+  // UV index categories (WHO scale)
+  const uvCat    = uv < 3 ? 'Low' : uv < 6 ? 'Moderate' : uv < 8 ? 'High' : uv < 11 ? 'Very High' : 'Extreme';
+  const uvCatNum = uv < 3 ? 1     : uv < 6 ? 2           : uv < 8 ? 3      : uv < 11 ? 4            : 5;
+  const uvColor  = uvCatNum === 1 ? 'var(--green)' : uvCatNum === 2 ? 'var(--yellow)' : uvCatNum === 3 ? 'var(--orange)' : uvCatNum === 4 ? 'var(--red)' : '#c084fc';
+  const uvBg     = uvCatNum === 1 ? 'rgba(74,222,128,.1)' : uvCatNum === 2 ? 'rgba(251,191,36,.1)' : uvCatNum === 3 ? 'rgba(251,146,60,.1)' : uvCatNum === 4 ? 'rgba(248,113,113,.1)' : 'rgba(192,132,252,.1)';
+
+  // Protection advice by category
+  const advice   = uv < 3 ? 'No protection needed' : uv < 6 ? 'Wear sunscreen SPF 30+' : uv < 8 ? 'Seek shade midday' : uv < 11 ? 'Minimize sun 10am–4pm' : 'Avoid sun exposure';
+  // Exposure time to burn for fair skin (approximate)
+  const burnMins = uv <= 0 ? '∞' : uv < 3 ? '60+ min' : uv < 6 ? '30–45 min' : uv < 8 ? '15–25 min' : uv < 11 ? '10–15 min' : '<10 min';
+
+  slot.innerHTML = `
+    <div class="aqi-section-ttl">UV Index</div>
+    <div class="uv-card">
+      <div class="uv-header">
+        <div class="uv-icon-wrap" style="background:${uvBg};border:1.5px solid ${uvColor}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="${uvColor}" viewBox="0 0 16 16">
+            <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>
+          </svg>
+        </div>
+        <div class="uv-info">
+          <div class="uv-area">Open-Meteo · WHO Scale</div>
+        </div>
+        <div class="uv-badge" style="background:${uvBg};color:${uvColor};border:1px solid ${uvColor}33">${uvCat}</div>
+        <div class="uv-score" style="color:${uvColor}">${uvRounded}</div>
+      </div>
+      <div class="uv-cells">
+        <div class="uv-cell">
+          <span class="uv-cell-lbl">Index</span>
+          <span class="uv-cell-val" style="color:${uvColor}">${uvRounded}</span>
+          <span class="uv-cell-sub">${uvCat}</span>
+        </div>
+        <div class="uv-cell">
+          <span class="uv-cell-lbl">Burn Time</span>
+          <span class="uv-cell-val" style="font-size:14px;padding-top:4px">${burnMins}</span>
+          <span class="uv-cell-sub">fair skin</span>
+        </div>
+        <div class="uv-cell">
+          <span class="uv-cell-lbl">Advice</span>
+          <span class="uv-cell-val" style="font-size:11px;line-height:1.3;padding-top:2px;color:var(--dim)">${advice}</span>
+          <span class="uv-cell-sub">&nbsp;</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+
 function renderHourly(periods) {
   const track = document.getElementById('hourlyTrack');
   if (!track || !periods.length) return;
@@ -461,6 +536,8 @@ function renderHourly(periods) {
   }).join('');
   // If OM hourly data already arrived, patch temps immediately
   if (typeof omData !== 'undefined' && omData?.hourly) patchHourlyTemps(omData.hourly);
+  // Repaint UV slot if data already available
+  if (typeof renderUVSlot === 'function') renderUVSlot();
 }
 
 // ── OBSERVATIONS ──────────────────────────────────
@@ -875,9 +952,9 @@ async function fetchNearby(lat, lon, stationsUrl) {
             <div class="state-count-badge" style="background:${sa.length>0?'rgba(248,113,113,.12)':'rgba(74,222,128,.08)'};color:${countColor};border:1px solid ${countColor}33">${sa.length} alert${sa.length!==1?'s':''}</div>
           </div>
           <div class="state-breakdown">
-            <div class="sbd-item"><span class="sbd-label">Warnings</span><span class="sbd-val sv-red">${warns}</span></div>
-            <div class="sbd-item"><span class="sbd-label">Watches</span><span class="sbd-val sv-orange">${watches}</span></div>
-            <div class="sbd-item"><span class="sbd-label">Advisories</span><span class="sbd-val sv-blue">${adv}</span></div>
+            <div class="sbd-item" onclick="gotoAlertsFiltered('warning')" title="View warnings"><span class="sbd-label">Warnings</span><span class="sbd-val sv-red">${warns}</span></div>
+            <div class="sbd-item" onclick="gotoAlertsFiltered('watch')" title="View watches"><span class="sbd-label">Watches</span><span class="sbd-val sv-orange">${watches}</span></div>
+            <div class="sbd-item" onclick="gotoAlertsFiltered('advisory')" title="View advisories"><span class="sbd-label">Advisories</span><span class="sbd-val sv-blue">${adv}</span></div>
           </div>
         </div>`);
     }
@@ -1390,7 +1467,11 @@ async function fetchOpenMeteo(lat, lon) {
     if (c.wind_gusts_10m != null) set('obsGust', Math.round(c.wind_gusts_10m));
 
     // UV index
-    if (c.uv_index != null) set('obsUV', c.uv_index.toFixed(1));
+    if (c.uv_index != null) {
+      set('obsUV', c.uv_index.toFixed(1));
+      window._uvData = c.uv_index;
+      renderUVSlot();
+    }
 
     // Cloud cover %
     if (c.cloud_cover != null) set('obsCloud', c.cloud_cover);
