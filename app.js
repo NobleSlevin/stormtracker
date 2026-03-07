@@ -36,28 +36,32 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.getElementById(map[t]).classList.add('on');
     document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
     // Leaflet needs size invalidation when its container becomes visible
-    if (t === 'radar' && rvMap) {
-      setTimeout(() => {
-        const mapEl = document.getElementById('radarMap');
-        if (mapEl) {
-          // Recompute height
-          const bar = document.querySelector('.radar-bar');
-          const barH = bar ? bar.offsetHeight : 44;
-          const tabsEl = document.querySelector('.tabs');
-          const tabsH = tabsEl ? tabsEl.offsetHeight : 44;
-          const obsEl = document.getElementById('obsStrip');
-          const obsH = (obsEl && obsEl.classList.contains('show')) ? obsEl.offsetHeight : 0;
-          const statsEl = document.querySelector('.stat-bar');
-          const statsH = statsEl ? statsEl.offsetHeight : 56;
-          const hdrEl = document.querySelector('.hdr');
-          const hdrH = hdrEl ? hdrEl.offsetHeight : 88;
-          const tickerEl = document.querySelector('.ticker');
-          const tickerH = tickerEl ? tickerEl.offsetHeight : 28;
-          const available = window.innerHeight - hdrH - obsH - statsH - tabsH - barH - tickerH - 2;
-          mapEl.style.height = Math.max(200, available) + 'px';
-        }
-        rvMap.invalidateSize();
-      }, 60);
+    if (t === 'radar') {
+      if (!rvInited && curLat) {
+        // First time — init the map
+        initRadar(curLat, curLon);
+      } else if (rvMap) {
+        setTimeout(() => {
+          const mapEl = document.getElementById('radarMap');
+          if (mapEl) {
+            const bar = document.querySelector('.radar-bar');
+            const barH = bar ? bar.offsetHeight : 44;
+            const tabsEl = document.querySelector('.tabs');
+            const tabsH = tabsEl ? tabsEl.offsetHeight : 44;
+            const obsEl = document.getElementById('obsStrip');
+            const obsH = (obsEl && obsEl.classList.contains('show')) ? obsEl.offsetHeight : 0;
+            const statsEl = document.querySelector('.stat-bar');
+            const statsH = statsEl ? statsEl.offsetHeight : 56;
+            const hdrEl = document.querySelector('.hdr');
+            const hdrH = hdrEl ? hdrEl.offsetHeight : 88;
+            const tickerEl = document.querySelector('.ticker');
+            const tickerH = tickerEl ? tickerEl.offsetHeight : 28;
+            const available = window.innerHeight - hdrH - obsH - statsH - tabsH - barH - tickerH - 2;
+            mapEl.style.height = Math.max(200, available) + 'px';
+          }
+          rvMap.invalidateSize();
+        }, 60);
+      }
     }
   });
 });
@@ -306,6 +310,12 @@ async function fetchObservations(stationsUrl) {
     set('obsWind',  windMph);
     set('obsPress', pressMb);
     set('obsVis',   visMi);
+    // Flag that NWS obs has a real temp — hero should show this, not OM's estimate
+    if (tempF != null) {
+      window._nwsObsTemp = tempF;
+      const tempEl = document.querySelector('.fch-temp');
+      if (tempEl) tempEl.innerHTML = `${tempF}<sup>°F</sup>`;
+    }
     document.getElementById('obsStrip').classList.add('show');
     // Store station id for Nearby tab
     return { stationId, name: st.features?.[0]?.properties?.name || stationId };
@@ -929,12 +939,20 @@ async function fetchOpenMeteo(lat, lon) {
 
     document.getElementById('obsStrip').classList.add('show');
 
-    // Patch hero temp in-place — avoid full re-render which destroys hourly toggle state
+    // Patch hero temp — only use OM if NWS obs station hasn't provided a real reading
     const tempEl = document.querySelector('.fch-temp');
-    if (tempEl && c?.temperature_2m != null) {
-      tempEl.innerHTML = `${Math.round(c.temperature_2m)}<sup>°F</sup>`;
-    } else if (tempEl && tempEl.textContent.includes('—') && window._nwsHeroTemp) {
-      tempEl.innerHTML = `${window._nwsHeroTemp}<sup>°F</sup>`;
+    if (tempEl) {
+      if (window._nwsObsTemp != null) {
+        // NWS obs already won — ensure hero shows it (OM shouldn't override)
+        if (tempEl.textContent.includes('—')) {
+          tempEl.innerHTML = `${window._nwsObsTemp}<sup>°F</sup>`;
+        }
+      } else if (c?.temperature_2m != null) {
+        // No NWS obs yet — use OM as best available
+        tempEl.innerHTML = `${Math.round(c.temperature_2m)}<sup>°F</sup>`;
+      } else if (window._nwsHeroTemp) {
+        tempEl.innerHTML = `${window._nwsHeroTemp}<sup>°F</sup>`;
+      }
     }
     // Insert feels-like line if not already present
     if (c?.apparent_temperature != null) {
@@ -957,6 +975,7 @@ async function fetchOpenMeteo(lat, lon) {
 }
 
 async function fetchForPoint(lat, lon) {
+  window._nwsObsTemp = null; // reset so new location doesn't inherit stale obs temp
   const [fc] = await Promise.all([
     fetchForecast(lat, lon),
     fetchAlerts(`${NWS}/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`),
@@ -968,8 +987,6 @@ async function fetchForPoint(lat, lon) {
     fetchNearby(lat, lon, stationUrl)
   ]);
   if (periods && periods.length) computeTornadoRisk(periods, lat, lon, allAlerts);
-  // Init radar (deferred — only loads fully when tab is visible)
-  initRadar(lat, lon);
 }
 
 async function geoMe() {
