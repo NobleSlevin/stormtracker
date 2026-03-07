@@ -37,7 +37,27 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
     // Leaflet needs size invalidation when its container becomes visible
     if (t === 'radar' && rvMap) {
-      setTimeout(() => rvMap.invalidateSize(), 50);
+      setTimeout(() => {
+        const mapEl = document.getElementById('radarMap');
+        if (mapEl) {
+          // Recompute height
+          const bar = document.querySelector('.radar-bar');
+          const barH = bar ? bar.offsetHeight : 44;
+          const tabsEl = document.querySelector('.tabs');
+          const tabsH = tabsEl ? tabsEl.offsetHeight : 44;
+          const obsEl = document.getElementById('obsStrip');
+          const obsH = (obsEl && obsEl.classList.contains('show')) ? obsEl.offsetHeight : 0;
+          const statsEl = document.querySelector('.stat-bar');
+          const statsH = statsEl ? statsEl.offsetHeight : 56;
+          const hdrEl = document.querySelector('.hdr');
+          const hdrH = hdrEl ? hdrEl.offsetHeight : 88;
+          const tickerEl = document.querySelector('.ticker');
+          const tickerH = tickerEl ? tickerEl.offsetHeight : 28;
+          const available = window.innerHeight - hdrH - obsH - statsH - tabsH - barH - tickerH - 2;
+          mapEl.style.height = Math.max(200, available) + 'px';
+        }
+        rvMap.invalidateSize();
+      }, 60);
     }
   });
 });
@@ -700,6 +720,29 @@ function initRadar(lat, lon) {
         <span class="radar-frames-label" id="rvFrameLabel"></span>
       </div>`;
 
+    // Size the map to fill available space
+    function sizeRadarMap() {
+      const mapEl = document.getElementById('radarMap');
+      if (!mapEl) return;
+      // Total viewport minus: obs strip, stat bar, tab bar, radar-bar (~44px), ticker (~28px)
+      const bar = document.querySelector('.radar-bar');
+      const barH = bar ? bar.offsetHeight : 44;
+      const tabsEl = document.querySelector('.tabs');
+      const tabsH = tabsEl ? tabsEl.offsetHeight : 44;
+      const obsEl = document.getElementById('obsStrip');
+      const obsH = (obsEl && obsEl.classList.contains('show')) ? obsEl.offsetHeight : 0;
+      const statsEl = document.querySelector('.stat-bar');
+      const statsH = statsEl ? statsEl.offsetHeight : 56;
+      const hdrEl = document.querySelector('.hdr');
+      const hdrH = hdrEl ? hdrEl.offsetHeight : 88;
+      const tickerEl = document.querySelector('.ticker');
+      const tickerH = tickerEl ? tickerEl.offsetHeight : 28;
+      const available = window.innerHeight - hdrH - obsH - statsH - tabsH - barH - tickerH - 2;
+      mapEl.style.height = Math.max(200, available) + 'px';
+    }
+    sizeRadarMap();
+    window.addEventListener('resize', () => { sizeRadarMap(); if (rvMap) rvMap.invalidateSize(); });
+
     // Init Leaflet map
     rvMap = L.map('radarMap', {
       center: [lat, lon],
@@ -888,18 +931,20 @@ async function fetchOpenMeteo(lat, lon) {
 
     // Patch hero temp in-place — avoid full re-render which destroys hourly toggle state
     const tempEl = document.querySelector('.fch-temp');
-    if (tempEl && omC?.temperature_2m != null) {
-      tempEl.innerHTML = `${Math.round(omC.temperature_2m)}<sup>°F</sup>`;
+    if (tempEl && c?.temperature_2m != null) {
+      tempEl.innerHTML = `${Math.round(c.temperature_2m)}<sup>°F</sup>`;
+    } else if (tempEl && tempEl.textContent.includes('—') && window._nwsHeroTemp) {
+      tempEl.innerHTML = `${window._nwsHeroTemp}<sup>°F</sup>`;
     }
     // Insert feels-like line if not already present
-    if (omC?.apparent_temperature != null) {
+    if (c?.apparent_temperature != null) {
       let feelsEl = document.querySelector('.fch-feels');
       if (!feelsEl) {
         feelsEl = document.createElement('div');
         feelsEl.className = 'fch-feels';
         tempEl?.insertAdjacentElement('afterend', feelsEl);
       }
-      feelsEl.textContent = `Feels like ${Math.round(omC.apparent_temperature)}°`;
+      feelsEl.textContent = `Feels like ${Math.round(c.apparent_temperature)}°`;
     }
   } catch(e) {
     console.warn('Open-Meteo error:', e);
