@@ -330,26 +330,44 @@ function compassSVG(windDeg, deviceDeg) {
     return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.5)" font-size="11" font-family="ui-monospace,monospace" font-weight="600">${lbl}</text>`;
   }).join('');
 
-  // Wind direction arrow (points TO where wind is going, FROM windDeg)
-  // Arrow points in the direction wind travels: windDeg + 180
-  const windArrowDeg = (windDeg != null) ? windDeg : null;
+  // Wind arrow:
+  // windDeg = direction wind is FROM (meteorological convention).
+  // The arrowhead points downwind (where wind is going = windDeg + 180).
+  // Line spans full inner diameter — from the upwind side to the downwind tip.
   let windArrowHTML = '';
-  if (windArrowDeg != null) {
-    const wa = windArrowDeg * Math.PI / 180;
-    const arrowLen = 68;
-    const tailLen  = 20;
-    const ax = cx + arrowLen * Math.sin(wa), ay = cy - arrowLen * Math.cos(wa);
-    const tx = cx - tailLen * Math.sin(wa), ty = cy + tailLen * Math.cos(wa);
-    // Arrowhead points
-    const headSize = 9;
-    const perpX =  Math.cos(wa), perpY = Math.sin(wa);
-    const lx = ax - headSize * Math.sin(wa) + (headSize*0.6) * perpX;
-    const ly = ay + headSize * Math.cos(wa) + (headSize*0.6) * perpY;
-    const rx = ax - headSize * Math.sin(wa) - (headSize*0.6) * perpX;
-    const ry = ay + headSize * Math.cos(wa) - (headSize*0.6) * perpY;
+  if (windDeg != null) {
+    // Downwind angle: where the wind is traveling TO
+    const waDeg = (windDeg + 180) % 360;
+    const wa = waDeg * Math.PI / 180;
+    const innerR = 30; // stop just inside the center circle edge
+
+    // Downwind tip (arrowhead end) — stop at inner circle edge
+    const tipX = cx + innerR * Math.sin(wa),  tipY = cy - innerR * Math.cos(wa);
+    // Extend line all the way to the opposite inner circle edge (upwind end)
+    const tailX = cx - innerR * Math.sin(wa), tailY = cy + innerR * Math.cos(wa);
+
+    // Build a long line from upwind inner-circle edge to downwind inner-circle edge
+    // but we want it to visually cross the full diameter, so use a larger inner reach
+    const lineR = 75; // reach from center toward each side (fits inside r=100 ring comfortably)
+    const lx1 = cx + lineR * Math.sin(wa),  ly1 = cy - lineR * Math.cos(wa);  // downwind end
+    const lx2 = cx - lineR * Math.sin(wa),  ly2 = cy + lineR * Math.cos(wa);  // upwind end (no head)
+
+    // Arrowhead at downwind tip
+    const headSize = 10;
+    const perpX = Math.cos(wa), perpY = Math.sin(wa);
+    const hx  = lx1, hy  = ly1;
+    const hlx = hx - headSize * Math.sin(wa) + (headSize * 0.55) * perpX;
+    const hly = hy + headSize * Math.cos(wa) + (headSize * 0.55) * perpY;
+    const hrx = hx - headSize * Math.sin(wa) - (headSize * 0.55) * perpX;
+    const hry = hy + headSize * Math.cos(wa) - (headSize * 0.55) * perpY;
+
+    // Small circle at upwind tail end
+    const tailCircleX = lx2, tailCircleY = ly2;
+
     windArrowHTML = `
-      <line x1="${tx.toFixed(1)}" y1="${ty.toFixed(1)}" x2="${ax.toFixed(1)}" y2="${ay.toFixed(1)}" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-      <polygon points="${ax.toFixed(1)},${ay.toFixed(1)} ${lx.toFixed(1)},${ly.toFixed(1)} ${rx.toFixed(1)},${ry.toFixed(1)}" fill="white"/>
+      <line x1="${lx2.toFixed(1)}" y1="${ly2.toFixed(1)}" x2="${lx1.toFixed(1)}" y2="${ly1.toFixed(1)}" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="${hx.toFixed(1)},${hy.toFixed(1)} ${hlx.toFixed(1)},${hly.toFixed(1)} ${hrx.toFixed(1)},${hry.toFixed(1)}" fill="white"/>
+      <circle cx="${tailCircleX.toFixed(1)}" cy="${tailCircleY.toFixed(1)}" r="4" fill="none" stroke="white" stroke-width="2"/>
     `;
   }
 
@@ -447,7 +465,7 @@ function renderWindModal() {
           <div class="beaufort-scale">${bf.desc}</div>
           <div class="beaufort-desc">Force ${bf.num} of 12</div>
         </div>
-        <div class="beaufort-num">${bf.num}</div>
+        <div class="beaufort-num" style="color:${gradientColor(bf.pct).hex}">${bf.num}</div>
       </div>
     </div>` : '';
 
