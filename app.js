@@ -952,29 +952,42 @@ function openDayModal(dayIdx) {
   // ── Mini compass SVG (120×120) ──
   function miniCompass(deg) {
     if (deg == null) return '';
-    const cx = 60, cy = 60, r = 50;
-    const a = deg * Math.PI / 180;
-    const pts = [['N',0],['E',90],['S',180],['W',270]];
-    const labels = pts.map(([l,d]) => {
-      const la = d * Math.PI / 180;
-      const x = cx + (r-14)*Math.sin(la), y = cy - (r-14)*Math.cos(la);
-      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${d===0?'#f87171':'rgba(255,255,255,.45)'}" font-size="10" font-family="ui-monospace,monospace" font-weight="${d===0?700:500}">${l}</text>`;
+    const cx = 150, cy = 150, r = 118;
+    // 72 ticks every 5° — major at 22.5° (16-point), mid at 10°
+    const ticksHTML = [];
+    for (let i = 0; i < 72; i++) {
+      const d = i * 5;
+      const a = d * Math.PI / 180;
+      const is16 = d % 22.5 === 0, isMid = d % 10 === 0;
+      const ro = r, ri = r - (is16 ? 16 : isMid ? 10 : 6);
+      const x1 = cx + ro*Math.sin(a), y1 = cy - ro*Math.cos(a);
+      const x2 = cx + ri*Math.sin(a), y2 = cy - ri*Math.cos(a);
+      ticksHTML.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,${is16?'.4':isMid?'.2':'.1'})" stroke-width="${is16?1.5:1}"/>`);
+    }
+    // 16-point labels
+    const pts16 = [
+      ['N',0],['NNE',22.5],['NE',45],['ENE',67.5],
+      ['E',90],['ESE',112.5],['SE',135],['SSE',157.5],
+      ['S',180],['SSW',202.5],['SW',225],['WSW',247.5],
+      ['W',270],['WNW',292.5],['NW',315],['NNW',337.5]
+    ];
+    const cardinals = new Set([0,90,180,270]);
+    const labelsHTML = pts16.map(([lbl, d]) => {
+      const a = d * Math.PI / 180;
+      const isCard = cardinals.has(d);
+      const rl = r - (isCard ? 26 : 24);
+      const x = cx + rl*Math.sin(a), y = cy - rl*Math.cos(a);
+      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${d===0?'#f87171':isCard?'rgba(255,255,255,.75)':'rgba(255,255,255,.38)'}" font-size="${isCard?13:9}" font-family="ui-monospace,monospace" font-weight="${isCard?700:500}">${lbl}</text>`;
     }).join('');
-    const ticks = [0,45,90,135,180,225,270,315].map(d => {
-      const ta = d * Math.PI / 180;
-      const ro = r, ri = r-(d%90===0?10:6);
-      return `<line x1="${(cx+ro*Math.sin(ta)).toFixed(1)}" y1="${(cy-ro*Math.cos(ta)).toFixed(1)}" x2="${(cx+ri*Math.sin(ta)).toFixed(1)}" y2="${(cy-ri*Math.cos(ta)).toFixed(1)}" stroke="rgba(255,255,255,${d%90===0?.35:.18})" stroke-width="${d%90===0?1.5:1}"/>`;
-    }).join('');
-    const lineR = 36;
-    const hw = 5, hh = 10;
+    const lineR = 88, hw = 7, hh = 14;
     const arrow = `<g transform="rotate(${deg},${cx},${cy})">
       <line x1="${cx}" y1="${cy-lineR}" x2="${cx}" y2="${cy+lineR}" stroke="#93c5fd" stroke-width="2.5" stroke-linecap="round"/>
       <polygon points="${cx},${cy+lineR} ${cx-hw},${cy+lineR-hh} ${cx+hw},${cy+lineR-hh}" fill="#93c5fd"/>
-      <circle cx="${cx}" cy="${cy-lineR}" r="3.5" fill="none" stroke="#93c5fd" stroke-width="2"/>
+      <circle cx="${cx}" cy="${cy-lineR}" r="4.5" fill="none" stroke="#93c5fd" stroke-width="2.2"/>
     </g>`;
-    return `<svg viewBox="0 0 120 120" width="140" height="140" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
-      ${ticks}${labels}${arrow}
+    return `<svg viewBox="0 0 300 300" width="160" height="160" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
+      ${ticksHTML.join('')}${labelsHTML}${arrow}
     </svg>`;
   }
 
@@ -983,29 +996,29 @@ function openDayModal(dayIdx) {
   const windCardHTML = maxWind != null ? `
     <div>
       <div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Wind</div>
-      <div class="aqi-card">
-        <div style="display:flex;align-items:center;gap:16px;padding:16px 18px">
-          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+      <div class="aqi-card" style="overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr;min-height:180px">
+          <div style="display:flex;flex-direction:column;justify-content:space-between;padding:18px 16px;border-right:1px solid var(--border)">
             <div>
-              <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">AVG SPEED</div>
-              <div style="font-size:42px;font-weight:300;line-height:1;color:var(--blue)">${avgWind}<span style="font-size:14px;color:var(--dim);margin-left:4px">mph</span></div>
+              <div style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">AVG SPEED</div>
+              <div style="font-size:44px;font-weight:300;line-height:1;color:var(--blue)">${avgWind}<span style="font-size:13px;color:var(--dim);margin-left:4px">mph</span></div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:6px">
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:8px">
                 <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Peak</span>
-                <span style="font-size:16px;font-weight:500;color:var(--text)">${maxWind} <span style="font-size:11px;color:var(--dim)">mph</span></span>
+                <span style="font-size:15px;font-weight:500;color:var(--text)">${maxWind}<span style="font-size:10px;color:var(--dim);margin-left:3px">mph</span></span>
               </div>
-              ${maxGust ? `<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:6px">
+              ${maxGust ? `<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:8px">
                 <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Gusts</span>
-                <span style="font-size:16px;font-weight:500;color:var(--orange)">${maxGust} <span style="font-size:11px;color:var(--dim)">mph</span></span>
+                <span style="font-size:15px;font-weight:500;color:var(--orange)">${maxGust}<span style="font-size:10px;color:var(--dim);margin-left:3px">mph</span></span>
               </div>` : ''}
               ${dominantDir ? `<div style="display:flex;justify-content:space-between;align-items:baseline">
-                <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Direction</span>
-                <span style="font-size:16px;font-weight:500;color:var(--text)">${dominantDir}</span>
+                <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Dir</span>
+                <span style="font-size:15px;font-weight:500;color:var(--text)">${dominantDir}</span>
               </div>` : ''}
             </div>
           </div>
-          <div style="flex-shrink:0;opacity:.9">${miniCompass(dominantWindDeg)}</div>
+          <div style="display:flex;align-items:center;justify-content:center;padding:8px">${miniCompass(dominantWindDeg)}</div>
         </div>
       </div>
     </div>` : '';
