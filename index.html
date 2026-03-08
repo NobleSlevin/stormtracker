@@ -146,7 +146,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 
 /* ── FORECAST ── */
 #panelForecast { padding: 18px 20px; }
-.fc-hero { background: linear-gradient(135deg,#1a3a5c 0%,#1e4976 50%,#1a3a5c 100%); border-radius: var(--r); padding: 24px; position: relative; overflow: hidden; min-height: 150px; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 10px; border: 1px solid rgba(147,197,253,0.15); }
+.fc-hero { background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: var(--r); padding: 24px; position: relative; overflow: hidden; min-height: 150px; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.12); }
 .fc-hero::before { display: none; }
 .fch-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .fch-day { font-size: 13px; font-weight: 600; color: rgba(147,197,253,.7); }
@@ -194,7 +194,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 
 /* ── NEARBY TAB ── */
 #panelNearby { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
-.section-ttl { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.section-ttl { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 2px; }
 
 /* State alert count */
 .state-alert-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
@@ -466,9 +466,9 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
 .day-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; display:none; }
 .day-modal-overlay.open { display:block; }
-.day-modal { position:fixed; inset:0; background:#0e1013; z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; overflow:hidden; }
+.day-modal { position:fixed; inset:0; background:#0e1013; z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; overflow:hidden; background-size:100% 100%; }
 .day-modal.open { transform:translateX(0); }
-.day-modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; padding-top:calc(env(safe-area-inset-top, 0px) + 16px); border-bottom:1px solid var(--border); flex-shrink:0; background:var(--card); }
+.day-modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; padding-top:calc(env(safe-area-inset-top, 0px) + 16px); border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; background:rgba(14,16,19,0.6); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
 .day-modal-back { display:flex; align-items:center; gap:4px; background:none; border:none; color:var(--blue); font-size:14px; font-weight:500; cursor:pointer; padding:4px 0; }
 .day-modal-title { font-size:16px; font-weight:600; color:var(--text); }
 .day-modal-body { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:16px; }
@@ -810,7 +810,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.5</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.6</div>
     </div>
   </div>
 </div>

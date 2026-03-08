@@ -816,7 +816,7 @@ function openDayModal(dayIdx) {
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
   // ── Hero card — fully inline styles to avoid fc-hero CSS conflicts ──
-  const heroHTML = `<div style="background:linear-gradient(135deg,#1a3a5c 0%,#1e4976 50%,#1a3a5c 100%);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(147,197,253,0.15);display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+  const heroHTML = `<div style="background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:13px;font-weight:600;color:rgba(147,197,253,.7)">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</span>
       <span style="font-size:13px;color:rgba(147,197,253,.5)">${d.isDaytime ? 'Daytime' : 'Evening'}</span>
