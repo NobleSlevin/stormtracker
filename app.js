@@ -1442,6 +1442,8 @@ function parseForecastSignals(periods, lat, alerts) {
 }
 
 function computeTornadoRisk(periods, lat, lon, alerts) {
+  const placeholder = document.getElementById('factorPlaceholder');
+  if (placeholder) placeholder.style.display = 'none';
   const factors = parseForecastSignals(periods, lat, alerts);
   const weights = [0.20, 0.18, 0.16, 0.12, 0.12, 0.10, 0.07, 0.05];
   const composite = factors.reduce((sum, f, i) => sum + f.live * weights[i], 0);
@@ -1889,6 +1891,14 @@ async function fetchForPoint(lat, lon) {
   }
 }
 
+function setRiskLoading(on) {
+  const el = document.getElementById('factorPlaceholder');
+  if (!el) return;
+  el.innerHTML = on
+    ? `<div class="spinner"></div><div class="state-sub" style="margin-top:10px">Computing risk…</div>`
+    : `<div class="state-icon"><svg width="34" height="34" fill="var(--dim)" viewBox="0 0 16 16"><path d="M6 0a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2.5 3a.5.5 0 0 0-1 0v.5H5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1H7.5zM3 5.5A.5.5 0 0 1 3.5 5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 5.5M4.5 8a.5.5 0 0 0 0 1H7v.5a.5.5 0 0 0 1 0V9h.5a.5.5 0 0 0 0-1zM6 11a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm1 3a.5.5 0 0 0 0 1h.01a.5.5 0 0 0 0-1z"/></svg><div class="state-sub">Awaiting location data…</div>`;
+}
+
 function setActiveLocBtn(id) {
   document.getElementById('btnGeo').classList.toggle('primary', id === 'btnGeo');
   document.getElementById('btnNational').classList.toggle('primary', id === 'btnNational');
@@ -1896,6 +1906,7 @@ function setActiveLocBtn(id) {
 
 async function geoMe() {
   setActiveLocBtn('btnGeo');
+  setRiskLoading(true);
   setLive('loading','LOCATING…');
   try {
     const pos = await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:6000}));

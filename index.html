@@ -533,10 +533,10 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="11" height="11" fill="currentColor"><use href="#bi-broadcast"/></svg> Nearby
     </button>
     <button class="tab" data-tab="radar">
-      <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/><path d="M8 3a5 5 0 1 0 0 10A5 5 0 0 0 8 3m0 1a4 4 0 1 1 0 8 4 4 0 0 1 0-8"/><path d="M8 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4m0 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/><path d="M8 7.5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0V8a.5.5 0 0 1 .5-.5"/><path d="M8.354 4.146a.5.5 0 0 1 0 .708l-5 5a.5.5 0 0 1-.708-.708l5-5a.5.5 0 0 1 .708 0"/></svg> Radar
+      <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a8 8 0 1 0 0-16A8 8 0 0 0 8 16m0-1.5a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13"/><path d="M8 11a3 3 0 1 0 0-6A3 3 0 0 0 8 11m0-1.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/><path d="M8 8.5a.5.5 0 0 0 .5-.5V3.5a.5.5 0 0 0-1 0V8a.5.5 0 0 0 .5.5"/><path d="M8 8.35 3.4 4.25a.5.5 0 1 0-.65.76L7.65 9.1a.5.5 0 0 0 .7-.035.5.5 0 0 0-.35-.715z"/></svg> Radar
     </button>
     <button class="tab" data-tab="tornado">
-      <svg width="11" height="11" fill="currentColor"><use href="#bi-tornado"/></svg> Risk
+      <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><path d="M6 0a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2.5 3a.5.5 0 0 0-1 0v.5H5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1H7.5zM3 5.5A.5.5 0 0 1 3.5 5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 5.5M4.5 8a.5.5 0 0 0 0 1H7v.5a.5.5 0 0 0 1 0V9h.5a.5.5 0 0 0 0-1zM6 11a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm1 3a.5.5 0 0 0 0 1h.01a.5.5 0 0 0 0-1z"/></svg> Risk
     </button>
   </div>
 
@@ -591,7 +591,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
     <div class="tab-panel" id="tabTornado">
       <div id="panelTornado">
         <div class="risk-banner" id="riskBanner">
-          <div class="risk-icon"><svg width="30" height="30" fill="currentColor"><use href="#bi-tornado"/></svg></div>
+          <div class="risk-icon"><svg width="30" height="30" fill="currentColor" viewBox="0 0 16 16"><path d="M6 0a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2.5 3a.5.5 0 0 0-1 0v.5H5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1H7.5zM3 5.5A.5.5 0 0 1 3.5 5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 5.5M4.5 8a.5.5 0 0 0 0 1H7v.5a.5.5 0 0 0 1 0V9h.5a.5.5 0 0 0 0-1zM6 11a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm1 3a.5.5 0 0 0 0 1h.01a.5.5 0 0 0 0-1z"/></svg></div>
           <div class="risk-info">
             <div class="risk-label">Tornado Formation Index</div>
             <div class="risk-level risk-guarded" id="riskLevel">Select Location</div>
@@ -613,8 +613,8 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
           </div>
         </div>
         <div class="factor-list" id="factorList">
-          <div class="state-center">
-            <div class="state-icon"><svg width="34" height="34" fill="var(--dim)"><use href="#bi-tornado"/></svg></div>
+          <div class="state-center" id="factorPlaceholder">
+            <div class="state-icon"><svg width="34" height="34" fill="var(--dim)" viewBox="0 0 16 16"><path d="M6 0a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2.5 3a.5.5 0 0 0-1 0v.5H5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1H7.5zM3 5.5A.5.5 0 0 1 3.5 5h9a.5.5 0 0 1 0 1h-9A.5.5 0 0 1 3 5.5M4.5 8a.5.5 0 0 0 0 1H7v.5a.5.5 0 0 0 1 0V9h.5a.5.5 0 0 0 0-1zM6 11a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm1 3a.5.5 0 0 0 0 1h.01a.5.5 0 0 0 0-1z"/></svg></div>
             <div class="state-sub">Awaiting location data…</div>
           </div>
         </div>
@@ -732,7 +732,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.5.2</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.5.3</div>
     </div>
   </div>
 </div>
