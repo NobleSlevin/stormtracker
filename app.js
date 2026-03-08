@@ -1019,7 +1019,7 @@ function openDayModal(dayIdx) {
       <polygon points="${cx},${cy+lineR} ${cx-hw},${cy+lineR-hh} ${cx+hw},${cy+lineR-hh}" fill="#93c5fd"/>
       <circle cx="${cx}" cy="${cy-lineR}" r="4.5" fill="none" stroke="#93c5fd" stroke-width="2.2"/>
     </g>`;
-    return `<svg viewBox="0 0 300 300" width="100%" height="100%" style="display:block;max-width:200px;max-height:200px" xmlns="http://www.w3.org/2000/svg">
+    return `<svg viewBox="0 0 300 300" width="100%" height="100%" style="display:block;max-width:240px;max-height:240px" xmlns="http://www.w3.org/2000/svg">
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
       ${ticksHTML.join('')}${labelsHTML}${arrow}
     </svg>`;
@@ -1052,7 +1052,7 @@ function openDayModal(dayIdx) {
               </div>` : ''}
             </div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:center;padding:12px;min-height:200px">${miniCompass(dominantWindDeg)}</div>
+          <div style="display:flex;align-items:center;justify-content:center;padding:8px;min-height:240px">${miniCompass(dominantWindDeg)}</div>
         </div>
       </div>
     </div>` : '';
