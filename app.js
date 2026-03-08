@@ -841,7 +841,8 @@ function openDayModal(dayIdx) {
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
   // Fire gradient early so accent color is available for hero HTML
-  const _dmAccent = weatherGradient(highTemp, d.shortForecast, document.querySelector('.day-modal'));
+  const _gradTemp = (dayIdx === 0 && window._omCurrentTemp != null) ? window._omCurrentTemp : highTemp;
+  const _dmAccent = weatherGradient(_gradTemp, d.shortForecast, document.querySelector('.day-modal'));
   const _ac = _dmAccent ? `rgb(${_dmAccent})` : 'rgb(147,197,253)';
   const _acFaint = _dmAccent ? `rgba(${_dmAccent},0.55)` : 'rgba(147,197,253,0.55)';
   const _acDim = _dmAccent ? `rgba(${_dmAccent},0.38)` : 'rgba(147,197,253,0.38)';
