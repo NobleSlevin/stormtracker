@@ -155,31 +155,22 @@ document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
-// ── SWIPE LEFT/RIGHT TO CHANGE TABS ──────────────
+// ── SWIPE LEFT/RIGHT ON TAB BAR TO CHANGE TABS ──────────────
 (function() {
-  const body = document.getElementById('body');
-  if (!body) return;
-  let tx = 0, ty = 0, locked = false;
-  body.addEventListener('touchstart', e => {
+  const tabBar = document.querySelector('.tabs');
+  if (!tabBar) return;
+  let tx = 0;
+  tabBar.addEventListener('touchstart', e => {
     tx = e.touches[0].clientX;
-    ty = e.touches[0].clientY;
-    locked = false;
   }, { passive: true });
-  body.addEventListener('touchend', e => {
-    if (locked) return;
+  tabBar.addEventListener('touchend', e => {
     const dx = e.changedTouches[0].clientX - tx;
-    const dy = e.changedTouches[0].clientY - ty;
-    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.8) return;
+    if (Math.abs(dx) < 40) return;
     const cur = document.querySelector('.tab.on')?.dataset?.tab;
     const idx = TAB_ORDER.indexOf(cur);
     if (idx === -1) return;
     if (dx < 0 && idx < TAB_ORDER.length - 1) switchTab(TAB_ORDER[idx + 1]);
     if (dx > 0 && idx > 0) switchTab(TAB_ORDER[idx - 1]);
-  }, { passive: true });
-  body.addEventListener('touchmove', e => {
-    const dx = Math.abs(e.touches[0].clientX - tx);
-    const dy = Math.abs(e.touches[0].clientY - ty);
-    if (dy > dx * 0.8) locked = true;
   }, { passive: true });
 })();
 
