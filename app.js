@@ -913,13 +913,23 @@ function openDayModal(dayIdx) {
   }
 
   // ── Compact square metric tiles (2×2 grid) ──
-  const windTileHTML = maxWind != null ? `
-    <div class="dm-tile">
-      <div class="dm-tile-ttl">Wind</div>
-      <div class="dm-tile-compass">${miniCompass(dominantWindDeg)}</div>
-      <div class="dm-tile-main">${avgWind}<span class="dm-tile-unit">mph avg</span></div>
-      <div class="dm-tile-sub">Peak ${maxWind}${maxGust ? ' · Gusts '+maxGust : ''} mph</div>
-      <div class="dm-tile-sub">${dominantDir || ''}</div>
+  const windCardHTML = maxWind != null ? `
+    <div>
+      <div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Wind</div>
+      <div class="aqi-card">
+        <div class="aqi-header" style="align-items:center">
+          <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">AVG SPEED</div>
+            <div style="font-size:40px;font-weight:300;line-height:1;color:var(--blue)">${avgWind}<span style="font-size:14px;color:var(--dim);margin-left:4px">mph</span></div>
+            <div style="display:flex;gap:14px;margin-top:2px">
+              <div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Peak</div><div style="font-size:15px;font-weight:500;color:var(--text)">${maxWind} mph</div></div>
+              ${maxGust ? `<div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Gusts</div><div style="font-size:15px;font-weight:500;color:var(--orange)">${maxGust} mph</div></div>` : ''}
+              ${dominantDir ? `<div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Direction</div><div style="font-size:15px;font-weight:500;color:var(--text)">${dominantDir}</div></div>` : ''}
+            </div>
+          </div>
+          <div style="flex-shrink:0;opacity:.85">${miniCompass(dominantWindDeg)}</div>
+        </div>
+      </div>
     </div>` : '';
 
   const humidTileHTML = avgHumid != null ? (() => {
@@ -956,7 +966,7 @@ function openDayModal(dayIdx) {
     </div>`;
   })() : '';
 
-  const gridTiles = [windTileHTML, humidTileHTML, visTileHTML, pressTileHTML].filter(Boolean).join('');
+  const gridTiles = [humidTileHTML, visTileHTML, pressTileHTML].filter(Boolean).join('');
   const tilesHTML = gridTiles ? `<div><div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Conditions</div><div class="dm-grid">${gridTiles}</div></div>` : '';
 
   const metricCards = [aqiCardHTML, uvCardHTML].filter(Boolean).join('');
@@ -965,6 +975,7 @@ function openDayModal(dayIdx) {
     heroHTML +
     hourlyHTML +
     metricCards +
+    (windCardHTML || '') +
     tilesHTML;
 
   document.getElementById('dayModalOverlay').classList.add('open');
