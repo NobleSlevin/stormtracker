@@ -800,7 +800,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.9.8</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.9.8d</div>
     </div>
   </div>
 </div>
@@ -816,7 +816,26 @@ function setAppHeight() {
 }
 setAppHeight();
 window.addEventListener('resize', setAppHeight);
-setTimeout(setAppHeight, 100);
+setTimeout(function() {
+  setAppHeight();
+  const app = document.getElementById('app');
+  const tw = document.querySelector('.ticker-wrap');
+  const t = document.querySelector('.ticker');
+  const aR = app.getBoundingClientRect();
+  const twR = tw.getBoundingClientRect();
+  const tR = t.getBoundingClientRect();
+  const dbg = document.createElement('div');
+  dbg.style.cssText = 'position:fixed;top:35%;left:8px;right:8px;background:rgba(0,0,180,.92);color:#fff;font-size:11px;padding:10px;z-index:99999;border-radius:8px;font-family:monospace;line-height:1.9';
+  dbg.innerHTML =
+    'screen.h: ' + window.screen.height + '<br>' +
+    'innerH: ' + window.innerHeight + '<br>' +
+    'app.h: ' + Math.round(aR.height) + ' / bottom: ' + Math.round(aR.bottom) + '<br>' +
+    'ticker-wrap.h: ' + Math.round(twR.height) + ' / bottom: ' + Math.round(twR.bottom) + '<br>' +
+    'ticker.h: ' + Math.round(tR.height) + ' / bottom: ' + Math.round(tR.bottom) + '<br>' +
+    'ticker-wrap computed height: ' + getComputedStyle(tw).height + '<br>' +
+    'ticker-wrap overflow: ' + getComputedStyle(tw).overflow;
+  document.body.appendChild(dbg);
+}, 500);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="app.js"></script>
