@@ -1512,7 +1512,7 @@ async function fetchObservations(stationsUrl) {
     set('obsWind',  windMph);
     set('obsPress', pressMb);
     set('obsVis',   visMi);
-    document.getElementById('obsStrip').classList.add('show');
+    const _os=document.getElementById('obsStrip');_os.classList.add('show');_os.dataset.active='1';
     // Store station id for Nearby tab
     return { stationId, name: st.features?.[0]?.properties?.name || stationId };
   } catch(e) { console.warn('Obs error:', e); }
@@ -2466,7 +2466,7 @@ async function fetchOpenMeteo(lat, lon) {
     if (document.getElementById('obsWind').textContent === '—' && c.wind_speed_10m != null)
       set('obsWind', Math.round(c.wind_speed_10m));
 
-    document.getElementById('obsStrip').classList.add('show');
+    const _os=document.getElementById('obsStrip');_os.classList.add('show');_os.dataset.active='1';
 
     // Open-Meteo owns the hero temp — it is spatially accurate and up-to-the-hour.
     // NWS obs stations can be miles away and report stale readings; they do not set the hero.
@@ -2596,7 +2596,7 @@ async function doNational(){
   curMode='national'; curState=null;
   document.getElementById('locName').textContent='United States';
   document.getElementById('locSub').textContent='National View';
-  document.getElementById('obsStrip').classList.remove('show');
+  const _os2=document.getElementById('obsStrip');_os2.classList.remove('show');delete _os2.dataset.active;
   await fetchAlerts(`${NWS}/alerts/active`);
 }
 
@@ -2790,3 +2790,24 @@ function nwrToggle(callsign, url, btn) {
     });
   }
 }
+
+// ── SCROLL: hide obs-strip on scroll down, show on scroll up/top ──
+(function() {
+  const body = document.getElementById('body');
+  if (!body) return;
+  let lastY = 0;
+  let hidden = false;
+  body.addEventListener('scroll', () => {
+    const y = body.scrollTop;
+    const strip = document.getElementById('obsStrip');
+    if (!strip || !strip.dataset.active) { lastY = y; return; }
+    if (y > 10) {
+      // scrolled down enough — always hide
+      if (!hidden) { strip.classList.remove('show'); hidden = true; }
+    } else {
+      // near top — always show
+      if (hidden) { strip.classList.add('show'); hidden = false; }
+    }
+    lastY = y;
+  }, { passive: true });
+})();
