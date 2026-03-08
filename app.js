@@ -159,138 +159,178 @@ document.querySelectorAll('.tab').forEach(btn => {
 // Fades from accent color at top → mid tone at 55% → var(--bg) at bottom.
 function weatherGradient(tempF, shortForecast, targetEl) {
   const fc = (shortForecast || '').toLowerCase();
-  const isWet      = /rain|shower|storm|thunder|drizzle|sleet|snow|flurr|blizzard|precip/.test(fc);
-  const isSnowy    = /snow|flurr|blizzard|sleet|ice|freezing/.test(fc);
-  const isFoggy    = /fog|mist|haze/.test(fc);
-  const isStormy   = /thunder|storm/.test(fc);
-  const isCloudy   = /cloud|overcast|partly/.test(fc);
+  const isWet    = /rain|shower|storm|thunder|drizzle|sleet|snow|flurr|blizzard|precip/.test(fc);
+  const isSnowy  = /snow|flurr|blizzard|sleet|ice|freezing/.test(fc);
+  const isFoggy  = /fog|mist|haze/.test(fc);
+  const isStormy = /thunder|storm/.test(fc);
+  const isCloudy = /cloud|overcast|partly/.test(fc);
 
   // ── GRADIENT LOGIC ────────────────────────────────────────────────────────
-  // Each bracket picks a TWO-HUE pair: c1 (top, vivid) crosses into c2 (mid,
-  // contrasting hue) then fades through c3 (dim) to black. The hue pair is
-  // chosen for both visual drama and weather intuition:
+  // Uses the reference mesh pattern: dark HSL base color + 3 dark anchor blobs
+  // (suppress the base in spots) + 3 vivid color blobs at different positions.
+  // All values are HSL. Two accent hues chosen per condition for visual drama.
   //
-  //  ≤25°F  ARCTIC    clear → violet-indigo top / icy cyan mid
-  //                   snowy → white-lavender top / deep navy mid
+  //  base  = dark version of primary hue (sets overall tint of black)
+  //  dark1-3 = near-black anchors at fixed positions (39%/37%, 16%/87%, 73%/24%)
+  //  v1    = primary vivid blob  (position: upper-left  -40%/-20%)
+  //  v2    = secondary vivid blob (position: center-low  60%/72%)
+  //  v3    = accent vivid blob   (position: lower-right  93%/90%)
   //
-  //  ≤40°F  COLD      clear → electric blue top / deep teal-green mid
-  //                   wet   → steel blue top / slate-purple mid
-  //
-  //  ≤55°F  COOL      clear → cyan-green top / cobalt blue mid
-  //                   wet   → stormy teal top / dark indigo mid
-  //
-  //  ≤68°F  MILD      clear → lime-green top / cyan-blue mid (fresh spring)
-  //                   wet   → forest green top / deep teal mid
-  //
-  //  ≤80°F  WARM      clear → golden yellow top / warm magenta-rose mid (sunset)
-  //                   wet   → amber top / burnt sienna mid
-  //
-  //  ≤92°F  HOT       clear → vivid orange top / purple-violet mid (heat haze)
-  //                   wet   → red-orange top / deep magenta mid (storm heat)
-  //                   stormy→ crimson top / dark purple mid (dramatic)
-  //
-  //  >92°F  SCORCHING → deep red top / dark burnt-orange mid (furnace)
-  //
-  //  FOG    (any temp) → muted grey-green top / dusty mauve mid (overcast murk)
-  //  CLOUDY modifier   → desaturates c1 slightly, shifts c2 cooler
+  //  ≤25°F  ARCTIC    clear → violet / icy cyan / indigo
+  //                   snowy → pale lavender / deep navy / ice blue
+  //  ≤40°F  COLD      clear → electric blue / teal / cobalt
+  //                   wet   → steel blue / slate-purple / deep blue
+  //  ≤55°F  COOL      clear → cyan / cobalt blue / teal-green
+  //                   wet   → teal / dark indigo / blue
+  //  ≤68°F  MILD      clear → lime-green / sky blue / emerald
+  //                   wet   → forest green / deep teal / cyan
+  //  ≤80°F  WARM      clear → golden yellow / magenta / amber
+  //                   wet   → amber / sienna / orange
+  //  ≤92°F  HOT       clear → vivid orange / purple-violet / yellow
+  //                   wet   → red-orange / deep magenta / orange
+  //                   stormy→ crimson / dark purple / red
+  //  >92°F  SCORCHING → deep red / burnt orange / crimson
+  //  FOG               → grey-green / dusty mauve / slate
+  //  CLOUDY modifier   → all saturations reduced by ~40%
 
-  let c1, c2, c3;
+  // [base-hue, base-sat, base-lit, dark-sat, dark-lit, v1-hsl, v2-hsl, v3-hsl]
+  let base, d, v1, v2, v3;
 
   if (tempF <= 25) {
     if (isSnowy) {
-      c1 = 'rgba(210,210,255,0.75)'; // white-lavender
-      c2 = 'rgba(30,40,160,0.55)';   // deep navy
-      c3 = 'rgba(10,10,80,0.20)';
+      base = 'hsla(230,60%,4%,1)';
+      d    = 'hsla(230,60%,5%,1)';
+      v1   = 'hsla(260,80%,75%,1)';   // pale lavender
+      v2   = 'hsla(220,90%,35%,1)';   // deep navy
+      v3   = 'hsla(200,85%,65%,1)';   // ice blue
     } else {
-      c1 = 'rgba(160,80,255,0.78)';  // violet
-      c2 = 'rgba(0,200,230,0.48)';   // icy cyan
-      c3 = 'rgba(0,80,120,0.18)';
+      base = 'hsla(270,60%,4%,1)';
+      d    = 'hsla(270,60%,5%,1)';
+      v1   = 'hsla(273,100%,65%,1)';  // violet
+      v2   = 'hsla(190,100%,55%,1)';  // icy cyan
+      v3   = 'hsla(250,85%,50%,1)';   // indigo
     }
   } else if (tempF <= 40) {
     if (isWet) {
-      c1 = 'rgba(60,140,255,0.78)';  // steel blue
-      c2 = 'rgba(100,60,200,0.50)';  // slate-purple
-      c3 = 'rgba(40,20,120,0.20)';
+      base = 'hsla(220,60%,4%,1)';
+      d    = 'hsla(220,60%,5%,1)';
+      v1   = 'hsla(213,90%,60%,1)';   // steel blue
+      v2   = 'hsla(255,70%,50%,1)';   // slate-purple
+      v3   = 'hsla(230,85%,40%,1)';   // deep blue
     } else {
-      c1 = 'rgba(40,160,255,0.78)';  // electric blue
-      c2 = 'rgba(0,180,140,0.50)';   // teal-green
-      c3 = 'rgba(0,80,60,0.20)';
+      base = 'hsla(210,60%,4%,1)';
+      d    = 'hsla(210,60%,5%,1)';
+      v1   = 'hsla(207,100%,58%,1)';  // electric blue
+      v2   = 'hsla(165,75%,45%,1)';   // teal-green
+      v3   = 'hsla(227,87%,55%,1)';   // cobalt
     }
   } else if (tempF <= 55) {
     if (isWet) {
-      c1 = 'rgba(0,210,200,0.75)';   // stormy teal
-      c2 = 'rgba(60,20,180,0.52)';   // dark indigo
-      c3 = 'rgba(20,0,80,0.20)';
+      base = 'hsla(185,60%,4%,1)';
+      d    = 'hsla(185,60%,5%,1)';
+      v1   = 'hsla(178,100%,42%,1)';  // stormy teal
+      v2   = 'hsla(248,80%,40%,1)';   // dark indigo
+      v3   = 'hsla(210,90%,50%,1)';   // blue
     } else {
-      c1 = 'rgba(0,230,160,0.74)';   // cyan-green
-      c2 = 'rgba(20,80,255,0.52)';   // cobalt blue
-      c3 = 'rgba(0,20,120,0.20)';
+      base = 'hsla(165,55%,4%,1)';
+      d    = 'hsla(165,55%,5%,1)';
+      v1   = 'hsla(158,100%,50%,1)';  // cyan-green
+      v2   = 'hsla(227,87%,55%,1)';   // cobalt blue
+      v3   = 'hsla(175,85%,42%,1)';   // teal
     }
   } else if (tempF <= 68) {
     if (isWet) {
-      c1 = 'rgba(20,180,80,0.74)';   // forest green
-      c2 = 'rgba(0,120,160,0.50)';   // deep teal
-      c3 = 'rgba(0,50,80,0.20)';
+      base = 'hsla(145,55%,4%,1)';
+      d    = 'hsla(145,55%,5%,1)';
+      v1   = 'hsla(141,80%,38%,1)';   // forest green
+      v2   = 'hsla(195,80%,35%,1)';   // deep teal
+      v3   = 'hsla(173,75%,45%,1)';   // cyan
     } else {
-      c1 = 'rgba(100,230,60,0.74)';  // lime-green
-      c2 = 'rgba(0,180,230,0.50)';   // sky blue
-      c3 = 'rgba(0,60,120,0.18)';
+      base = 'hsla(130,55%,4%,1)';
+      d    = 'hsla(130,55%,5%,1)';
+      v1   = 'hsla(104,80%,57%,1)';   // lime-green
+      v2   = 'hsla(199,90%,52%,1)';   // sky blue
+      v3   = 'hsla(151,100%,45%,1)';  // emerald
     }
   } else if (tempF <= 80) {
     if (isWet) {
-      c1 = 'rgba(230,160,0,0.78)';   // amber
-      c2 = 'rgba(180,60,20,0.52)';   // burnt sienna
-      c3 = 'rgba(80,20,0,0.22)';
+      base = 'hsla(35,60%,4%,1)';
+      d    = 'hsla(35,60%,5%,1)';
+      v1   = 'hsla(38,100%,48%,1)';   // amber
+      v2   = 'hsla(16,80%,40%,1)';    // burnt sienna
+      v3   = 'hsla(25,90%,52%,1)';    // orange
     } else {
-      c1 = 'rgba(255,210,0,0.78)';   // golden yellow
-      c2 = 'rgba(220,40,120,0.50)';  // warm magenta (sunset)
-      c3 = 'rgba(100,0,60,0.18)';
+      base = 'hsla(45,60%,4%,1)';
+      d    = 'hsla(45,60%,5%,1)';
+      v1   = 'hsla(48,100%,52%,1)';   // golden yellow
+      v2   = 'hsla(330,85%,52%,1)';   // warm magenta
+      v3   = 'hsla(38,95%,52%,1)';    // amber
     }
   } else if (tempF <= 92) {
     if (isStormy) {
-      c1 = 'rgba(220,30,30,0.80)';   // crimson
-      c2 = 'rgba(80,0,160,0.55)';    // dark purple
-      c3 = 'rgba(30,0,60,0.22)';
+      base = 'hsla(0,60%,4%,1)';
+      d    = 'hsla(0,60%,5%,1)';
+      v1   = 'hsla(0,95%,48%,1)';     // crimson
+      v2   = 'hsla(275,90%,38%,1)';   // dark purple
+      v3   = 'hsla(10,90%,45%,1)';    // deep red
     } else if (isWet) {
-      c1 = 'rgba(255,80,20,0.80)';   // red-orange
-      c2 = 'rgba(160,0,120,0.52)';   // deep magenta
-      c3 = 'rgba(60,0,60,0.20)';
+      base = 'hsla(15,60%,4%,1)';
+      d    = 'hsla(15,60%,5%,1)';
+      v1   = 'hsla(18,100%,54%,1)';   // red-orange
+      v2   = 'hsla(305,90%,38%,1)';   // deep magenta
+      v3   = 'hsla(28,95%,52%,1)';    // orange
     } else {
-      c1 = 'rgba(255,140,0,0.80)';   // vivid orange
-      c2 = 'rgba(120,0,200,0.52)';   // purple-violet (heat haze)
-      c3 = 'rgba(50,0,100,0.20)';
+      base = 'hsla(28,60%,4%,1)';
+      d    = 'hsla(28,60%,5%,1)';
+      v1   = 'hsla(32,100%,52%,1)';   // vivid orange
+      v2   = 'hsla(280,90%,48%,1)';   // purple-violet
+      v3   = 'hsla(50,100%,54%,1)';   // yellow
     }
   } else {
-    // Scorching
-    c1 = 'rgba(255,50,0,0.85)';      // deep red
-    c2 = 'rgba(180,60,0,0.58)';      // burnt orange
-    c3 = 'rgba(80,20,0,0.25)';
+    base = 'hsla(8,60%,4%,1)';
+    d    = 'hsla(8,60%,5%,1)';
+    v1   = 'hsla(5,100%,50%,1)';      // deep red
+    v2   = 'hsla(22,95%,45%,1)';      // burnt orange
+    v3   = 'hsla(0,95%,42%,1)';       // crimson
   }
 
   if (isFoggy) {
-    c1 = 'rgba(140,160,150,0.65)';   // grey-green murk
-    c2 = 'rgba(110,80,120,0.42)';    // dusty mauve
-    c3 = 'rgba(50,30,60,0.18)';
+    base = 'hsla(150,20%,4%,1)';
+    d    = 'hsla(150,20%,5%,1)';
+    v1   = 'hsla(148,30%,42%,1)';     // grey-green
+    v2   = 'hsla(290,25%,38%,1)';     // dusty mauve
+    v3   = 'hsla(210,20%,40%,1)';     // slate
   } else if (isCloudy && !isWet) {
-    // Slightly desaturate — blend c1 toward grey, shift c2 cooler
-    c1 = c1.replace(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/, (_, r, g, b, a) => {
-      const avg = (parseInt(r)*0.6 + parseInt(g)*0.6 + parseInt(b)*0.6) / 3;
-      return `rgba(${Math.round(parseInt(r)*0.7+avg*0.3)},${Math.round(parseInt(g)*0.7+avg*0.3)},${Math.round(parseInt(b)*0.7+avg*0.3)},${a})`;
-    });
+    // Reduce saturation of vivid blobs for overcast look
+    v1 = v1.replace(/hsla\((\d+),(\d+)%/, (_, h, s) => `hsla(${h},${Math.round(s*0.55)}%`);
+    v2 = v2.replace(/hsla\((\d+),(\d+)%/, (_, h, s) => `hsla(${h},${Math.round(s*0.55)}%`);
+    v3 = v3.replace(/hsla\((\d+),(\d+)%/, (_, h, s) => `hsla(${h},${Math.round(s*0.55)}%`);
   }
 
-  // 4-stop linear: vivid hue A at top → contrasting hue B at 38% → dim fade at 62% → black base
-  const grad = `linear-gradient(to bottom, ${c1} 0%, ${c2} 38%, ${c3} 62%, #000000 84%)`;
+  // Mesh pattern: dark base + 3 dark anchor blobs + 3 vivid color blobs
+  // Anchors suppress the base at fixed positions; vivid blobs provide the color light sources
+  const bgColor = base;
+  const bgImage = [
+    `radial-gradient(at 39% 37%, ${d} 0px, transparent 50%)`,
+    `radial-gradient(at 16% 87%, ${d} 0px, transparent 50%)`,
+    `radial-gradient(at 73% 24%, ${d} 0px, transparent 50%)`,
+    `radial-gradient(at -40% -20%, ${v1} 0px, transparent 40%)`,
+    `radial-gradient(at 60% 72%, ${v2} 0px, transparent 50%)`,
+    `radial-gradient(at 93% 90%, ${v3} 0px, transparent 50%)`,
+  ].join(', ');
+
   const el = targetEl || document.body;
   if (el.classList && el.classList.contains('day-modal')) {
-    el.style.backgroundImage = grad;
+    el.style.backgroundColor = bgColor;
+    el.style.backgroundImage = bgImage;
   } else {
-    el.style.background = grad;
+    el.style.backgroundColor = bgColor;
+    el.style.backgroundImage = bgImage;
     window._lastGradTemp = tempF;
     window._lastGradFc   = shortForecast;
   }
-  window._weatherAccent = accent;
-  return accent;
+  window._weatherAccent = null;
+  return null;
 }
 
 function clearWeatherGradient() {
