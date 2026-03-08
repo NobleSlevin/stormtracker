@@ -404,8 +404,8 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .data-note { font-size: 10px; color: var(--muted); font-family: var(--mono); letter-spacing: .5px; text-align: center; padding: 6px 4px; }
 
 /* ── TICKER ── */
-.ticker { flex-shrink: 0; background: var(--card); border-top: 1px solid var(--border); height: 28px; display: flex; align-items: center; overflow: hidden; }
-.ticker-wrap { flex-shrink: 0; background: #16181d; padding-bottom: env(safe-area-inset-bottom, 34px); }
+.ticker { flex-shrink: 0; background: var(--card); border-top: 1px solid var(--border); height: 28px; min-height: 28px; display: flex; align-items: center; overflow: hidden; }
+.ticker-wrap { flex-shrink: 0; background: #16181d; height: 62px; display: flex; flex-direction: column; justify-content: flex-start; }
 .ticker-lbl { background: var(--blue); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 0 12px; height: 28px; display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
 .ticker-track { overflow: hidden; flex: 1; height: 28px; display: flex; align-items: center; }
 .ticker-inner { font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: nowrap; animation: ticker 40s linear infinite; letter-spacing: .5px; }
@@ -800,7 +800,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.9.7</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.9.8</div>
     </div>
   </div>
 </div>
@@ -812,9 +812,7 @@ if (window.navigator.standalone === true) {
 }
 function setAppHeight() {
   const app = document.getElementById('app');
-  // Use screen.height to cover the full physical display including safe areas
   app.style.height = window.screen.height + 'px';
-  app.style.top = '0';
 }
 setAppHeight();
 window.addEventListener('resize', setAppHeight);
