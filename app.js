@@ -858,7 +858,7 @@ function openDayModal(dayIdx) {
     const uvColor = _uvC.hex, uvBg = _uvC.bg, uvBorder = _uvC.border;
     const advice  = uv < 3 ? 'No protection needed' : uv < 6 ? 'Wear sunscreen SPF 30+' : uv < 8 ? 'Seek shade midday' : uv < 11 ? 'Minimize sun 10am–4pm' : 'Avoid sun exposure';
     const burnMins = uv <= 0 ? '∞' : uv < 3 ? '60+ min' : uv < 6 ? '30–45 min' : uv < 8 ? '15–25 min' : uv < 11 ? '10–15 min' : '<10 min';
-    return `<div class="aqi-section-ttl">UV Index</div>
+    return `<div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">UV Index</div>
     <div class="uv-card">
       <div class="uv-header">
         <div class="uv-icon-wrap" style="background:${uvBg};border:1.5px solid ${uvBorder}">
@@ -953,7 +953,7 @@ function openDayModal(dayIdx) {
   })() : '';
 
   const gridTiles = [windTileHTML, humidTileHTML, visTileHTML, pressTileHTML].filter(Boolean).join('');
-  const tilesHTML = gridTiles ? `<div class="aqi-section-ttl">Conditions</div><div class="dm-grid">${gridTiles}</div>` : '';
+  const tilesHTML = gridTiles ? `<div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">Conditions</div><div class="dm-grid">${gridTiles}</div>` : '';
 
   const metricCards = [aqiCardHTML, uvCardHTML].filter(Boolean).join('');
 
@@ -1060,7 +1060,7 @@ function aqiHTML(aq) {
   const padCells = aq.pollutants.length < 3
     ? Array(3 - aq.pollutants.length).fill('<div class="aqi-cell"></div>').join('') : '';
   return `
-    <div class="aqi-section-ttl">Air Quality</div>
+    <div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">Air Quality</div>
     <div class="aqi-card">
       <div class="aqi-header">
         <div class="aqi-icon-wrap" style="background:${aqiBg};border-color:${aqiBorder}">
@@ -1118,7 +1118,7 @@ function renderUVSlot() {
   const burnMins = uv <= 0 ? '∞' : uv < 3 ? '60+ min' : uv < 6 ? '30–45 min' : uv < 8 ? '15–25 min' : uv < 11 ? '10–15 min' : '<10 min';
 
   slot.innerHTML = `
-    <div class="aqi-section-ttl">UV Index</div>
+    <div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">UV Index</div>
     <div class="uv-card">
       <div class="uv-header">
         <div class="uv-icon-wrap" style="background:${uvBg};border:1.5px solid ${uvBorder}">
