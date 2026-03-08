@@ -28,7 +28,7 @@ body { min-height: 100%; }
 ::-webkit-scrollbar { display: none; }
 
 #app { display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-repeat: no-repeat; animation: bgbreathe 20s ease-in-out infinite; }
-#app::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 45vh; background: linear-gradient(to bottom, transparent 0%, #080808 85%); pointer-events: none; z-index: 0; }
+#app::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 45vh; background: linear-gradient(to bottom, transparent 0%, #000000 80%); pointer-events: none; z-index: 0; }
 .sa-top { flex-shrink: 0; height: env(safe-area-inset-top, 0px); background: var(--bg); }
 
 /* ── HEADER ── */
@@ -718,7 +718,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.7.4</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.7.5</div>
   </div>
 
 </div>
@@ -818,7 +818,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.7.4</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.7.5</div>
     </div>
   </div>
 </div>
@@ -837,7 +837,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.7.4"></script>
+<script src="app.js?v=2.7.5"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>

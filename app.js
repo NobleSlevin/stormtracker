@@ -309,7 +309,7 @@ function weatherGradient(tempF, shortForecast, targetEl) {
 
   // Mesh pattern: dark base + 3 dark anchor blobs + 3 vivid color blobs
   // Anchors suppress the base at fixed positions; vivid blobs provide the color light sources
-  const bgColor = base;
+  const bgColor = "#000000";
   const bgImage = [
     `radial-gradient(at 61% 63%, ${d} 0px, transparent 50%)`,
     `radial-gradient(at 84% 13%, ${d} 0px, transparent 50%)`,
