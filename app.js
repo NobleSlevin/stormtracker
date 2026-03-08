@@ -271,7 +271,7 @@ function updateTicker(alerts) {
 // ══════════════════════════════════════════════
 // WIND MODAL
 // ══════════════════════════════════════════════
-let _compassActive = false;
+let _compassActive = sessionStorage.getItem('sw-compass-active') === '1';
 let _compassHeading = null;
 let _compassHandler = null;
 
@@ -428,7 +428,7 @@ function renderWindModal() {
       </div>
       <div class="wind-stat-card">
         <span class="wind-stat-lbl">Direction</span>
-        <span class="wind-stat-val" style="font-size:26px;padding-top:4px">${dir != null ? dir + '°' : '—'}</span>
+        <span class="wind-stat-val">${dir != null ? dir + '°' : '—'}</span>
         <span class="wind-stat-unit">${cardDir}</span>
         <span class="wind-stat-sub">wind from ${cardDir}</span>
       </div>
@@ -463,7 +463,7 @@ function renderWindModal() {
   const headingTxt = _compassHeading != null ? `${_compassHeading.toFixed(0)}° ${degToCard(_compassHeading)}` : '…';
   const compassPermHTML = `
     <button class="wind-compass-btn" id="windCompassBtn" onclick="requestCompass()" style="display:${_compassActive ? 'none' : 'flex'}">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/><path d="m5.904 6.523.94 2.555.938-2.555L10.338 5.5l-2.556.94L6.844 5.5l-.94 2.023zm2.598 3.168-1.11-3.015L4.378 7.566l3.014-1.11 1.11 3.015 3.015-1.11-3.015 1.11z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
       Enable Live Compass
     </button>
     <div class="wind-compass-status" id="windCompassStatus" style="display:${_compassActive ? 'flex' : 'flex'}">
@@ -531,6 +531,7 @@ function requestCompass() {
 function startCompass() {
   if (_compassHandler) window.removeEventListener('deviceorientation', _compassHandler);
   _compassActive = true;
+  sessionStorage.setItem('sw-compass-active', '1');
   // Hide enable button, show status line immediately without full re-render
   const btn = document.getElementById('windCompassBtn');
   if (btn) btn.style.display = 'none';
@@ -1888,7 +1889,13 @@ async function fetchForPoint(lat, lon) {
   }
 }
 
+function setActiveLocBtn(id) {
+  document.getElementById('btnGeo').classList.toggle('primary', id === 'btnGeo');
+  document.getElementById('btnNational').classList.toggle('primary', id === 'btnNational');
+}
+
 async function geoMe() {
+  setActiveLocBtn('btnGeo');
   setLive('loading','LOCATING…');
   try {
     const pos = await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:6000}));
@@ -1939,6 +1946,7 @@ async function doSearch() {
 }
 
 async function doNational(){
+  setActiveLocBtn('btnNational');
   curMode='national'; curState=null;
   document.getElementById('locName').textContent='United States';
   document.getElementById('locSub').textContent='National View';
