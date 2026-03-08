@@ -348,11 +348,11 @@ function compassSVG(windDeg, deviceDeg, arrowColor) {
   // windDeg = FROM direction; arrowhead points downwind (windDeg+180)
   let windArrowHTML = '';
   if (windDeg != null) {
-    const waDeg = (windDeg + 180) % 360;
-    const wa = waDeg * Math.PI / 180;
+    // windDeg = FROM direction. Arrow points INTO the wind (toward wind source = standard met convention).
+    const wa = windDeg * Math.PI / 180;
     const lineR = 88; // reach from center — stops inside the ring
-    const lx1 = cx + lineR * Math.sin(wa),  ly1 = cy - lineR * Math.cos(wa);  // downwind tip
-    const lx2 = cx - lineR * Math.sin(wa),  ly2 = cy + lineR * Math.cos(wa);  // upwind tail
+    const lx1 = cx + lineR * Math.sin(wa),  ly1 = cy - lineR * Math.cos(wa);  // upwind tip (arrowhead)
+    const lx2 = cx - lineR * Math.sin(wa),  ly2 = cy + lineR * Math.cos(wa);  // downwind tail
     const headSize = 11;
     const perpX = Math.cos(wa), perpY = Math.sin(wa);
     const hlx = lx1 - headSize * Math.sin(wa) + headSize * 0.55 * perpX;
@@ -388,10 +388,9 @@ function compassSVG(windDeg, deviceDeg, arrowColor) {
     ${windArrowHTML}
     <!-- Device heading tick -->
     ${deviceHTML}
-    <!-- Center crosshair -->
-    <line x1="${(cx-10).toFixed(1)}" y1="${cy}" x2="${(cx+10).toFixed(1)}" y2="${cy}" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>
-    <line x1="${cx}" y1="${(cy-10).toFixed(1)}" x2="${cx}" y2="${(cy+10).toFixed(1)}" stroke="rgba(255,255,255,.25)" stroke-width="1.5"/>
-    <circle cx="${cx}" cy="${cy}" r="2.5" fill="rgba(255,255,255,.4)"/>
+    <!-- Center speed circle -->
+    <circle cx="${cx}" cy="${cy}" r="30" fill="#0e1013" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
+    ${window._windData?.speed != null ? `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" fill="white" font-size="16" font-weight="600" font-family="ui-monospace,monospace">${window._windData.speed}</text>` : `<circle cx="${cx}" cy="${cy}" r="3" fill="rgba(255,255,255,.35)"/>`}
   </svg>`;
 }
 
@@ -635,15 +634,18 @@ function renderForecast(periods){
   if(!periods.length){box.innerHTML='<div class="state-center"><div class="state-icon">🌤️</div><div class="state-ttl">No data</div></div>';return;}
   const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const hero_p = periods[0];
-  const dayMap = new Map();
+  // Build day pairs: {day: period, night: period} for each date
+  const dayPairMap = new Map();
   for (let i = 1; i < periods.length; i++) {
     const p = periods[i];
     const dt = new Date(p.startTime);
     const dateKey = dt.toDateString();
-    if (!dayMap.has(dateKey)) { dayMap.set(dateKey, p); }
-    else if (p.isDaytime) { dayMap.set(dateKey, p); }
+    if (!dayPairMap.has(dateKey)) dayPairMap.set(dateKey, {});
+    if (p.isDaytime) dayPairMap.get(dateKey).day = p;
+    else dayPairMap.get(dateKey).night = p;
   }
-  const days = [hero_p, ...[...dayMap.values()].slice(0, 6)];
+  const dayPairs = [...dayPairMap.values()].slice(0, 6);
+  const days = [hero_p, ...dayPairs.map(pair => pair.day || pair.night)];
   const now=new Date(), hero=days[0];
   if (hero?.temperature) window._nwsHeroTemp = hero.temperature;
   // Hero always renders with placeholder temp — OM patch fills in real current value
@@ -652,8 +654,29 @@ function renderForecast(periods){
     <div class="fch-temp">—<sup>°F</sup></div>
     <div class="fch-icon">${wxIcon(hero.shortForecast, 56)}</div>
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
+    <div class="fch-extras" id="fchExtras"></div>
   </div>`:'';
-  const rows=days.slice(1,7).map(d=>{const dt=new Date(d.startTime);return`<div class="fc-day-row"><span class="fdr-name">${dn[dt.getDay()]}</span><span class="fdr-icon">${wxIcon(d.shortForecast)}</span><span class="fdr-desc">${d.shortForecast}</span><span class="fdr-temp ${tempClass(d.temperature)}">${d.temperature}°</span></div>`;}).join('');
+  const rows = dayPairs.map(pair => {
+    const d = pair.day || pair.night;
+    const dt = new Date(d.startTime);
+    const hi = d.temperature;
+    const lo = pair.night?.temperature ?? pair.day?.temperature ?? hi;
+    const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
+    // Temp range bar: map across a reasonable daily scale (20–110°F)
+    const scaleMin = 20, scaleMax = 110;
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const loP = ((clamp(lowTemp, scaleMin, scaleMax) - scaleMin) / (scaleMax - scaleMin) * 100).toFixed(1);
+    const hiP = ((clamp(highTemp, scaleMin, scaleMax) - scaleMin) / (scaleMax - scaleMin) * 100).toFixed(1);
+    const hiColor = tempClass(highTemp);
+    const loColor = tempClass(lowTemp);
+    return `<div class="fc-day-row">
+      <span class="fdr-name">${dn[dt.getDay()]}</span>
+      <span class="fdr-icon">${wxIcon(d.shortForecast)}</span>
+      <span class="fdr-lo ${loColor}">${lowTemp}°</span>
+      <span class="fdr-range-wrap"><span class="fdr-range-track"><span class="fdr-range-fill" style="left:${loP}%;right:${(100-parseFloat(hiP)).toFixed(1)}%"></span></span></span>
+      <span class="fdr-hi ${hiColor}">${highTemp}°</span>
+    </div>`;
+  }).join('');
   box.innerHTML=heroHTML
     +'<div class="hourly-toggle" id="hourlyToggle"><span class="hourly-toggle-lbl"><svg width="12" height="12" fill="currentColor"><use href="#bi-sun"/></svg> Hourly Forecast</span><span class="hourly-toggle-chevron"><svg width="10" height="10" fill="currentColor"><use href="#bi-chevron-right"/></svg></span></div>'
     +'<div class="hourly-scroll" id="hourlyScroll"><div class="hourly-track" id="hourlyTrack"></div></div>'
@@ -663,12 +686,23 @@ function renderForecast(periods){
   // Repaint cached AQI + UV immediately so slots never appear blank on re-render
   if (_aqiCache) { const s=document.getElementById('aqiSlot'); if(s) s.innerHTML=aqiHTML(_aqiCache); }
   if (window._uvData != null) renderUVSlot();
+  renderHeroExtras();
   document.getElementById('hourlyToggle').addEventListener('click', () => {
     document.getElementById('hourlyToggle').classList.toggle('open');
     document.getElementById('hourlyScroll').classList.toggle('open');
   });
 }
 
+
+// ── HERO EXTRA STATS (visibility, precip 24h) ────────────────────────────────
+function renderHeroExtras() {
+  const el = document.getElementById('fchExtras');
+  if (!el) return;
+  const parts = [];
+  if (window._visibilityMi != null) parts.push(`Visibility: ${window._visibilityMi} mi`);
+  if (window._precip24h != null) parts.push(`Precip 24h: ${window._precip24h}"`);
+  el.textContent = parts.join('  ·  ');
+}
 
 // ── PATCH HOURLY TEMPS FROM OPEN-METEO ───────────
 // NWS hourly periods own everything except temperature — OM provides the accurate temp.
@@ -854,9 +888,11 @@ function renderUVSlot() {
 function renderHourly(periods) {
   const track = document.getElementById('hourlyTrack');
   if (!track || !periods.length) return;
-  track.innerHTML = periods.slice(0, 24).map(p => {
+  const now = new Date();
+  track.innerHTML = periods.slice(0, 24).map((p, idx) => {
     const dt = new Date(p.startTime);
-    const hr = dt.toLocaleTimeString([], {hour:'numeric'});
+    // Label first period "Now", then every subsequent hour
+    const hr = idx === 0 ? 'Now' : dt.toLocaleTimeString([], {hour:'numeric'});
     const precip = p.probabilityOfPrecipitation?.value;
     const windNums = (p.windSpeed||'0').match(/\d+/g)||['0'];
     const windMax = Math.max(...windNums.map(Number));
@@ -1773,16 +1809,17 @@ async function fetchOpenMeteo(lat, lon) {
       current: [
         'temperature_2m','apparent_temperature','relative_humidity_2m',
         'dew_point_2m','wind_speed_10m','wind_gusts_10m','wind_direction_10m',
-        'uv_index','cloud_cover','precipitation','weather_code','is_day'
+        'uv_index','cloud_cover','precipitation','weather_code','is_day',
+        'visibility'
       ].join(','),
       hourly: [
         'temperature_2m','cape','lifted_index','convective_inhibition',
-        'freezing_level_height','precipitation_probability'
+        'freezing_level_height','precipitation_probability','precipitation'
       ].join(','),
       wind_speed_unit: 'mph',
       temperature_unit: 'fahrenheit',
       forecast_days: 1,
-      forecast_hours: 6,
+      forecast_hours: 24,
       timezone: 'auto'
     });
     const res = await fetch(`${OM}?${params}`);
@@ -1821,6 +1858,20 @@ async function fetchOpenMeteo(lat, lon) {
       window._uvData = c.uv_index;
       renderUVSlot();
     }
+
+    // Visibility (OM returns meters, convert to miles)
+    if (c.visibility != null) {
+      window._visibilityMi = (c.visibility / 1609.34).toFixed(1);
+    }
+
+    // Precip last 24h from hourly sum
+    if (data.hourly?.precipitation) {
+      const sum = data.hourly.precipitation.slice(0, 24).reduce((a, v) => a + (v || 0), 0);
+      window._precip24h = sum.toFixed(2);
+    }
+
+    // Update hero extra stats if rendered
+    renderHeroExtras();
 
     // Cloud cover %
     if (c.cloud_cover != null) set('obsCloud', c.cloud_cover);
