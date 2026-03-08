@@ -86,7 +86,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .stat-item:last-child { border-right: none; }
 .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
 .stat-val { font-size: 24px; font-weight: 300; line-height: 1.1; }
-.sv-blue{color:var(--blue)} .sv-red{color:var(--red)} .sv-orange{color:var(--orange)}
+.sv-blue{color:var(--text)} .sv-red{color:var(--red)} .sv-orange{color:var(--orange)}
 
 /* ── TABS ── */
 .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
@@ -161,7 +161,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .fc-days { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .fc-day-row { display: flex; align-items: center; gap: 10px; background: var(--card2); border: 1px solid var(--border); border-radius: var(--rsm); padding: 15px 18px; }
 .fdr-name { font-size: 14px; font-weight: 500; color: var(--dim); width: 36px; flex-shrink: 0; }
-.fdr-icon { width: 24px; height: 24px; text-align: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--blue); opacity: .8; overflow: visible; }
+.fdr-icon { width: 24px; height: 24px; text-align: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--text); opacity: .7; overflow: visible; }
 .fdr-lo { font-size: 15px; font-weight: 400; color: var(--dim); flex-shrink: 0; min-width: 32px; text-align: right; }
 .fdr-hi { font-size: 15px; font-weight: 600; flex-shrink: 0; min-width: 32px; }
 .fdr-range-wrap { flex: 1; padding: 0 6px; display: flex; align-items: center; }
@@ -186,10 +186,10 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .hourly-track { display: flex; gap: 9px; padding: 6px 2px; width: max-content; }
 .hour-card { display: flex; flex-direction: column; align-items: center; gap: 7px; background: var(--card2); border: 1px solid var(--border); border-radius: var(--rsm); padding: 14px 13px; min-width: 76px; }
 .hc-time { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .5px; }
-.hc-icon { color: var(--blue); opacity: .8; display: flex; align-items: center; justify-content: center; overflow: visible; width: 20px; height: 20px; }
+.hc-icon { color: var(--text); opacity: .7; display: flex; align-items: center; justify-content: center; overflow: visible; width: 20px; height: 20px; }
 .hc-label { font-size: 11px; font-weight: 500; color: var(--dim); text-align: center; white-space: nowrap; }
 .hc-temp { font-size: 18px; font-weight: 400; }
-.hc-precip { font-family: var(--mono); font-size: 11px; color: var(--blue); }
+.hc-precip { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.55); }
 .hc-wind { font-family: var(--mono); font-size: 10px; color: var(--dim); }
 
 /* ── NEARBY TAB ── */
@@ -810,7 +810,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.4.6</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.4.7</div>
     </div>
   </div>
 </div>
