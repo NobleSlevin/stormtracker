@@ -132,10 +132,15 @@ document.querySelectorAll('.tab').forEach(btn => {
     // Restore gradient when returning to forecast tab
     if (t === 'forecast') {
       const bodyEl2 = document.getElementById('body');
-      const gradTemp = window._omCurrentTemp ?? window._forecastPeriods?.[0]?.temperature;
-      const gradFc   = window._forecastPeriods?.[0]?.shortForecast;
+      const gradTemp = window._lastGradTemp ?? window._omCurrentTemp ?? window._forecastPeriods?.[0]?.temperature;
+      const gradFc   = window._lastGradFc   ?? window._forecastPeriods?.[0]?.shortForecast;
       if (gradTemp != null && gradFc && bodyEl2) {
-        weatherGradient(gradTemp, gradFc, bodyEl2);
+        const _acc = weatherGradient(gradTemp, gradFc, bodyEl2);
+        if (_acc) {
+          document.documentElement.style.setProperty('--hero-accent',       `rgb(${_acc})`);
+          document.documentElement.style.setProperty('--hero-accent-faint', `rgba(${_acc},0.75)`);
+          document.documentElement.style.setProperty('--hero-accent-dim',   `rgba(${_acc},0.55)`);
+        }
       }
     }
     // Leaflet needs size invalidation when its container becomes visible
@@ -197,14 +202,14 @@ function weatherGradient(tempF, shortForecast, targetEl) {
 
   const grad = `linear-gradient(to bottom, ${top} 0%, ${mid} 40%, #0e1013 72%)`;
   const el = targetEl || document.body;
-  // Use backgroundImage for elements with a solid background-color base (day-modal)
-  // so the solid color always underlays the gradient
   if (el.classList && el.classList.contains('day-modal')) {
     el.style.backgroundImage = grad;
   } else {
     el.style.background = grad;
+    // Cache params so tab switches can reliably restore
+    window._lastGradTemp = tempF;
+    window._lastGradFc   = shortForecast;
   }
-  // Store accent color for hero text
   window._weatherAccent = accent;
   return accent;
 }
@@ -1014,7 +1019,7 @@ function openDayModal(dayIdx) {
       <polygon points="${cx},${cy+lineR} ${cx-hw},${cy+lineR-hh} ${cx+hw},${cy+lineR-hh}" fill="#93c5fd"/>
       <circle cx="${cx}" cy="${cy-lineR}" r="4.5" fill="none" stroke="#93c5fd" stroke-width="2.2"/>
     </g>`;
-    return `<svg viewBox="0 0 300 300" width="160" height="160" xmlns="http://www.w3.org/2000/svg">
+    return `<svg viewBox="0 0 300 300" width="100%" height="100%" style="display:block;max-width:200px;max-height:200px" xmlns="http://www.w3.org/2000/svg">
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
       ${ticksHTML.join('')}${labelsHTML}${arrow}
     </svg>`;
@@ -1047,7 +1052,7 @@ function openDayModal(dayIdx) {
               </div>` : ''}
             </div>
           </div>
-          <div style="display:flex;align-items:center;justify-content:center;padding:8px">${miniCompass(dominantWindDeg)}</div>
+          <div style="display:flex;align-items:center;justify-content:center;padding:12px;min-height:200px">${miniCompass(dominantWindDeg)}</div>
         </div>
       </div>
     </div>` : '';
@@ -2271,7 +2276,7 @@ async function fetchOpenMeteo(lat, lon) {
       // Re-paint gradient now that we have the real observed temp
       const _fp = window._forecastPeriods?.[0];
       const _bodyEl = document.getElementById('body');
-      if (_fp && _bodyEl && _bodyEl.style.background) {
+      if (_fp && _bodyEl) {
         const _acc = weatherGradient(window._omCurrentTemp, _fp.shortForecast, _bodyEl);
         if (_acc) {
           document.documentElement.style.setProperty('--hero-accent', `rgb(${_acc})`);
