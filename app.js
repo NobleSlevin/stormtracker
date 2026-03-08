@@ -311,12 +311,12 @@ function weatherGradient(tempF, shortForecast, targetEl) {
   // Anchors suppress the base at fixed positions; vivid blobs provide the color light sources
   const bgColor = base;
   const bgImage = [
-    `radial-gradient(at 39% 37%, ${d} 0px, transparent 50%)`,
-    `radial-gradient(at 16% 87%, ${d} 0px, transparent 50%)`,
-    `radial-gradient(at 73% 24%, ${d} 0px, transparent 50%)`,
-    `radial-gradient(at -40% -20%, ${v1} 0px, transparent 40%)`,
-    `radial-gradient(at 60% 72%, ${v2} 0px, transparent 50%)`,
-    `radial-gradient(at 93% 90%, ${v3} 0px, transparent 50%)`,
+    `radial-gradient(at 61% 63%, ${d} 0px, transparent 50%)`,
+    `radial-gradient(at 84% 13%, ${d} 0px, transparent 50%)`,
+    `radial-gradient(at 27% 76%, ${d} 0px, transparent 50%)`,
+    `radial-gradient(at 140% 120%, ${v1} 0px, transparent 40%)`,
+    `radial-gradient(at 10% 72%, ${v2} 0px, transparent 50%)`,
+    `radial-gradient(at -10% 5%, ${v3} 0px, transparent 50%)`,
   ].join(', ');
 
   const el = targetEl || document.body;

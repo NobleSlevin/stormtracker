@@ -418,16 +418,17 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .data-note { font-size: 10px; color: var(--muted); font-family: var(--mono); letter-spacing: .5px; text-align: center; padding: 6px 4px; }
 
 /* ── TICKER ── */
-.ticker { flex-shrink: 0; background: var(--card); border-top: 1px solid var(--border); height: 28px; min-height: 28px; display: flex; align-items: center; overflow: hidden; }
-.ticker-wrap { flex-shrink: 0; background: var(--card); }
-.ticker-lbl { background: var(--blue); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 0 12px; height: 28px; display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
-.ticker-track { overflow: hidden; flex: 1; height: 28px; display: flex; align-items: center; }
-.ticker-inner { font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: nowrap; animation: ticker 40s linear infinite; letter-spacing: .5px; }
+.ticker-wrap { flex-shrink: 0; padding: 8px 14px 0; }
+.ticker { background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 14px 14px 0 0; height: 36px; display: flex; align-items: center; overflow: hidden; }
+.ticker-lbl { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 0 11px; height: 36px; display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.08); }
+.ticker-track { overflow: hidden; flex: 1; height: 36px; display: flex; align-items: center; }
+.ticker-inner { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.5); white-space: nowrap; animation: ticker 40s linear infinite; letter-spacing: .5px; }
 @keyframes ticker { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
-.tsep { color: var(--blue); margin: 0 14px; }
-.ticker-credit { flex-shrink: 0; padding: 0 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: #fbbf24; border-left: 1px solid var(--border); height: 28px; display: flex; align-items: center; white-space: nowrap; }
-.ticker-info-btn { flex-shrink: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-left: 1px solid var(--border); color: var(--dim); cursor: pointer; padding: 0; -webkit-appearance: none; }
-.ticker-info-btn:active { color: var(--blue); }
+.tsep { color: rgba(255,255,255,0.25); margin: 0 14px; }
+.ticker-credit { display: none; }
+.ticker-info-btn { flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-left: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); cursor: pointer; padding: 0; -webkit-appearance: none; }
+.ticker-info-btn:active { color: rgba(255,255,255,0.8); }
+.ticker-byline { text-align: center; padding: 5px 0 calc(env(safe-area-inset-bottom,0px) + 6px); font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: rgba(255,255,255,0.18); }
 /* Info Modal */
 .info-modal { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; }
 .info-modal.open { display: flex; }
@@ -714,8 +715,8 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
     <button class="ticker-info-btn" onclick="document.getElementById('infoModal').classList.add('open')" aria-label="About StormWatch">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     </button>
-    <div class="ticker-credit">BUILT BY TREY</div>
   </div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA</div>
   </div>
 
 </div>
@@ -815,7 +816,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.6.1</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.6.2</div>
     </div>
   </div>
 </div>
@@ -834,7 +835,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.6.1"></script>
+<script src="app.js?v=2.6.2"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>
