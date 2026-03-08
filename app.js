@@ -815,40 +815,45 @@ async function fetchAlerts(url){
 async function fetchForecast(lat, lon, attempt = 1) {
   const box = document.getElementById('panelForecast');
   try {
-    if (box) box.innerHTML = '<div class="state-center"><div class="spinner"></div><div class="state-sub" style="margin-top:10px">Loading forecast…</div></div>';
-    const pt=await nwsFetch(`${NWS}/points/${lat.toFixed(4)},${lon.toFixed(4)}`);
-    const pp=pt.properties||{};
-    const city=pp.relativeLocation?.properties;
-    if(city){
-      document.getElementById('locName').textContent=city.city;
+    // Only show spinner on first attempt to avoid flash during retries
+    if (attempt === 1 && box) box.innerHTML = '<div class="state-center"><div class="spinner"></div><div class="state-sub" style="margin-top:10px">Loading forecast…</div></div>';
+    const pt = await nwsFetch(`${NWS}/points/${lat.toFixed(4)},${lon.toFixed(4)}`);
+    const pp = pt?.properties || {};
+    const city = pp.relativeLocation?.properties;
+    if (city) {
+      document.getElementById('locName').textContent = city.city;
       document.getElementById('locSub').textContent = city.state;
       const stateNames = {'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming'};
       curState = stateNames[city.state] || city.state;
     }
-    const results = { periods: [], hourly: [], stationUrl: pp.observationStations };
-    if(pp.forecast){
-      const fc=await nwsFetch(pp.forecast);
-      results.periods=fc.properties?.periods||[];
-      renderForecast(results.periods);
+    // NWS sometimes returns a valid /points/ response but with missing forecast URLs — retry if so
+    if (!pp.forecast) {
+      throw new Error('NWS points response missing forecast URL');
     }
-    if(pp.forecastHourly){
-      const fh=await nwsFetch(pp.forecastHourly);
-      results.hourly=fh.properties?.periods||[];
+    const results = { periods: [], hourly: [], stationUrl: pp.observationStations };
+    const fc = await nwsFetch(pp.forecast);
+    results.periods = fc.properties?.periods || [];
+    if (!results.periods.length) throw new Error('NWS returned empty forecast periods');
+    renderForecast(results.periods);
+    if (pp.forecastHourly) {
+      const fh = await nwsFetch(pp.forecastHourly);
+      results.hourly = fh.properties?.periods || [];
       renderHourly(results.hourly);
     }
     return results;
   } catch(e) {
     console.warn('Forecast error (attempt ' + attempt + '):', e);
-    if (attempt < 3) {
-      // Auto-retry up to 3 times with short delay — NWS API is flaky
-      await new Promise(r => setTimeout(r, 1500 * attempt));
+    if (attempt < 4) {
+      // NWS is flaky — retry up to 4x with exponential backoff
+      const delay = 1000 * attempt;
+      if (box) box.innerHTML = `<div class="state-center"><div class="spinner"></div><div class="state-sub" style="margin-top:10px">Retrying… (${attempt}/4)</div></div>`;
+      await new Promise(r => setTimeout(r, delay));
       return fetchForecast(lat, lon, attempt + 1);
     }
     if (box) box.innerHTML = `<div class="state-center">
-      <div class="state-icon" style="font-size:32px">⚠️</div>
-      <div class="state-ttl">Forecast Unavailable</div>
-      <div class="state-sub">NWS API error — tap to retry</div>
-      <button onclick="fetchForPoint(${lat},${lon})" style="margin-top:16px;padding:10px 24px;border-radius:999px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:var(--text);font-size:14px;cursor:pointer;">Retry</button>
+      <div class="state-ttl" style="margin-bottom:8px">NWS Unavailable</div>
+      <div class="state-sub" style="margin-bottom:16px">The National Weather Service API is not responding. This is usually temporary.</div>
+      <button onclick="fetchForPoint(${lat},${lon})" style="padding:10px 24px;border-radius:999px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:var(--text);font-size:14px;cursor:pointer;">Try Again</button>
     </div>`;
     return {periods:[],hourly:[],stationUrl:null};
   }
