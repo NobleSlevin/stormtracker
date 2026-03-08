@@ -70,7 +70,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 16
 
 /* ── OBS STRIP ── */
 .obs-strip { display: grid; grid-template-columns: repeat(8,1fr); border-bottom: 1px solid var(--border); background: var(--card2); flex-shrink: 0; overflow: hidden; max-height: 0; transition: max-height .3s ease; }
-.obs-strip.show { max-height: 80px; }
+.obs-strip.show { max-height: 96px; }
 .obs-item { padding: 12px 6px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; }
 .obs-item:last-child { border-right: none; }
 .obs-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--dim); }
@@ -164,11 +164,8 @@ header { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 16
 .fdr-lo { font-size: 15px; font-weight: 400; color: var(--dim); flex-shrink: 0; min-width: 32px; text-align: right; }
 .fdr-hi { font-size: 15px; font-weight: 600; flex-shrink: 0; min-width: 32px; }
 .fdr-range-wrap { flex: 1; padding: 0 6px; }
-.fdr-range-track { position: relative; height: 5px; background: linear-gradient(to right, #67e8f9, #4ade80, #a3e635, #fbbf24, #fb923c, #f87171); border-radius: 999px; opacity: 0.18; }
-.fdr-range-wrap { flex: 1; padding: 0 6px; position: relative; }
-.fdr-range-track { position: relative; height: 5px; border-radius: 999px; overflow: visible; }
-.fdr-range-track::before { content:''; position:absolute; inset:0; border-radius:999px; background: linear-gradient(to right, #67e8f9, #4ade80, #a3e635, #fbbf24, #fb923c, #f87171); opacity: 0.2; }
-.fdr-range-fill { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(to right, #67e8f9, #4ade80, #a3e635, #fbbf24, #fb923c, #f87171); background-size: 600px 100%; background-position: var(--gp, 0) 0; }
+.fdr-range-track { position: relative; height: 5px; background: rgba(255,255,255,.1); border-radius: 999px; }
+.fdr-range-fill { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
 .fdr-desc { font-size: 13px; color: var(--dim); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fdr-temp { font-size: 19px; font-weight: 400; flex-shrink: 0; min-width: 38px; text-align: right; }
 
@@ -535,8 +532,8 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
     <div class="obs-item"><span class="obs-label">Feels</span><span class="obs-val" id="obsFeels">—</span><span class="obs-unit">°F</span></div>
     <div class="obs-item"><span class="obs-label">Humid</span><span class="obs-val" id="obsHumid">—</span><span class="obs-unit">%</span></div>
     <div class="obs-item"><span class="obs-label">Dewpt</span><span class="obs-val" id="obsDew">—</span><span class="obs-unit">°F</span></div>
-    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Wind</span><span class="obs-val" id="obsWind">—</span><span class="obs-unit">mph</span><svg width="8" height="8" fill="var(--dim)" style="margin-top:1px;opacity:.6"><use href="#bi-caret-down-fill"/></svg></div>
-    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Gust</span><span class="obs-val" id="obsGust">—</span><span class="obs-unit">mph</span><svg width="8" height="8" fill="var(--dim)" style="margin-top:1px;opacity:.6"><use href="#bi-caret-down-fill"/></svg></div>
+    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Wind</span><span class="obs-val" id="obsWind">—</span><span class="obs-unit">mph</span><svg width="10" height="10" fill="var(--dim)" style="margin-top:2px"><use href="#bi-caret-down-fill"/></svg></div>
+    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Gust</span><span class="obs-val" id="obsGust">—</span><span class="obs-unit">mph</span><svg width="10" height="10" fill="var(--dim)" style="margin-top:2px"><use href="#bi-caret-down-fill"/></svg></div>
     <div class="obs-item"><span class="obs-label">UV</span><span class="obs-val" id="obsUV">—</span><span class="obs-unit">idx</span></div>
     <div class="obs-item"><span class="obs-label">Cloud</span><span class="obs-val" id="obsCloud">—</span><span class="obs-unit">%</span></div>
   </div>
@@ -758,7 +755,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.7.4</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.7.5</div>
     </div>
   </div>
 </div>
