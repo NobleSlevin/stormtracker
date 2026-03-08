@@ -344,27 +344,18 @@ function compassSVG(windDeg, deviceDeg, arrowColor) {
     return degLabel + `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${isCard?'rgba(255,255,255,.75)':'rgba(255,255,255,.38)'}" font-size="${isCard?13:9}" font-family="ui-monospace,monospace" font-weight="${isCard?700:500}">${lbl}</text>`;
   }).join('');
 
-  // Wind arrow — spans full inner diameter
-  // windDeg = FROM direction; arrowhead points downwind (windDeg+180)
+  // Wind arrow — drawn pointing straight up (north = 0°) then rotated to windDeg.
+  // windDeg is meteorological FROM direction: arrowhead points into the wind source.
   let windArrowHTML = '';
   if (windDeg != null) {
-    // windDeg = FROM direction. Arrow points INTO the wind (toward wind source = standard met convention).
-    const wa = windDeg * Math.PI / 180;
-    const lineR = 88; // reach from center — stops inside the ring
-    const lx1 = cx + lineR * Math.sin(wa),  ly1 = cy - lineR * Math.cos(wa);  // upwind tip (arrowhead)
-    const lx2 = cx - lineR * Math.sin(wa),  ly2 = cy + lineR * Math.cos(wa);  // downwind tail
-    const headSize = 11;
-    const perpX = Math.cos(wa), perpY = Math.sin(wa);
-    const hlx = lx1 - headSize * Math.sin(wa) + headSize * 0.55 * perpX;
-    const hly = ly1 + headSize * Math.cos(wa) + headSize * 0.55 * perpY;
-    const hrx = lx1 - headSize * Math.sin(wa) - headSize * 0.55 * perpX;
-    const hry = ly1 + headSize * Math.cos(wa) - headSize * 0.55 * perpY;
+    const lineR = 88;
     const ac = arrowColor || 'white';
-    windArrowHTML = `
-      <line x1="${lx2.toFixed(1)}" y1="${ly2.toFixed(1)}" x2="${lx1.toFixed(1)}" y2="${ly1.toFixed(1)}" stroke="${ac}" stroke-width="2.5" stroke-linecap="round"/>
-      <polygon points="${lx1.toFixed(1)},${ly1.toFixed(1)} ${hlx.toFixed(1)},${hly.toFixed(1)} ${hrx.toFixed(1)},${hry.toFixed(1)}" fill="${ac}"/>
-      <circle cx="${lx2.toFixed(1)}" cy="${ly2.toFixed(1)}" r="4.5" fill="none" stroke="${ac}" stroke-width="2.2"/>
-    `;
+    const hw = 7, hh = 14; // arrowhead half-width, height
+    windArrowHTML = `<g transform="rotate(${windDeg}, ${cx}, ${cy})">
+      <line x1="${cx}" y1="${cy + lineR}" x2="${cx}" y2="${cy - lineR}" stroke="${ac}" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="${cx},${cy - lineR} ${cx - hw},${cy - lineR + hh} ${cx + hw},${cy - lineR + hh}" fill="${ac}"/>
+      <circle cx="${cx}" cy="${cy + lineR}" r="4.5" fill="none" stroke="${ac}" stroke-width="2.2"/>
+    </g>`;
   }
 
   // Device heading — blue tick at rim, inside the ring (no outside protrusion)
@@ -390,7 +381,7 @@ function compassSVG(windDeg, deviceDeg, arrowColor) {
     ${deviceHTML}
     <!-- Center speed circle -->
     <circle cx="${cx}" cy="${cy}" r="30" fill="#0e1013" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
-    ${window._windData?.speed != null ? `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" fill="white" font-size="16" font-weight="600" font-family="ui-monospace,monospace">${window._windData.speed}</text>` : `<circle cx="${cx}" cy="${cy}" r="3" fill="rgba(255,255,255,.35)"/>`}
+    ${window._windData?.speed != null ? `<text x="${cx}" y="${cy - 7}" text-anchor="middle" dominant-baseline="central" fill="white" font-size="16" font-weight="600" font-family="ui-monospace,monospace">${window._windData.speed}</text><text x="${cx}" y="${cy + 11}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.5)" font-size="9" font-family="ui-monospace,monospace">mph</text>` : `<circle cx="${cx}" cy="${cy}" r="3" fill="rgba(255,255,255,.35)"/>`}
   </svg>`;
 }
 
