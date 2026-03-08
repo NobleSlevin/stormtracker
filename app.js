@@ -759,12 +759,12 @@ function openDayModal(dayIdx) {
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
   // ── Hero card (mirrors fc-hero) ──
-  const heroHTML = `<div class="fc-hero" style="margin-bottom:10px">
+  const heroHTML = `<div class="fc-hero">
     <div class="fch-top">
       <div class="fch-day">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</div>
       <div class="fch-time">${d.isDaytime ? 'Daytime' : 'Evening'}</div>
     </div>
-    <div class="fch-temp" style="font-size:52px">${highTemp}<sup>°F</sup> <span style="font-size:24px;opacity:.55">/ ${lowTemp}°</span></div>
+    <div class="fch-temp">${highTemp}<sup>°F</sup><span style="font-size:28px;font-weight:300;opacity:.55"> / ${lowTemp}°</span></div>
     <div class="fch-icon">${wxIcon(d.shortForecast, 56)}</div>
     <div class="fch-meta">
       <div>${d.shortForecast}</div>
@@ -821,7 +821,13 @@ function openDayModal(dayIdx) {
   const maxWind = hours.length ? Math.max(...hours.filter(h=>h.wind!=null).map(h=>h.wind)) : null;
   const avgWind = hours.filter(h=>h.wind!=null).length ? Math.round(hours.filter(h=>h.wind!=null).reduce((a,h)=>a+h.wind,0)/hours.filter(h=>h.wind!=null).length) : null;
   const maxGust = hours.length ? Math.max(...hours.filter(h=>h.gust!=null).map(h=>h.gust)) : null;
-  const maxUV = hours.length && hours.filter(h=>h.uv!=null).length ? Math.max(...hours.filter(h=>h.uv!=null).map(h=>h.uv)) : null;
+  const maxUV = (() => {
+    const fromHourly = hours.filter(h=>h.uv!=null && h.uv > 0);
+    if (fromHourly.length) return Math.max(...fromHourly.map(h=>h.uv));
+    // fallback to current UV for today's modal
+    if (window._uvData != null && dayIdx === 0) return window._uvData;
+    return null;
+  })();
   const pressures = hours.filter(h=>h.pressure!=null).map(h=>h.pressure);
   const avgPressure = pressures.length ? Math.round(pressures.reduce((a,v)=>a+v,0)/pressures.length) : null;
   const visibs = hours.filter(h=>h.vis!=null).map(h=>parseFloat(h.vis));
@@ -972,37 +978,40 @@ function openDayModal(dayIdx) {
     </div>`;
   })() : '';
 
-  // ── Other days rows (mirrors fc-days, skip current day) ──
-  const tempGradientStop = t => t<=32?'#67e8f9':t<=50?'#4ade80':t<=65?'#a3e635':t<=75?'#fbbf24':t<=85?'#fb923c':'#f87171';
-  const scaleMin = 20, scaleMax = 110;
-  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
-  const otherDayRows = pairs.map((p2, i) => {
-    if (i === dayIdx) return '';
-    const dd = p2.day || p2.night;
-    const ddt = new Date(dd.startTime);
-    const dhi = dd.temperature;
-    const dlo = p2.night?.temperature ?? p2.day?.temperature ?? dhi;
-    const dLow = Math.min(dhi, dlo), dHigh = Math.max(dhi, dlo);
-    const loP = ((clamp(dLow, scaleMin, scaleMax) - scaleMin) / (scaleMax - scaleMin) * 100).toFixed(1);
-    const hiP = ((clamp(dHigh, scaleMin, scaleMax) - scaleMin) / (scaleMax - scaleMin) * 100).toFixed(1);
-    const rightP = (100 - parseFloat(hiP)).toFixed(1);
-    const fillGrad = `linear-gradient(to right, ${tempGradientStop(dLow)}, ${tempGradientStop(dHigh)})`;
-    return `<div class="fc-day-row" onclick="openDayModal(${i})">
-      <span class="fdr-name">${dns[ddt.getDay()]}</span>
-      <span class="fdr-icon">${wxIcon(dd.shortForecast)}</span>
-      <span class="fdr-lo ${tempClass(dLow)}">${dLow}°</span>
-      <span class="fdr-range-wrap"><span class="fdr-range-track"><span class="fdr-range-fill" style="left:${loP}%;right:${rightP}%;background:${fillGrad}"></span></span></span>
-      <span class="fdr-hi ${tempClass(dHigh)}">${dHigh}°</span>
+  // ── Detailed hourly table (temp, feels, precip, wind, humidity) ──
+  const hourlyTableHTML = hours.length ? (() => {
+    const rows = hours.map(h => {
+      const hr = new Date(h.time).toLocaleTimeString([], {hour:'numeric'});
+      return `<div class="dd-htbl-row">
+        <span class="dd-htbl-time">${hr}</span>
+        <span class="dd-htbl-temp ${h.temp!=null?tempClass(h.temp):''}">${h.temp!=null?h.temp+'°':'—'}</span>
+        <span class="dd-htbl-feels" style="color:var(--dim);font-size:12px">${h.feelsLike!=null?'Feels '+h.feelsLike+'°':''}</span>
+        <span class="dd-htbl-precip" style="color:#93c5fd">${h.precip!=null?h.precip+'%':''}</span>
+        <span class="dd-htbl-wind" style="color:var(--dim);font-size:12px">${h.wind!=null?h.wind+'mph':''} ${h.windDir||''}</span>
+        <span class="dd-htbl-humid" style="color:var(--dim);font-size:12px">${h.humid!=null?h.humid+'%':''}</span>
+      </div>`;
+    }).join('');
+    return `<div class="aqi-section-ttl">Hourly</div>
+    <div class="aqi-card" style="padding:0">
+      <div class="dd-htbl-head">
+        <span class="dd-htbl-time"></span>
+        <span class="dd-htbl-temp">Temp</span>
+        <span class="dd-htbl-feels"></span>
+        <span class="dd-htbl-precip" style="color:#93c5fd">Precip</span>
+        <span class="dd-htbl-wind">Wind</span>
+        <span class="dd-htbl-humid">Humid</span>
+      </div>
+      ${rows}
     </div>`;
-  }).join('');
+  })() : '';
 
   const metricCards = [aqiCardHTML, uvCardHTML, windCardHTML, humidCardHTML, visCardHTML, pressCardHTML].filter(Boolean).join('');
 
   document.getElementById('dayModalBody').innerHTML =
     heroHTML +
     hourlyHTML +
-    metricCards +
-    (otherDayRows ? `<div class="fc-days" style="margin-top:10px">${otherDayRows}</div>` : '');
+    hourlyTableHTML +
+    metricCards;
 
   document.getElementById('dayModalOverlay').classList.add('open');
   document.getElementById('dayModal').classList.add('open');
