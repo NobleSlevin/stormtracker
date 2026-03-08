@@ -669,16 +669,34 @@ function renderForecast(periods){
     const hiP = ((clamp(highTemp, scaleMin, scaleMax) - scaleMin) / (scaleMax - scaleMin) * 100).toFixed(1);
     const hiColor = tempClass(highTemp);
     const loColor = tempClass(lowTemp);
+    // The fill gradient needs to show the correct color slice for this temp range.
+    // We use a wide gradient and shift it so the color at loP% of the full scale
+    // starts at the left edge of the fill, using background-size + background-position trick.
+    // Simpler: inline a gradient from loTemp color to hiTemp color.
+    const tempGradientStop = (t) => {
+      if (t <= 32) return '#67e8f9';
+      if (t <= 50) return '#4ade80';
+      if (t <= 65) return '#a3e635';
+      if (t <= 75) return '#fbbf24';
+      if (t <= 85) return '#fb923c';
+      return '#f87171';
+    };
+    const fillGrad = `linear-gradient(to right, ${tempGradientStop(lowTemp)}, ${tempGradientStop(highTemp)})`;
+    const rightP = (100 - parseFloat(hiP)).toFixed(1);
     return `<div class="fc-day-row">
       <span class="fdr-name">${dn[dt.getDay()]}</span>
       <span class="fdr-icon">${wxIcon(d.shortForecast)}</span>
       <span class="fdr-lo ${loColor}">${lowTemp}°</span>
-      <span class="fdr-range-wrap"><span class="fdr-range-track"><span class="fdr-range-fill" style="left:${loP}%;right:${(100-parseFloat(hiP)).toFixed(1)}%"></span></span></span>
+      <span class="fdr-range-wrap">
+        <span class="fdr-range-track">
+          <span class="fdr-range-fill" style="left:${loP}%;right:${rightP}%;background:${fillGrad}"></span>
+        </span>
+      </span>
       <span class="fdr-hi ${hiColor}">${highTemp}°</span>
     </div>`;
   }).join('');
   box.innerHTML=heroHTML
-    +'<div class="hourly-toggle" id="hourlyToggle"><span class="hourly-toggle-lbl"><svg width="12" height="12" fill="currentColor"><use href="#bi-sun"/></svg> Hourly Forecast</span><span class="hourly-toggle-chevron"><svg width="10" height="10" fill="currentColor"><use href="#bi-chevron-right"/></svg></span></div>'
+    +'<div class="hourly-toggle" id="hourlyToggle"><span class="hourly-toggle-lbl"><svg width="12" height="12" fill="currentColor"><use href="#bi-sun"/></svg> Hourly Forecast</span><span class="hourly-toggle-chevron"><svg class="caret-right" width="10" height="10" fill="currentColor"><use href="#bi-caret-right-fill"/></svg><svg class="caret-down" width="10" height="10" fill="currentColor"><use href="#bi-caret-down-fill"/></svg></span></div>'
     +'<div class="hourly-scroll" id="hourlyScroll"><div class="hourly-track" id="hourlyTrack"></div></div>'
     +'<div id="aqiSlot"></div>'
     +'<div id="uvSlot"></div>'
@@ -687,6 +705,9 @@ function renderForecast(periods){
   if (_aqiCache) { const s=document.getElementById('aqiSlot'); if(s) s.innerHTML=aqiHTML(_aqiCache); }
   if (window._uvData != null) renderUVSlot();
   renderHeroExtras();
+  // Auto-expand hourly on load
+  document.getElementById('hourlyToggle').classList.add('open');
+  document.getElementById('hourlyScroll').classList.add('open');
   document.getElementById('hourlyToggle').addEventListener('click', () => {
     document.getElementById('hourlyToggle').classList.toggle('open');
     document.getElementById('hourlyScroll').classList.toggle('open');
@@ -1851,6 +1872,7 @@ async function fetchOpenMeteo(lat, lon) {
       gust:      c.wind_gusts_10m   != null ? Math.round(c.wind_gusts_10m)   : null,
       direction: c.wind_direction_10m != null ? Math.round(c.wind_direction_10m) : null,
     };
+    if (c.temperature_2m != null) window._omCurrentTemp = Math.round(c.temperature_2m);
 
     // UV index
     if (c.uv_index != null) {

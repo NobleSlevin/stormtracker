@@ -155,7 +155,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 16
 .fch-feels { font-size: 13px; color: rgba(147,197,253,.5); margin-bottom: 3px; }
 .fch-icon { position: absolute; right: 18px; top: 50%; transform: translateY(-55%); opacity: .25; color: rgba(147,197,253,1); }
 .fch-meta { font-size: 13px; color: rgba(147,197,253,.6); display: flex; flex-direction: column; gap: 2px; }
-.fch-extras { font-size: 11px; color: rgba(147,197,253,.45); font-family: var(--mono); margin-top: 4px; letter-spacing: .3px; }
+.fch-extras { font-size: 13px; color: rgba(147,197,253,.5); margin-top: 2px; }
 .fch-meta b { font-weight: 600; color: rgba(147,197,253,.85); }
 .fc-days { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .fc-day-row { display: flex; align-items: center; gap: 10px; background: var(--card2); border: 1px solid var(--border); border-radius: var(--rsm); padding: 15px 18px; }
@@ -163,19 +163,25 @@ header { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 16
 .fdr-icon { width: 24px; height: 24px; text-align: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--blue); opacity: .8; overflow: visible; }
 .fdr-lo { font-size: 15px; font-weight: 400; color: var(--dim); flex-shrink: 0; min-width: 32px; text-align: right; }
 .fdr-hi { font-size: 15px; font-weight: 600; flex-shrink: 0; min-width: 32px; }
-.fdr-range-wrap { flex: 1; padding: 0 4px; }
-.fdr-range-track { position: relative; height: 5px; background: rgba(255,255,255,.08); border-radius: 999px; }
-.fdr-range-fill { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(to right, #67e8f9, #4ade80, #a3e635, #fbbf24, #fb923c, #f87171); }
+.fdr-range-wrap { flex: 1; padding: 0 6px; }
+.fdr-range-track { position: relative; height: 5px; background: linear-gradient(to right, #67e8f9, #4ade80, #a3e635, #fbbf24, #fb923c, #f87171); border-radius: 999px; opacity: 0.18; }
+.fdr-range-wrap { flex: 1; padding: 0 6px; position: relative; }
+.fdr-range-track { position: relative; height: 5px; border-radius: 999px; overflow: visible; }
+.fdr-range-track::before { content:''; position:absolute; inset:0; border-radius:999px; background: linear-gradient(to right, #67e8f9, #4ade80, #a3e635, #fbbf24, #fb923c, #f87171); opacity: 0.2; }
+.fdr-range-fill { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(to right, #67e8f9, #4ade80, #a3e635, #fbbf24, #fb923c, #f87171); background-size: 600px 100%; background-position: var(--gp, 0) 0; }
 .fdr-desc { font-size: 13px; color: var(--dim); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fdr-temp { font-size: 19px; font-weight: 400; flex-shrink: 0; min-width: 38px; text-align: right; }
-.fch-extras { font-size: 11px; color: rgba(147,197,253,.45); font-family: var(--mono); margin-top: 5px; letter-spacing: .3px; }
+
 .t-hot{color:#f87171} .t-warm{color:#fb923c} .t-mild{color:#fbbf24} .t-cool{color:#93c5fd} .t-cold{color:#bfdbfe}
 
 /* ── HOURLY ── */
 .hourly-toggle { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--rsm); cursor: pointer; margin-bottom: 6px; }
 .hourly-toggle-lbl { font-size: 14px; font-weight: 500; color: var(--dim); display: flex; align-items: center; gap: 7px; }
-.hourly-toggle-chevron { color: var(--muted); transition: transform .2s; display: flex; }
-.hourly-toggle.open .hourly-toggle-chevron { transform: rotate(90deg); }
+.hourly-toggle-chevron { color: var(--dim); display: flex; }
+.hourly-toggle-chevron .caret-right { display: inline; }
+.hourly-toggle-chevron .caret-down  { display: none; }
+.hourly-toggle.open .hourly-toggle-chevron .caret-right { display: none; }
+.hourly-toggle.open .hourly-toggle-chevron .caret-down  { display: inline; }
 .hourly-scroll { display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; margin-bottom: 4px; }
 .hourly-scroll::-webkit-scrollbar { display: none; }
 .hourly-scroll.open { display: block; }
@@ -471,6 +477,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   <symbol id="bi-arrow-repeat" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5 5 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z"/></symbol>
   <symbol id="bi-broadcast" viewBox="0 0 16 16"><path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708m2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></symbol>
   <symbol id="bi-caret-down-fill" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></symbol>
+  <symbol id="bi-caret-right-fill" viewBox="0 0 16 16"><path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/></symbol>
   <symbol id="bi-thermometer-half" viewBox="0 0 16 16"><path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/></symbol>
 </svg>
 
@@ -528,8 +535,8 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
     <div class="obs-item"><span class="obs-label">Feels</span><span class="obs-val" id="obsFeels">—</span><span class="obs-unit">°F</span></div>
     <div class="obs-item"><span class="obs-label">Humid</span><span class="obs-val" id="obsHumid">—</span><span class="obs-unit">%</span></div>
     <div class="obs-item"><span class="obs-label">Dewpt</span><span class="obs-val" id="obsDew">—</span><span class="obs-unit">°F</span></div>
-    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Wind <svg width="7" height="7" fill="var(--dim)" style="vertical-align:middle;margin-left:1px"><use href="#bi-caret-down-fill"/></svg></span><span class="obs-val" id="obsWind">—</span><span class="obs-unit">mph</span></div>
-    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Gust <svg width="7" height="7" fill="var(--dim)" style="vertical-align:middle;margin-left:1px"><use href="#bi-caret-down-fill"/></svg></span><span class="obs-val" id="obsGust">—</span><span class="obs-unit">mph</span></div>
+    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Wind</span><span class="obs-val" id="obsWind">—</span><span class="obs-unit">mph</span><svg width="8" height="8" fill="var(--dim)" style="margin-top:1px;opacity:.6"><use href="#bi-caret-down-fill"/></svg></div>
+    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Gust</span><span class="obs-val" id="obsGust">—</span><span class="obs-unit">mph</span><svg width="8" height="8" fill="var(--dim)" style="margin-top:1px;opacity:.6"><use href="#bi-caret-down-fill"/></svg></div>
     <div class="obs-item"><span class="obs-label">UV</span><span class="obs-val" id="obsUV">—</span><span class="obs-unit">idx</span></div>
     <div class="obs-item"><span class="obs-label">Cloud</span><span class="obs-val" id="obsCloud">—</span><span class="obs-unit">%</span></div>
   </div>
@@ -751,7 +758,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.7.0</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.7.4</div>
     </div>
   </div>
 </div>
