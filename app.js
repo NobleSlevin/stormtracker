@@ -302,7 +302,7 @@ function clearWeatherGradient() {
 // ── HELPERS ───────────────────────────────────────
 async function nwsFetch(url) {
   const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 10000);
+  const tid = setTimeout(() => ctrl.abort(), 15000);
   try {
     const r = await fetch(url, { headers: { 'Accept': 'application/geo+json' }, signal: ctrl.signal });
     clearTimeout(tid);
@@ -772,15 +772,16 @@ async function fetchAlerts(url){
 }
 
 // ── FORECAST + HOURLY ─────────────────────────────
-async function fetchForecast(lat, lon) {
+async function fetchForecast(lat, lon, attempt = 1) {
+  const box = document.getElementById('panelForecast');
   try {
+    if (box) box.innerHTML = '<div class="state-center"><div class="spinner"></div><div class="state-sub" style="margin-top:10px">Loading forecast…</div></div>';
     const pt=await nwsFetch(`${NWS}/points/${lat.toFixed(4)},${lon.toFixed(4)}`);
     const pp=pt.properties||{};
     const city=pp.relativeLocation?.properties;
     if(city){
       document.getElementById('locName').textContent=city.city;
       document.getElementById('locSub').textContent = city.state;
-      // city.state is the abbreviation from NWS — reverse-lookup full name for display
       const stateNames = {'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming'};
       curState = stateNames[city.state] || city.state;
     }
@@ -796,7 +797,21 @@ async function fetchForecast(lat, lon) {
       renderHourly(results.hourly);
     }
     return results;
-  }catch(e){console.warn('Forecast error:',e);return{periods:[],hourly:[],stationUrl:null};}
+  } catch(e) {
+    console.warn('Forecast error (attempt ' + attempt + '):', e);
+    if (attempt < 3) {
+      // Auto-retry up to 3 times with short delay — NWS API is flaky
+      await new Promise(r => setTimeout(r, 1500 * attempt));
+      return fetchForecast(lat, lon, attempt + 1);
+    }
+    if (box) box.innerHTML = `<div class="state-center">
+      <div class="state-icon" style="font-size:32px">⚠️</div>
+      <div class="state-ttl">Forecast Unavailable</div>
+      <div class="state-sub">NWS API error — tap to retry</div>
+      <button onclick="fetchForPoint(${lat},${lon})" style="margin-top:16px;padding:10px 24px;border-radius:999px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:var(--text);font-size:14px;cursor:pointer;">Retry</button>
+    </div>`;
+    return {periods:[],hourly:[],stationUrl:null};
+  }
 }
 
 function renderForecast(periods){
