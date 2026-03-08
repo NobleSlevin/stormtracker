@@ -913,21 +913,80 @@ function openDayModal(dayIdx) {
   }
 
   // ── Compact square metric tiles (2×2 grid) ──
+  // Build a version of compassSVG sized for the day modal wind card
+  function dayModalCompass(windDeg, speedMph) {
+    if (windDeg == null) return '';
+    const cx = 150, cy = 150, r = 118;
+    const ticksHTML = [];
+    for (let i = 0; i < 72; i++) {
+      const deg = i * 5;
+      const a = deg * Math.PI / 180;
+      const is16pt = deg % 22.5 === 0;
+      const isMid  = deg % 10 === 0;
+      const rOuter = r;
+      const rInner = is16pt ? r - 16 : isMid ? r - 10 : r - 6;
+      const x1 = cx + rOuter * Math.sin(a), y1 = cy - rOuter * Math.cos(a);
+      const x2 = cx + rInner * Math.sin(a), y2 = cy - rInner * Math.cos(a);
+      ticksHTML.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,${is16pt?'.4':isMid?'.2':'.1'})" stroke-width="${is16pt?1.5:1}"/>`);
+    }
+    const pts16 = [
+      ['N',0],['NNE',22.5],['NE',45],['ENE',67.5],
+      ['E',90],['ESE',112.5],['SE',135],['SSE',157.5],
+      ['S',180],['SSW',202.5],['SW',225],['WSW',247.5],
+      ['W',270],['WNW',292.5],['NW',315],['NNW',337.5]
+    ];
+    const isCardinal = new Set([0,90,180,270]);
+    const cardHTML = pts16.map(([lbl, deg]) => {
+      const a = deg * Math.PI / 180;
+      const isCard = isCardinal.has(deg);
+      const rLbl = r - (isCard ? 26 : 24);
+      const x = cx + rLbl * Math.sin(a), y = cy - rLbl * Math.cos(a);
+      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${isCard?'rgba(255,255,255,.75)':'rgba(255,255,255,.38)'}" font-size="${isCard?13:9}" font-family="ui-monospace,monospace" font-weight="${isCard?700:500}">${lbl}</text>`;
+    }).join('');
+    const lineR = 88;
+    const hw = 7, hh = 14;
+    const arrowHTML = `<g transform="rotate(${windDeg}, ${cx}, ${cy})">
+      <line x1="${cx}" y1="${cy - lineR}" x2="${cx}" y2="${cy + lineR}" stroke="#93c5fd" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="${cx},${cy + lineR} ${cx - hw},${cy + lineR - hh} ${cx + hw},${cy + lineR - hh}" fill="#93c5fd"/>
+      <circle cx="${cx}" cy="${cy - lineR}" r="4.5" fill="none" stroke="#93c5fd" stroke-width="2.2"/>
+    </g>`;
+    const centerHTML = speedMph != null
+      ? `<circle cx="${cx}" cy="${cy}" r="30" fill="#0e1013" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
+         <text x="${cx}" y="${cy - 7}" text-anchor="middle" dominant-baseline="central" fill="white" font-size="16" font-weight="600" font-family="ui-monospace,monospace">${speedMph}</text>
+         <text x="${cx}" y="${cy + 11}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.5)" font-size="9" font-family="ui-monospace,monospace">mph</text>`
+      : `<circle cx="${cx}" cy="${cy}" r="30" fill="#0e1013" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>`;
+    return `<svg viewBox="0 0 300 300" width="180" height="180" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
+      ${ticksHTML.join('')}${cardHTML}${arrowHTML}${centerHTML}
+    </svg>`;
+  }
+
   const windCardHTML = maxWind != null ? `
     <div>
       <div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Wind</div>
       <div class="aqi-card">
-        <div class="aqi-header" style="align-items:center">
-          <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0">
-            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">AVG SPEED</div>
-            <div style="font-size:40px;font-weight:300;line-height:1;color:var(--blue)">${avgWind}<span style="font-size:14px;color:var(--dim);margin-left:4px">mph</span></div>
-            <div style="display:flex;gap:14px;margin-top:2px">
-              <div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Peak</div><div style="font-size:15px;font-weight:500;color:var(--text)">${maxWind} mph</div></div>
-              ${maxGust ? `<div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Gusts</div><div style="font-size:15px;font-weight:500;color:var(--orange)">${maxGust} mph</div></div>` : ''}
-              ${dominantDir ? `<div><div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Direction</div><div style="font-size:15px;font-weight:500;color:var(--text)">${dominantDir}</div></div>` : ''}
+        <div style="display:flex;align-items:center;gap:16px;padding:16px 18px">
+          <div style="display:flex;flex-direction:column;gap:10px;flex:1;min-width:0">
+            <div>
+              <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">AVG SPEED</div>
+              <div style="font-size:42px;font-weight:300;line-height:1;color:var(--blue)">${avgWind}<span style="font-size:14px;color:var(--dim);margin-left:4px">mph</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:6px">
+                <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Peak</span>
+                <span style="font-size:16px;font-weight:500;color:var(--text)">${maxWind} <span style="font-size:11px;color:var(--dim)">mph</span></span>
+              </div>
+              ${maxGust ? `<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--border);padding-bottom:6px">
+                <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Gusts</span>
+                <span style="font-size:16px;font-weight:500;color:var(--orange)">${maxGust} <span style="font-size:11px;color:var(--dim)">mph</span></span>
+              </div>` : ''}
+              ${dominantDir ? `<div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Direction</span>
+                <span style="font-size:16px;font-weight:500;color:var(--text)">${dominantDir}</span>
+              </div>` : ''}
             </div>
           </div>
-          <div style="flex-shrink:0;opacity:.85">${miniCompass(dominantWindDeg)}</div>
+          <div style="flex-shrink:0">${dayModalCompass(dominantWindDeg, avgWind)}</div>
         </div>
       </div>
     </div>` : '';
