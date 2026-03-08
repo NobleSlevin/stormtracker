@@ -27,7 +27,7 @@ body { color: var(--text); font-family: var(--sans); font-size: 16px; line-heigh
 body { min-height: 100%; }
 ::-webkit-scrollbar { display: none; }
 
-#app { display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; min-height: 100vh; height: -webkit-fill-available; }
+#app { display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
 .sa-top { flex-shrink: 0; height: env(safe-area-inset-top, 0px); background: var(--bg); }
 
 /* ── HEADER ── */
@@ -106,7 +106,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .alert-badge { margin-left: auto; font-family: var(--mono); font-size: 9px; padding: 2px 8px; border-radius: 5px; flex-shrink: 0; background: rgba(248,113,113,.1); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
 
 /* ── BODY ── */
-#body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; padding-bottom: env(safe-area-inset-bottom, 16px); }
+#body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
 #body.radar-active { overflow: hidden; }
 .tab-panel { display: none; }
 .tab-panel.on { display: block; }
@@ -405,8 +405,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
 /* ── TICKER ── */
 .ticker { flex-shrink: 0; background: var(--card); border-top: 1px solid var(--border); height: 28px; display: flex; align-items: center; overflow: hidden; }
-.ticker-wrap { flex-shrink: 0; background: var(--bg); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.is-standalone .ticker-wrap { padding-bottom: max(env(safe-area-inset-bottom, 34px), 34px); }
+.ticker-wrap { flex-shrink: 0; background: var(--bg); padding-bottom: env(safe-area-inset-bottom, 0px); min-height: calc(28px + env(safe-area-inset-bottom, 0px)); }
 .ticker-lbl { background: var(--blue); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 0 12px; height: 28px; display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
 .ticker-track { overflow: hidden; flex: 1; height: 28px; display: flex; align-items: center; }
 .ticker-inner { font-family: var(--mono); font-size: 11px; color: var(--dim); white-space: nowrap; animation: ticker 40s linear infinite; letter-spacing: .5px; }
@@ -801,21 +800,13 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.9.1</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.9.2</div>
     </div>
   </div>
 </div>
 
 <div id="tipbox"></div>
 <script>
-function setAppHeight() {
-  const app = document.getElementById('app');
-  if (app) app.style.height = window.innerHeight + 'px';
-}
-setAppHeight();
-window.addEventListener('resize', setAppHeight);
-window.addEventListener('load', setAppHeight);
-setTimeout(setAppHeight, 300);
 if (window.navigator.standalone === true) {
   document.documentElement.classList.add('is-standalone');
 }
