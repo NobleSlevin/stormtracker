@@ -714,12 +714,19 @@ function renderWindModal() {
 }
 
 function openWindModal() {
-  document.getElementById('windModal').classList.add('open');
+  const modal = document.getElementById('windModal');
+  modal.classList.add('open');
+  // Apply weather gradient matching current conditions
+  const temp = window._omCurrentTemp ?? window._lastGradTemp ?? null;
+  const fc   = window._lastGradFc ?? '';
+  if (temp != null) weatherGradient(temp, fc, modal);
   renderWindModal();
 }
 
 function closeWindModal() {
-  document.getElementById('windModal').classList.remove('open');
+  const modal = document.getElementById('windModal');
+  modal.classList.remove('open');
+  modal.style.backgroundImage = '';
   // Do NOT stop compass — keep it running so button stays hidden on re-open
 }
 
@@ -2575,6 +2582,8 @@ async function doSearch() {
     document.getElementById('locName').textContent=name;
     document.getElementById('locSub').textContent='';
     document.getElementById('searchInput').value='';
+    const ov = document.getElementById('searchOverlay');
+    if (ov) ov.style.display = 'none';
     await fetchForPoint(curLat,curLon);
   }catch(e){
     setLive('err','NOT FOUND');
