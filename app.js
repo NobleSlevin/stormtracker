@@ -740,7 +740,12 @@ function renderForecast(periods){
   window._forecastPeriods = periods; // cache for gradient restore
   const days = [hero_p, ...dayPairs.map(pair => pair.day || pair.night)];
   const now=new Date(), hero=days[0];
-  if (hero?.temperature) window._nwsHeroTemp = hero.temperature;
+  if (hero?.temperature) {
+    window._nwsHeroTemp = hero.temperature;
+    // Set temp immediately from NWS — OM will overwrite with more accurate value when it arrives
+    const _tEl = document.querySelector('.fch-temp');
+    if (_tEl) _tEl.innerHTML = `${hero.temperature}<sup>°F</sup>`;
+  }
   // Paint body gradient based on today's conditions
   if (hero) {
     // Use live observed temp if available, fall back to NWS period temp
@@ -2495,10 +2500,10 @@ async function fetchSuggestions(q) {
       const name = p.address?.city || p.address?.town || p.address?.village || p.address?.county || p.name || '';
       const state = p.address?.state || '';
       const label = name + (state ? ', ' + state : '');
-      const sub = (p.address?.county ? p.address.county + ' · ' : '') + (p.type || p.class || '');
+      const sub = p.address?.county || '';
       const lat = parseFloat(p.lat).toFixed(4);
       const lon = parseFloat(p.lon).toFixed(4);
-      return `<div class="sdrop-item" onclick="selectSuggestion(${lat},${lon},${JSON.stringify(label)},${JSON.stringify(state)})">
+      return `<div class="sdrop-item" onmousedown="selectSuggestion(${lat},${lon},${JSON.stringify(label)},${JSON.stringify(state)})" ontouchstart="selectSuggestion(${lat},${lon},${JSON.stringify(label)},${JSON.stringify(state)})">
         <span>${label}</span>
         ${sub ? `<span class="sdrop-item-sub">${sub}</span>` : ''}
       </div>`;
@@ -2541,7 +2546,7 @@ window.addEventListener('load',()=>{
   });
   document.getElementById('searchInput').addEventListener('blur', () => {
     // Delay close so tap on item registers first
-    setTimeout(closeDropdown, 200);
+    setTimeout(closeDropdown, 350);
   });
   document.getElementById('btnSearch').addEventListener('click',doSearch);
   document.getElementById('btnGeo').addEventListener('click',geoMe);
