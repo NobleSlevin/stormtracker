@@ -1970,9 +1970,94 @@ async function refresh(){
   else if(curLat)await fetchForPoint(curLat,curLon);
 }
 
+
+// ── Search autocomplete ──────────────────────────────────────────────────────
+let _acTimer = null;
+let _acAbort = null;
+
+function closeDropdown() {
+  const dd = document.getElementById('searchDropdown');
+  if (dd) { dd.classList.remove('open'); dd.innerHTML = ''; }
+}
+
+async function fetchSuggestions(q) {
+  if (_acAbort) _acAbort.abort();
+  _acAbort = new AbortController();
+  const dd = document.getElementById('searchDropdown');
+  if (!dd) return;
+
+  // ZIP: show single suggestion immediately
+  if (/^\d{5}$/.test(q)) {
+    dd.innerHTML = `<div class="sdrop-item" onclick="selectSuggestion(null,null,'${q}','')"><span>${q}</span><span class="sdrop-item-sub">ZIP Code</span></div>`;
+    dd.classList.add('open');
+    return;
+  }
+
+  if (q.length < 2) { closeDropdown(); return; }
+
+  dd.innerHTML = '<div class="sdrop-loading">Searching…</div>';
+  dd.classList.add('open');
+
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&countrycodes=us&format=json&limit=5&addressdetails=1`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'StormWatch-PWA/2.0' }, signal: _acAbort.signal }
+    );
+    const results = await r.json();
+    if (!results.length) { dd.innerHTML = '<div class="sdrop-loading">No results</div>'; return; }
+
+    dd.innerHTML = results.map(p => {
+      const name = p.address?.city || p.address?.town || p.address?.village || p.address?.county || p.name || '';
+      const state = p.address?.state || '';
+      const label = name + (state ? ', ' + state : '');
+      const sub = (p.address?.county ? p.address.county + ' · ' : '') + (p.type || p.class || '');
+      const lat = parseFloat(p.lat).toFixed(4);
+      const lon = parseFloat(p.lon).toFixed(4);
+      return `<div class="sdrop-item" onclick="selectSuggestion(${lat},${lon},${JSON.stringify(label)},${JSON.stringify(state)})">
+        <span>${label}</span>
+        ${sub ? `<span class="sdrop-item-sub">${sub}</span>` : ''}
+      </div>`;
+    }).join('');
+    dd.classList.add('open');
+  } catch(e) {
+    if (e.name !== 'AbortError') { dd.innerHTML = '<div class="sdrop-loading">Search error</div>'; }
+  }
+}
+
+async function selectSuggestion(lat, lon, label, state) {
+  closeDropdown();
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchInput').blur();
+  if (lat === null) {
+    // ZIP fallback — use doSearch
+    document.getElementById('searchInput').value = label;
+    await doSearch();
+    return;
+  }
+  curLat = lat; curLon = lon; curMode = 'search';
+  curState = state || null;
+  document.getElementById('locName').textContent = label;
+  document.getElementById('locSub').textContent = '';
+  setActiveLocBtn(null);
+  await fetchForPoint(curLat, curLon);
+}
+
 // ── INIT ─────────────────────────────────────────
 window.addEventListener('load',()=>{
-  document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { closeDropdown(); doSearch(); }
+    if (e.key === 'Escape') closeDropdown();
+  });
+  document.getElementById('searchInput').addEventListener('input', e => {
+    clearTimeout(_acTimer);
+    const q = e.target.value.trim();
+    if (!q) { closeDropdown(); return; }
+    _acTimer = setTimeout(() => fetchSuggestions(q), 300);
+  });
+  document.getElementById('searchInput').addEventListener('blur', () => {
+    // Delay close so tap on item registers first
+    setTimeout(closeDropdown, 200);
+  });
   document.getElementById('btnSearch').addEventListener('click',doSearch);
   document.getElementById('btnGeo').addEventListener('click',geoMe);
   document.getElementById('btnNational').addEventListener('click',doNational);
