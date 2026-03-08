@@ -906,7 +906,7 @@ function openDayModal(dayIdx) {
       <polygon points="${cx},${cy+lineR} ${cx-hw},${cy+lineR-hh} ${cx+hw},${cy+lineR-hh}" fill="#93c5fd"/>
       <circle cx="${cx}" cy="${cy-lineR}" r="3.5" fill="none" stroke="#93c5fd" stroke-width="2"/>
     </g>`;
-    return `<svg viewBox="0 0 120 120" width="96" height="96" xmlns="http://www.w3.org/2000/svg">
+    return `<svg viewBox="0 0 120 120" width="140" height="140" xmlns="http://www.w3.org/2000/svg">
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
       ${ticks}${labels}${arrow}
     </svg>`;
@@ -914,53 +914,6 @@ function openDayModal(dayIdx) {
 
   // ── Compact square metric tiles (2×2 grid) ──
   // Build a version of compassSVG sized for the day modal wind card
-  function dayModalCompass(windDeg, speedMph) {
-    if (windDeg == null) return '';
-    const cx = 150, cy = 150, r = 118;
-    const ticksHTML = [];
-    for (let i = 0; i < 72; i++) {
-      const deg = i * 5;
-      const a = deg * Math.PI / 180;
-      const is16pt = deg % 22.5 === 0;
-      const isMid  = deg % 10 === 0;
-      const rOuter = r;
-      const rInner = is16pt ? r - 16 : isMid ? r - 10 : r - 6;
-      const x1 = cx + rOuter * Math.sin(a), y1 = cy - rOuter * Math.cos(a);
-      const x2 = cx + rInner * Math.sin(a), y2 = cy - rInner * Math.cos(a);
-      ticksHTML.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,${is16pt?'.4':isMid?'.2':'.1'})" stroke-width="${is16pt?1.5:1}"/>`);
-    }
-    const pts16 = [
-      ['N',0],['NNE',22.5],['NE',45],['ENE',67.5],
-      ['E',90],['ESE',112.5],['SE',135],['SSE',157.5],
-      ['S',180],['SSW',202.5],['SW',225],['WSW',247.5],
-      ['W',270],['WNW',292.5],['NW',315],['NNW',337.5]
-    ];
-    const isCardinal = new Set([0,90,180,270]);
-    const cardHTML = pts16.map(([lbl, deg]) => {
-      const a = deg * Math.PI / 180;
-      const isCard = isCardinal.has(deg);
-      const rLbl = r - (isCard ? 26 : 24);
-      const x = cx + rLbl * Math.sin(a), y = cy - rLbl * Math.cos(a);
-      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${isCard?'rgba(255,255,255,.75)':'rgba(255,255,255,.38)'}" font-size="${isCard?13:9}" font-family="ui-monospace,monospace" font-weight="${isCard?700:500}">${lbl}</text>`;
-    }).join('');
-    const lineR = 88;
-    const hw = 7, hh = 14;
-    const arrowHTML = `<g transform="rotate(${windDeg}, ${cx}, ${cy})">
-      <line x1="${cx}" y1="${cy - lineR}" x2="${cx}" y2="${cy + lineR}" stroke="#93c5fd" stroke-width="2.5" stroke-linecap="round"/>
-      <polygon points="${cx},${cy + lineR} ${cx - hw},${cy + lineR - hh} ${cx + hw},${cy + lineR - hh}" fill="#93c5fd"/>
-      <circle cx="${cx}" cy="${cy - lineR}" r="4.5" fill="none" stroke="#93c5fd" stroke-width="2.2"/>
-    </g>`;
-    const centerHTML = speedMph != null
-      ? `<circle cx="${cx}" cy="${cy}" r="30" fill="#0e1013" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
-         <text x="${cx}" y="${cy - 7}" text-anchor="middle" dominant-baseline="central" fill="white" font-size="16" font-weight="600" font-family="ui-monospace,monospace">${speedMph}</text>
-         <text x="${cx}" y="${cy + 11}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,.5)" font-size="9" font-family="ui-monospace,monospace">mph</text>`
-      : `<circle cx="${cx}" cy="${cy}" r="30" fill="#0e1013" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>`;
-    return `<svg viewBox="0 0 300 300" width="180" height="180" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
-      ${ticksHTML.join('')}${cardHTML}${arrowHTML}${centerHTML}
-    </svg>`;
-  }
-
   const windCardHTML = maxWind != null ? `
     <div>
       <div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Wind</div>
@@ -986,7 +939,7 @@ function openDayModal(dayIdx) {
               </div>` : ''}
             </div>
           </div>
-          <div style="flex-shrink:0">${dayModalCompass(dominantWindDeg, avgWind)}</div>
+          <div style="flex-shrink:0;opacity:.9">${miniCompass(dominantWindDeg)}</div>
         </div>
       </div>
     </div>` : '';
