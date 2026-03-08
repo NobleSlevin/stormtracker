@@ -153,9 +153,9 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 /* ── FORECAST ── */
 #panelForecast { padding: 18px 20px; }
 .fc-hero { 
-  background: rgba(255,255,255,0.08); 
-  backdrop-filter: blur(40px) saturate(1.8) brightness(1.1); 
-  -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.1); 
+  background: rgba(255,255,255,0.07); 
+  backdrop-filter: blur(40px) saturate(1.8) brightness(1.05); 
+  -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.05); 
   border-radius: var(--r); 
   padding: 24px; 
   position: relative; 
@@ -165,8 +165,13 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
   flex-direction: column; 
   justify-content: space-between; 
   margin-bottom: 10px; 
-  border: 1px solid rgba(255,255,255,0.35); 
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.28);
+  box-shadow: 
+    0 8px 32px rgba(0,0,0,0.35),
+    inset 0 1.5px 0 rgba(255,255,255,0.45),
+    inset 0 -1px 0 rgba(255,255,255,0.06),
+    inset 1px 0 0 rgba(255,255,255,0.12),
+    inset -1px 0 0 rgba(255,255,255,0.06);
   filter: url(#liquid-glass);
 }
 .fc-hero::before { 
@@ -175,9 +180,22 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
   position: absolute; 
   inset: 0; 
   border-radius: var(--r);
-  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 40%, transparent 60%);
+  background: 
+    radial-gradient(ellipse at 30% 0%, rgba(255,255,255,0.18) 0%, transparent 55%),
+    linear-gradient(160deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.02) 35%, transparent 55%);
   pointer-events: none;
   z-index: 0;
+}
+.fc-hero::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0; left: 8px; right: 8px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6) 30%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.6) 70%, transparent);
+  border-radius: 0 0 50% 50%;
+  pointer-events: none;
+  z-index: 2;
 }
 .fc-hero > * { position: relative; z-index: 1; }
 .fch-top { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -545,6 +563,24 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 <body>
 
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="liquid-glass" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+      <!-- Displacement map for refraction distortion -->
+      <feImage result="normalMap" preserveAspectRatio="xMidYMid slice"
+        href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJuIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC4wMiAwLjAyIiBudW1PY3RhdmVzPSI0IiBzZWVkPSI1IiByZXN1bHQ9Im5vaXNlIi8+PGZlQ29tcG9uZW50VHJhbnNmZXI+PGZlRnVuY1IgdHlwZT0ibGluZWFyIiBzbG9wZT0iMC44IiBpbnRlcmNlcHQ9IjAuMSIvPjxmZUZ1bmNHIHR5cGU9ImxpbmVhciIgc2xvcGU9IjAuOCIgaW50ZXJjZXB0PSIwLjEiLz48L2ZlQ29tcG9uZW50VHJhbnNmZXI+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbHRlcj0idXJsKCNuKSIvPjwvc3ZnPg==" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" result="blurred"/>
+      <feDisplacementMap in="blurred" in2="normalMap" scale="8" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
+      <!-- Composite with original for subtle effect -->
+      <feBlend in="displaced" in2="SourceGraphic" mode="normal" result="blended"/>
+      <!-- Specular rim highlight -->
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1" result="alpha-blur"/>
+      <feSpecularLighting in="alpha-blur" surfaceScale="4" specularConstant="1.2" specularExponent="20" result="specular" lighting-color="rgba(255,255,255,0.5)">
+        <fePointLight x="50%" y="-20%" z="80"/>
+      </feSpecularLighting>
+      <feComposite in="specular" in2="SourceAlpha" operator="in" result="spec-masked"/>
+      <feBlend in="blended" in2="spec-masked" mode="screen" result="final"/>
+    </filter>
+  </defs>
   <symbol id="bi-search" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.099zm-5.242 1.656a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11"/></symbol>
   <symbol id="bi-arrow-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/></symbol>
   <symbol id="bi-geo-alt" viewBox="0 0 16 16"><path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A32 32 0 0 1 8 14.58a32 32 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10"/><path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4m0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/></symbol>
@@ -744,7 +780,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.7.6</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.7.7</div>
   </div>
 
 </div>
@@ -844,7 +880,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.7.6</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.7.7</div>
     </div>
   </div>
 </div>
@@ -863,7 +899,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.7.6"></script>
+<script src="app.js?v=2.7.7"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>
