@@ -813,26 +813,154 @@ function openDayModal(dayIdx) {
       }).join('')}
     </div>` : '';
 
-  // Stats grid
-  const statHTML = (label, val, unit) => val != null ? `
-    <div class="dd-stat">
-      <div class="dd-stat-label">${label}</div>
-      <div class="dd-stat-val">${val}<span class="dd-stat-unit"> ${unit}</span></div>
-    </div>` : '';
-
-  const statsHTML = `
-    <div class="dd-section">
-      <div class="dd-section-title">Conditions</div>
-      <div class="dd-stat-grid">
-        ${statHTML('UV Index', maxUV != null ? maxUV.toFixed(1) : null, 'max')}
-        ${statHTML('Humidity', avgHumid, '% avg')}
-        ${statHTML('Wind Low', minWind, 'mph')}
-        ${statHTML('Wind High', maxWind, 'mph')}
-        ${maxGust ? statHTML('Max Gust', maxGust, 'mph') : ''}
-        ${avgPressure ? statHTML('Pressure', avgPressure, 'mb') : ''}
-        ${minVis && maxVis ? `<div class="dd-stat"><div class="dd-stat-label">Visibility</div><div class="dd-stat-val">${minVis}–${maxVis}<span class="dd-stat-unit"> mi</span></div></div>` : ''}
+  // ── UV card (matches forecast tab renderUVSlot) ──
+  const uvCardHTML = maxUV != null ? (() => {
+    const uv = maxUV;
+    const uvRounded = Math.round(uv * 10) / 10;
+    const uvCat  = uv < 3 ? 'Low' : uv < 6 ? 'Moderate' : uv < 8 ? 'High' : uv < 11 ? 'Very High' : 'Extreme';
+    const _uvC   = gradientColor(Math.min(uv, 11) / 11);
+    const uvColor = _uvC.hex, uvBg = _uvC.bg, uvBorder = _uvC.border;
+    const advice  = uv < 3 ? 'No protection needed' : uv < 6 ? 'Wear sunscreen SPF 30+' : uv < 8 ? 'Seek shade midday' : uv < 11 ? 'Minimize sun 10am–4pm' : 'Avoid sun exposure';
+    const burnMins = uv <= 0 ? '∞' : uv < 3 ? '60+ min' : uv < 6 ? '30–45 min' : uv < 8 ? '15–25 min' : uv < 11 ? '10–15 min' : '<10 min';
+    return `<div class="aqi-section-ttl">UV Index</div>
+    <div class="uv-card">
+      <div class="uv-header">
+        <div class="uv-icon-wrap" style="background:${uvBg};border:1.5px solid ${uvBorder}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="${uvColor}" viewBox="0 0 16 16">
+            <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>
+          </svg>
+        </div>
+        <div class="uv-info"><div class="uv-area">Peak for the day</div></div>
+        <div class="uv-badge" style="background:${uvBg};color:${uvColor};border:1px solid ${uvBorder}">${uvCat}</div>
+        <div class="uv-score" style="color:${uvColor}">${uvRounded}</div>
+      </div>
+      ${rangeBar(uv, 11, 'linear-gradient(to right, #4ade80 0%, #a3e635 18%, #fbbf24 36%, #fb923c 55%, #f87171 73%, #c084fc 100%)')}
+      <div class="uv-cells">
+        <div class="uv-cell"><span class="uv-cell-lbl">Index</span><span class="uv-cell-val" style="color:${uvColor}">${uvRounded}</span><span class="uv-cell-sub">${uvCat}</span></div>
+        <div class="uv-cell"><span class="uv-cell-lbl">Burn Time</span><span class="uv-cell-val" style="font-size:14px;padding-top:4px">${burnMins}</span><span class="uv-cell-sub">fair skin</span></div>
+        <div class="uv-cell"><span class="uv-cell-lbl">Advice</span><span class="uv-cell-val" style="font-size:11px;line-height:1.3;padding-top:2px;color:var(--dim)">${advice}</span><span class="uv-cell-sub">&nbsp;</span></div>
       </div>
     </div>`;
+  })() : '';
+
+  // ── AQI card (uses cached AQI data — same day, close enough) ──
+  const aqiCardHTML = window._aqiCache ? aqiHTML(window._aqiCache) : '';
+
+  // ── Wind card ──
+  const windCardHTML = (maxWind != null) ? (() => {
+    const dominantDir = hours.filter(h=>h.windDir).reduce((acc,h) => { acc[h.windDir]=(acc[h.windDir]||0)+1; return acc; }, {});
+    const topDir = Object.entries(dominantDir).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    const avgWind = hours.filter(h=>h.wind!=null).length ? Math.round(hours.filter(h=>h.wind!=null).reduce((a,h)=>a+h.wind,0)/hours.filter(h=>h.wind!=null).length) : null;
+    const wPct = Math.min(maxWind / 60, 1);
+    const wC = gradientColor(wPct);
+    return `<div class="aqi-section-ttl">Wind</div>
+    <div class="aqi-card">
+      <div class="aqi-header">
+        <div class="aqi-icon-wrap" style="background:${wC.bg};border-color:${wC.border}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${wC.hex}" viewBox="0 0 16 16">
+            <path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2h-5a.5.5 0 0 1 0-1h5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>
+          </svg>
+        </div>
+        <div class="aqi-info"><div class="aqi-area">${topDir ? 'Primarily ' + topDir : 'Hourly avg'}</div></div>
+        <div class="aqi-badge" style="background:${wC.bg};color:${wC.hex};border:1px solid ${wC.border}">${maxWind} mph peak</div>
+        <div class="aqi-score" style="color:${wC.hex}">${avgWind}</div>
+      </div>
+      ${rangeBar(maxWind, 60, 'linear-gradient(to right, #4ade80, #fbbf24, #fb923c, #f87171)')}
+      <div class="aqi-cells">
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Avg</span><span class="aqi-cell-val" style="color:${wC.hex}">${avgWind}</span><span class="aqi-cell-sub">mph</span></div>
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Peak</span><span class="aqi-cell-val" style="color:${wC.hex}">${maxWind}</span><span class="aqi-cell-sub">mph</span></div>
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Gusts</span><span class="aqi-cell-val">${maxGust ?? '—'}</span><span class="aqi-cell-sub">${maxGust ? 'mph' : ''}</span></div>
+      </div>
+    </div>`;
+  })() : '';
+
+  // ── Humidity card ──
+  const humidCardHTML = avgHumid != null ? (() => {
+    const minHumid = Math.min(...hours.filter(h=>h.humid!=null).map(h=>h.humid));
+    const maxHumid = Math.max(...hours.filter(h=>h.humid!=null).map(h=>h.humid));
+    const hC = gradientColor(avgHumid / 100);
+    const hLabel = avgHumid < 30 ? 'Dry' : avgHumid < 60 ? 'Comfortable' : avgHumid < 80 ? 'Humid' : 'Very Humid';
+    return `<div class="aqi-section-ttl">Humidity</div>
+    <div class="aqi-card">
+      <div class="aqi-header">
+        <div class="aqi-icon-wrap" style="background:${hC.bg};border-color:${hC.border}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${hC.hex}" viewBox="0 0 16 16">
+            <path d="M8 16a6 6 0 0 0 6-6c0-1.655-1.122-2.904-2.432-4.362C10.254 4.176 8.75 2.503 8 0c0 0-6 5.686-6 10a6 6 0 0 0 6 6M6.646 4.646l.708.708c-.29.29-1.128 1.311-1.907 2.87l-.894-.448c.82-1.641 1.717-2.753 2.093-3.13"/>
+          </svg>
+        </div>
+        <div class="aqi-info"><div class="aqi-area">Relative humidity</div></div>
+        <div class="aqi-badge" style="background:${hC.bg};color:${hC.hex};border:1px solid ${hC.border}">${hLabel}</div>
+        <div class="aqi-score" style="color:${hC.hex}">${avgHumid}%</div>
+      </div>
+      ${rangeBar(avgHumid, 100, 'linear-gradient(to right, #fbbf24, #4ade80, #93c5fd)')}
+      <div class="aqi-cells">
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Low</span><span class="aqi-cell-val">${minHumid}%</span><span class="aqi-cell-sub">driest</span></div>
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Avg</span><span class="aqi-cell-val" style="color:${hC.hex}">${avgHumid}%</span><span class="aqi-cell-sub">${hLabel}</span></div>
+        <div class="aqi-cell"><span class="aqi-cell-lbl">High</span><span class="aqi-cell-val">${maxHumid}%</span><span class="aqi-cell-sub">most humid</span></div>
+      </div>
+    </div>`;
+  })() : '';
+
+  // ── Visibility card ──
+  const visCardHTML = (minVis != null && maxVis != null) ? (() => {
+    const vF = parseFloat(minVis);
+    const vPct = Math.min(vF / 10, 1);
+    const vColor = vF < 1 ? '#f87171' : vF < 3 ? '#fb923c' : vF < 5 ? '#fbbf24' : '#4ade80';
+    const vBg = vColor + '22', vBorder = vColor + '55';
+    const vLabel = vF < 0.25 ? 'Dense Fog' : vF < 1 ? 'Fog' : vF < 3 ? 'Mist' : vF < 5 ? 'Haze' : 'Clear';
+    return `<div class="aqi-section-ttl">Visibility</div>
+    <div class="aqi-card">
+      <div class="aqi-header">
+        <div class="aqi-icon-wrap" style="background:${vBg};border-color:${vBorder}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${vColor}" viewBox="0 0 16 16">
+            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+            <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+          </svg>
+        </div>
+        <div class="aqi-info"><div class="aqi-area">Lowest during day</div></div>
+        <div class="aqi-badge" style="background:${vBg};color:${vColor};border:1px solid ${vBorder}">${vLabel}</div>
+        <div class="aqi-score" style="color:${vColor}">${minVis}</div>
+      </div>
+      ${rangeBar(vF, 10, 'linear-gradient(to right, #f87171, #fb923c, #fbbf24, #4ade80)')}
+      <div class="aqi-cells">
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Min</span><span class="aqi-cell-val" style="color:${vColor}">${minVis}</span><span class="aqi-cell-sub">mi</span></div>
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Max</span><span class="aqi-cell-val">${maxVis}</span><span class="aqi-cell-sub">mi</span></div>
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Status</span><span class="aqi-cell-val" style="font-size:12px;padding-top:3px;color:${vColor}">${vLabel}</span><span class="aqi-cell-sub">&nbsp;</span></div>
+      </div>
+    </div>`;
+  })() : '';
+
+  // ── Pressure card ──
+  const pressCardHTML = avgPressure != null ? (() => {
+    const minPress = Math.min(...pressures);
+    const maxPress = Math.max(...pressures);
+    const trend = pressures.length > 1 ? (pressures[pressures.length-1] > pressures[0] ? '↑ Rising' : pressures[pressures.length-1] < pressures[0] ? '↓ Falling' : '→ Steady') : '→ Steady';
+    const tColor = trend.startsWith('↑') ? '#4ade80' : trend.startsWith('↓') ? '#f87171' : '#93c5fd';
+    const pNorm = Math.min(Math.max((avgPressure - 980) / (1040 - 980), 0), 1);
+    const pC = gradientColor(1 - pNorm);
+    return `<div class="aqi-section-ttl">Pressure</div>
+    <div class="aqi-card">
+      <div class="aqi-header">
+        <div class="aqi-icon-wrap" style="background:${pC.bg};border-color:${pC.border}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${pC.hex}" viewBox="0 0 16 16">
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+            <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/>
+          </svg>
+        </div>
+        <div class="aqi-info"><div class="aqi-area">Barometric · mb</div></div>
+        <div class="aqi-badge" style="background:${pC.bg};color:${tColor};border:1px solid ${pC.border}">${trend}</div>
+        <div class="aqi-score" style="color:${pC.hex}">${avgPressure}</div>
+      </div>
+      ${rangeBar(avgPressure - 980, 60, 'linear-gradient(to right, #f87171, #fbbf24, #4ade80, #93c5fd)')}
+      <div class="aqi-cells">
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Low</span><span class="aqi-cell-val">${minPress}</span><span class="aqi-cell-sub">mb</span></div>
+        <div class="aqi-cell"><span class="aqi-cell-lbl">Avg</span><span class="aqi-cell-val" style="color:${pC.hex}">${avgPressure}</span><span class="aqi-cell-sub">mb</span></div>
+        <div class="aqi-cell"><span class="aqi-cell-lbl">High</span><span class="aqi-cell-val">${maxPress}</span><span class="aqi-cell-sub">mb</span></div>
+      </div>
+    </div>`;
+  })() : '';
+
+  const statsHTML = [uvCardHTML, aqiCardHTML, windCardHTML, humidCardHTML, visCardHTML, pressCardHTML].filter(Boolean).join('\n');
 
   document.getElementById('dayModalBody').innerHTML = `
     <div class="dd-section">
