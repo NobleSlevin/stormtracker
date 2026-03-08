@@ -801,20 +801,19 @@ function openDayModal(dayIdx) {
 
   const hoursWithData = hours.filter(h => h.temp != null);
   // ── Horizontal hourly scroll (same hour-card style as forecast tab) ──
-  const hourlyHTML = hoursWithData.length ? `
-    <div class="hourly-scroll" style="display:block">
-      <div class="hourly-track">
+  const hourlyHTML = hoursWithData.length >= 2 ? `
+    <div class="dd-hourly-scroll">
+      <div class="dd-hourly-track">
         ${hoursWithData.map((h, idx) => {
           const hr = new Date(h.time).toLocaleTimeString([], {hour:'numeric'});
           const label = idx === 0 ? 'Now' : hr;
           const shortFx = h.wcode != null ? wcodeToShort(h.wcode) : '';
-          return `<div class="hour-card">
-            <span class="hc-time">${label}</span>
-            <span class="hc-icon">${wxIcon(shortFx, 20)}</span>
-            <span class="hc-label">${wxLabel(shortFx)}</span>
-            <span class="hc-temp ${h.temp != null ? tempClass(h.temp) : ''}">${h.temp != null ? h.temp+'°' : '—'}</span>
-            ${h.precip != null ? `<span class="hc-precip">${h.precip}%</span>` : ''}
-            <span class="hc-wind">${h.wind != null ? h.wind+'mph' : '—'}</span>
+          return `<div class="dd-hour-col">
+            <span class="dd-hour-time">${label}</span>
+            <span style="font-size:18px;line-height:1">${wxIcon(shortFx, 18)}</span>
+            <span class="dd-hour-temp ${h.temp != null ? tempClass(h.temp) : ''}">${h.temp != null ? h.temp+'°' : '—'}</span>
+            ${h.precip != null ? `<span class="dd-hour-precip">${h.precip}%</span>` : ''}
+            <span class="dd-hour-wind">${h.wind != null ? h.wind+'mph' : '—'}</span>
           </div>`;
         }).join('')}
       </div>
