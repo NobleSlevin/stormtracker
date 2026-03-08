@@ -156,37 +156,55 @@ function weatherGradient(tempF, shortForecast, targetEl) {
   const isSnowy = /snow|flurr|blizzard|sleet|ice|freezing/.test(fc);
   const isFoggy = /fog|mist|haze/.test(fc);
 
-  let top, mid;
+  // top/mid: gradient stops. accent: solid RGB for hero text tinting
+  let top, mid, accent;
   if (tempF <= 25) {
     top = isSnowy ? 'rgba(139,120,220,0.55)' : 'rgba(99,102,241,0.50)';
     mid = isSnowy ? 'rgba(100,80,180,0.28)'  : 'rgba(79,82,200,0.22)';
+    accent = isSnowy ? '180,160,255' : '160,150,255';
   } else if (tempF <= 40) {
     top = isWet  ? 'rgba(96,165,250,0.55)'   : 'rgba(147,197,253,0.48)';
     mid = isWet  ? 'rgba(71,130,210,0.28)'   : 'rgba(120,165,230,0.22)';
+    accent = isWet ? '140,190,255' : '170,210,255';
   } else if (tempF <= 55) {
     top = isWet  ? 'rgba(45,180,180,0.52)'   : 'rgba(94,234,212,0.44)';
     mid = isWet  ? 'rgba(30,150,160,0.26)'   : 'rgba(70,200,190,0.20)';
+    accent = isWet ? '100,220,210' : '130,240,215';
   } else if (tempF <= 68) {
     top = isWet  ? 'rgba(74,180,130,0.50)'   : 'rgba(134,239,172,0.42)';
     mid = isWet  ? 'rgba(50,150,110,0.24)'   : 'rgba(100,210,150,0.18)';
+    accent = isWet ? '120,210,160' : '160,245,185';
   } else if (tempF <= 80) {
     top = isWet  ? 'rgba(180,140,60,0.52)'   : 'rgba(251,191,36,0.48)';
     mid = isWet  ? 'rgba(150,110,40,0.26)'   : 'rgba(220,160,30,0.22)';
+    accent = isWet ? '220,185,100' : '255,210,80';
   } else if (tempF <= 92) {
     top = isWet  ? 'rgba(220,100,40,0.52)'   : 'rgba(251,146,60,0.50)';
     mid = isWet  ? 'rgba(190,80,30,0.26)'    : 'rgba(220,120,40,0.24)';
+    accent = isWet ? '240,140,90' : '255,175,100';
   } else {
     top = 'rgba(248,113,113,0.55)';
     mid = 'rgba(200,60,60,0.28)';
+    accent = '255,150,140';
   }
   if (isFoggy) {
     top = 'rgba(120,140,120,0.46)';
     mid = 'rgba(90,110,90,0.22)';
+    accent = '170,195,175';
   }
 
   const grad = `linear-gradient(to bottom, ${top} 0%, ${mid} 40%, #0e1013 72%)`;
   const el = targetEl || document.body;
-  el.style.background = grad;
+  // Use backgroundImage for elements with a solid background-color base (day-modal)
+  // so the solid color always underlays the gradient
+  if (el.classList && el.classList.contains('day-modal')) {
+    el.style.backgroundImage = grad;
+  } else {
+    el.style.background = grad;
+  }
+  // Store accent color for hero text
+  window._weatherAccent = accent;
+  return accent;
 }
 
 function clearWeatherGradient() {
@@ -717,7 +735,14 @@ function renderForecast(periods){
   const now=new Date(), hero=days[0];
   if (hero?.temperature) window._nwsHeroTemp = hero.temperature;
   // Paint body gradient based on today's conditions
-  if (hero) weatherGradient(hero.temperature, hero.shortForecast, document.getElementById('body'));
+  if (hero) {
+    const _accent = weatherGradient(hero.temperature, hero.shortForecast, document.getElementById('body'));
+    if (_accent) {
+      document.documentElement.style.setProperty('--hero-accent', `rgb(${_accent})`);
+      document.documentElement.style.setProperty('--hero-accent-faint', `rgba(${_accent},0.75)`);
+      document.documentElement.style.setProperty('--hero-accent-dim', `rgba(${_accent},0.55)`);
+    }
+  }
   // Hero always renders with placeholder temp — OM patch fills in real current value
   const heroHTML=hero?`<div class="fc-hero">
     <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div><div class="fch-time">${now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div>
@@ -815,21 +840,28 @@ function openDayModal(dayIdx) {
   const lo = pair.night?.temperature ?? pair.day?.temperature ?? hi;
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
+  // Fire gradient early so accent color is available for hero HTML
+  const _dmAccent = weatherGradient(highTemp, _gp.shortForecast, document.querySelector('.day-modal'));
+  const _ac = _dmAccent ? `rgb(${_dmAccent})` : 'rgb(147,197,253)';
+  const _acFaint = _dmAccent ? `rgba(${_dmAccent},0.55)` : 'rgba(147,197,253,0.55)';
+  const _acDim = _dmAccent ? `rgba(${_dmAccent},0.38)` : 'rgba(147,197,253,0.38)';
+  const _acBorder = _dmAccent ? `rgba(${_dmAccent},0.15)` : 'rgba(147,197,253,0.15)';
+
   // ── Hero card — fully inline styles to avoid fc-hero CSS conflicts ──
-  const heroHTML = `<div style="background:rgba(255,255,255,0.07);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+  const heroHTML = `<div style="background:rgba(255,255,255,0.13);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(255,255,255,0.18);display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:13px;font-weight:600;color:rgba(147,197,253,.7)">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</span>
-      <span style="font-size:13px;color:rgba(147,197,253,.5)">${d.isDaytime ? 'Daytime' : 'Evening'}</span>
+      <span style="font-size:13px;font-weight:600;color:${_acFaint}">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</span>
+      <span style="font-size:13px;color:${_acDim}">${d.isDaytime ? 'Daytime' : 'Evening'}</span>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div>
         <div style="font-size:60px;font-weight:300;line-height:1;color:#eef0f4">${highTemp}<sup style="font-size:22px;vertical-align:super">°F</sup><span style="font-size:26px;font-weight:300;opacity:.5"> / ${lowTemp}°</span></div>
       </div>
-      <div style="opacity:.25;color:rgba(147,197,253,1);flex-shrink:0">${wxIcon(d.shortForecast, 52)}</div>
+      <div style="opacity:.25;color:${_ac};flex-shrink:0">${wxIcon(d.shortForecast, 52)}</div>
     </div>
-    <div style="font-size:14px;color:rgba(147,197,253,.7);line-height:1.4">${d.shortForecast}</div>
-    <div style="font-size:13px;color:rgba(147,197,253,.55)">Wind: <b style="color:rgba(147,197,253,.9);font-weight:600">${d.windDirection||''} ${d.windSpeed||''}</b></div>
-    ${d.detailedForecast && d.detailedForecast !== d.shortForecast ? `<div style="font-size:12px;color:rgba(147,197,253,.4);line-height:1.6;border-top:1px solid rgba(147,197,253,.1);padding-top:10px;margin-top:2px">${d.detailedForecast}</div>` : ''}
+    <div style="font-size:14px;color:${_acFaint};line-height:1.4">${d.shortForecast}</div>
+    <div style="font-size:13px;color:${_acDim}">Wind: <b style="color:${_ac};font-weight:600">${d.windDirection||''} ${d.windSpeed||''}</b></div>
+    ${d.detailedForecast && d.detailedForecast !== d.shortForecast ? `<div style="font-size:12px;color:${_acDim};line-height:1.6;border-top:1px solid ${_acBorder};padding-top:10px;margin-top:2px">${d.detailedForecast}</div>` : ''}
   </div>`;
 
   // ── Hourly data for this day ──
@@ -1063,7 +1095,7 @@ function openDayModal(dayIdx) {
 
   // Paint gradient for this specific day
   const _gp = d;
-  weatherGradient(highTemp, _gp.shortForecast, document.querySelector('.day-modal'));
+  // gradient already applied above
   document.getElementById('dayModalOverlay').classList.add('open');
   document.getElementById('dayModal').classList.add('open');
 }
