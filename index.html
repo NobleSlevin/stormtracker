@@ -23,10 +23,12 @@
   --sans:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
 }
 html, body { height: 100%; margin: 0; padding: 0; background: var(--bg); }
+html { height: -webkit-fill-available; }
+body { min-height: -webkit-fill-available; }
 body { overflow: hidden; color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.65; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
 ::-webkit-scrollbar { display: none; }
 
-#app { display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
+#app { display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh; }
 .sa-top { flex-shrink: 0; height: env(safe-area-inset-top, 0px); background: var(--bg); }
 
 /* ── HEADER ── */
@@ -88,7 +90,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 16
 .sv-blue{color:var(--blue)} .sv-red{color:var(--red)} .sv-orange{color:var(--orange)}
 
 /* ── TABS ── */
-.tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
+.tabs { display: flex; border-top: 1px solid var(--border); background: var(--card); flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
 .tab { flex: 1; padding: 13px 2px; font-size: 13px; font-weight: 500; color: var(--dim); cursor: pointer; border: none; background: none; font-family: var(--sans); border-bottom: 2px solid transparent; display: flex; align-items: center; justify-content: center; gap: 4px; transition: color .15s; -webkit-appearance: none; }
 .tab.on { color: var(--blue); border-bottom-color: var(--blue); }
 
@@ -450,6 +452,51 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .radar-timeline-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width .1s; pointer-events: none; }
 .radar-timestamp { font-size: 10px; font-weight: 500; color: var(--dim); font-family: var(--mono); flex-shrink: 0; white-space: nowrap; }
 .leaflet-tile-pane { filter: saturate(1.3) brightness(0.9); }
+
+.fc-day-row { cursor: pointer; }
+.fc-day-row:active { opacity: .75; }
+
+.day-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; display:none; }
+.day-modal-overlay.open { display:block; }
+.day-modal { position:fixed; inset:0; background:var(--bg); z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; overflow:hidden; }
+.day-modal.open { transform:translateX(0); }
+.day-modal-header { display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--card); }
+.day-modal-back { display:flex; align-items:center; gap:4px; background:none; border:none; color:var(--blue); font-size:14px; font-weight:500; cursor:pointer; padding:4px 0; }
+.day-modal-title { font-size:16px; font-weight:600; color:var(--text); }
+.day-modal-body { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:16px; }
+
+.dd-section { background:var(--card2); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; }
+.dd-section-title { font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--dim); margin-bottom:14px; }
+.dd-hero-temps { display:flex; align-items:center; gap:0; margin-bottom:14px; }
+.dd-temp-hi { font-size:52px; font-weight:300; line-height:1; }
+.dd-temp-sep { font-size:24px; color:var(--dim); margin:0 10px; }
+.dd-temp-lo { font-size:36px; font-weight:300; color:var(--dim); line-height:1; align-self:flex-end; margin-bottom:4px; }
+.dd-summary { font-size:14px; color:var(--dim); line-height:1.6; }
+
+.dd-stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.dd-stat { background:var(--card3); border-radius:var(--rsm); padding:12px 14px; }
+.dd-stat-label { font-size:10px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--dim); margin-bottom:4px; }
+.dd-stat-val { font-size:22px; font-weight:500; color:var(--text); line-height:1.1; }
+.dd-stat-unit { font-size:11px; color:var(--dim); }
+
+.dd-hourly-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -18px; padding:0 18px; }
+.dd-hourly-scroll::-webkit-scrollbar { display:none; }
+.dd-hourly-track { display:flex; gap:8px; padding-bottom:4px; width:max-content; }
+.dd-hour-col { display:flex; flex-direction:column; align-items:center; gap:5px; min-width:52px; background:var(--card3); border-radius:var(--rsm); padding:10px 6px; }
+.dd-hour-time { font-size:10px; color:var(--dim); font-weight:500; }
+.dd-hour-temp { font-size:15px; font-weight:600; }
+.dd-hour-precip { font-size:10px; color:var(--blue); }
+.dd-hour-wind { font-size:10px; color:var(--dim); }
+.dd-hour-humid { font-size:10px; color:var(--dim); }
+
+.dd-precip-row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); }
+.dd-precip-row:last-child { border-bottom:none; }
+.dd-precip-time { font-size:12px; color:var(--dim); min-width:54px; }
+.dd-precip-bar-wrap { flex:1; }
+.dd-precip-bar-track { height:4px; background:rgba(255,255,255,.08); border-radius:999px; }
+.dd-precip-bar-fill { height:4px; background:#93c5fd; border-radius:999px; }
+.dd-precip-pct { font-size:12px; color:var(--blue); min-width:32px; text-align:right; }
+
 </style>
 </head>
 <body>
@@ -545,43 +592,15 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
     <div class="stat-item"><span class="stat-label">Updated</span><span class="stat-val" style="font-size:11px;color:var(--dim);padding-top:5px" id="sUpdated">—</span></div>
   </div>
 
-  <div class="tabs">
-    <button class="tab on" data-tab="alerts">
-      <svg width="11" height="11" fill="currentColor"><use href="#bi-exclamation-triangle"/></svg> Alerts
-    </button>
-    <button class="tab" data-tab="forecast">
-      <svg width="11" height="11" fill="currentColor"><use href="#bi-sun"/></svg> Forecast
-    </button>
-    <button class="tab" data-tab="nearby">
-      <svg width="11" height="11" fill="currentColor"><use href="#bi-broadcast"/></svg> Nearby
-    </button>
-    <button class="tab" data-tab="radar">
-      <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><use href="#bi-globe"/></svg> Radar
-    </button>
-    <button class="tab" data-tab="tornado">
-      <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><use href="#bi-cloud-lightning"/></svg> Risk
-    </button>
-  </div>
-
-  <div class="filter-row" id="filterRow">
-    <span class="filter-label">Filter</span>
-    <button class="fbtn f-all on" data-f="all">All</button>
-    <button class="fbtn f-ext" data-f="Extreme">Extreme</button>
-    <button class="fbtn f-sev" data-f="Severe">Severe</button>
-    <button class="fbtn f-mod" data-f="Moderate">Moderate</button>
-    <button class="fbtn f-min" data-f="Minor">Minor</button>
-    <span class="alert-badge" id="alertBadge">0 alerts</span>
-  </div>
-
   <div id="body">
 
-    <div class="tab-panel on" id="tabAlerts">
+    <div class="tab-panel" id="tabAlerts">
       <div id="panelAlerts">
         <div class="state-center"><div class="spinner"></div><div class="state-sub" style="margin-top:10px">Loading alerts…</div></div>
       </div>
     </div>
 
-    <div class="tab-panel" id="tabForecast">
+    <div class="tab-panel on" id="tabForecast">
       <div id="panelForecast">
         <div class="state-center">
           <div class="state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="var(--dim)" viewBox="0 0 16 16"><path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.476A5.5 5.5 0 0 1 4.406 3.342"/></svg></div>
@@ -645,6 +664,34 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       </div>
     </div>
 
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" data-tab="forecast">
+      <svg width="11" height="11" fill="currentColor"><use href="#bi-sun"/></svg> Forecast
+    </button>
+    <button class="tab" data-tab="alerts">
+      <svg width="11" height="11" fill="currentColor"><use href="#bi-exclamation-triangle"/></svg> Alerts
+    </button>
+    <button class="tab" data-tab="nearby">
+      <svg width="11" height="11" fill="currentColor"><use href="#bi-broadcast"/></svg> Nearby
+    </button>
+    <button class="tab" data-tab="radar">
+      <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><use href="#bi-globe"/></svg> Radar
+    </button>
+    <button class="tab" data-tab="tornado">
+      <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16"><use href="#bi-cloud-lightning"/></svg> Risk
+    </button>
+  </div>
+
+  <div class="filter-row" id="filterRow">
+    <span class="filter-label">Filter</span>
+    <button class="fbtn f-all on" data-f="all">All</button>
+    <button class="fbtn f-ext" data-f="Extreme">Extreme</button>
+    <button class="fbtn f-sev" data-f="Severe">Severe</button>
+    <button class="fbtn f-mod" data-f="Moderate">Moderate</button>
+    <button class="fbtn f-min" data-f="Minor">Minor</button>
+    <span class="alert-badge" id="alertBadge">0 alerts</span>
   </div>
 
   <div class="ticker-wrap">
@@ -755,7 +802,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.7.9</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.8.1</div>
     </div>
   </div>
 </div>
@@ -763,5 +810,18 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 <div id="tipbox"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="app.js"></script>
+
+  <!-- Day Detail Modal -->
+  <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>
+  <div class="day-modal" id="dayModal">
+    <div class="day-modal-header">
+      <button class="day-modal-back" onclick="closeDayModal()">
+        <svg width="16" height="16" fill="currentColor"><use href="#bi-chevron-left"/></svg>
+        Back
+      </button>
+      <span class="day-modal-title" id="dayModalTitle"></span>
+    </div>
+    <div class="day-modal-body" id="dayModalBody"></div>
+  </div>
 </body>
 </html>

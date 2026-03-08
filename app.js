@@ -116,6 +116,8 @@ let curLat = null, curLon = null, curMode = null, curState = null;
 let omData = null; // Open-Meteo current data
 
 // ── TABS ──────────────────────────────────────────
+// Forecast is now the default tab — hide filter row on init
+document.getElementById('filterRow').style.display = 'none';
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
     const t = btn.dataset.tab;
@@ -638,6 +640,7 @@ function renderForecast(periods){
     else dayPairMap.get(dateKey).night = p;
   }
   const dayPairs = [...dayPairMap.values()].slice(0, 6);
+  window._dayPairsCache = dayPairs;
   const days = [hero_p, ...dayPairs.map(pair => pair.day || pair.night)];
   const now=new Date(), hero=days[0];
   if (hero?.temperature) window._nwsHeroTemp = hero.temperature;
@@ -676,7 +679,8 @@ function renderForecast(periods){
     };
     const fillGrad = `linear-gradient(to right, ${tempGradientStop(lowTemp)}, ${tempGradientStop(highTemp)})`;
     const rightP = (100 - parseFloat(hiP)).toFixed(1);
-    return `<div class="fc-day-row">
+    const dayIdx = dayPairs.indexOf(pair);
+    return `<div class="fc-day-row" onclick="openDayModal(${dayIdx})">
       <span class="fdr-name">${dn[dt.getDay()]}</span>
       <span class="fdr-icon">${wxIcon(d.shortForecast)}</span>
       <span class="fdr-lo ${loColor}">${lowTemp}°</span>
@@ -716,6 +720,142 @@ function renderHeroExtras() {
   if (window._visibilityMi != null) parts.push(`Visibility: ${window._visibilityMi} mi`);
   if (window._precip24h != null) parts.push(`Precip 24h: ${window._precip24h}"`);
   el.textContent = parts.join('  ·  ');
+}
+
+
+// ── DAY DETAIL MODAL ──────────────────────────────
+function openDayModal(dayIdx) {
+  const oh = window._omHourly;
+  const pairs = window._dayPairsCache;
+  if (!pairs || !pairs[dayIdx]) return;
+
+  const pair = pairs[dayIdx];
+  const d = pair.day || pair.night;
+  const dt = new Date(d.startTime);
+  const dn = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  document.getElementById('dayModalTitle').textContent = `${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}`;
+
+  const hi = d.temperature;
+  const lo = pair.night?.temperature ?? pair.day?.temperature ?? hi;
+  const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
+  const summary = d.detailedForecast || d.shortForecast || '';
+
+  // Get OM hourly data for this day
+  const dateStr = dt.toISOString().slice(0, 10); // "2026-03-08"
+  let hours = [];
+  if (oh && oh.time) {
+    oh.time.forEach((t, i) => {
+      if (t.startsWith(dateStr)) {
+        hours.push({
+          time: t,
+          temp: oh.temperature_2m?.[i] != null ? Math.round(oh.temperature_2m[i]) : null,
+          feelsLike: oh.apparent_temperature?.[i] != null ? Math.round(oh.apparent_temperature[i]) : null,
+          precip: oh.precipitation_probability?.[i] ?? null,
+          precipAmt: oh.precipitation?.[i] ?? null,
+          wind: oh.wind_speed_10m?.[i] != null ? Math.round(oh.wind_speed_10m[i]) : null,
+          gust: oh.wind_gusts_10m?.[i] != null ? Math.round(oh.wind_gusts_10m[i]) : null,
+          windDir: oh.wind_direction_10m?.[i] != null ? degToCard(Math.round(oh.wind_direction_10m[i])) : null,
+          humid: oh.relative_humidity_2m?.[i] != null ? Math.round(oh.relative_humidity_2m[i]) : null,
+          pressure: oh.surface_pressure?.[i] != null ? Math.round(oh.surface_pressure[i]) : null,
+          vis: oh.visibility?.[i] != null ? (oh.visibility[i] / 1609.34).toFixed(1) : null,
+          uv: oh.uv_index?.[i] != null ? oh.uv_index[i].toFixed(1) : null,
+        });
+      }
+    });
+  }
+
+  // Aggregates
+  const avgHumid = hours.length ? Math.round(hours.reduce((a,h) => a + (h.humid ?? 0), 0) / hours.filter(h => h.humid != null).length) : null;
+  const minWind = hours.length ? Math.min(...hours.filter(h=>h.wind!=null).map(h=>h.wind)) : null;
+  const maxWind = hours.length ? Math.max(...hours.filter(h=>h.wind!=null).map(h=>h.wind)) : null;
+  const maxGust = hours.length ? Math.max(...hours.filter(h=>h.gust!=null).map(h=>h.gust)) : null;
+  const maxUV = hours.length ? Math.max(...hours.filter(h=>h.uv!=null).map(h=>parseFloat(h.uv))) : null;
+  const pressures = hours.filter(h=>h.pressure!=null).map(h=>h.pressure);
+  const avgPressure = pressures.length ? Math.round(pressures.reduce((a,v)=>a+v,0)/pressures.length) : null;
+  const visibs = hours.filter(h=>h.vis!=null).map(h=>parseFloat(h.vis));
+  const minVis = visibs.length ? Math.min(...visibs).toFixed(1) : null;
+  const maxVis = visibs.length ? Math.max(...visibs).toFixed(1) : null;
+
+  // Precip hours with meaningful chance
+  const precipHours = hours.filter(h => h.precip != null && h.precip >= 20);
+
+  // Hourly strip HTML
+  const hourlyHTML = hours.length ? `
+    <div class="dd-section">
+      <div class="dd-section-title">Hourly Breakdown</div>
+      <div class="dd-hourly-scroll"><div class="dd-hourly-track">
+        ${hours.map(h => {
+          const hr = new Date(h.time).toLocaleTimeString([], {hour:'numeric'});
+          return `<div class="dd-hour-col">
+            <span class="dd-hour-time">${hr}</span>
+            <span class="dd-hour-temp ${h.temp != null ? tempClass(h.temp) : ''}">${h.temp != null ? h.temp+'°' : '—'}</span>
+            ${h.precip != null ? `<span class="dd-hour-precip">${h.precip}%</span>` : '<span class="dd-hour-precip" style="color:var(--dim)">—</span>'}
+            ${h.wind != null ? `<span class="dd-hour-wind">${h.wind}mph</span>` : ''}
+            ${h.humid != null ? `<span class="dd-hour-humid">${h.humid}%💧</span>` : ''}
+          </div>`;
+        }).join('')}
+      </div></div>
+    </div>` : '';
+
+  // Precip detail
+  const precipDetailHTML = precipHours.length ? `
+    <div class="dd-section">
+      <div class="dd-section-title">Precipitation Chances</div>
+      ${precipHours.map(h => {
+        const hr = new Date(h.time).toLocaleTimeString([], {hour:'numeric'});
+        return `<div class="dd-precip-row">
+          <span class="dd-precip-time">${hr}</span>
+          <div class="dd-precip-bar-wrap"><div class="dd-precip-bar-track"><div class="dd-precip-bar-fill" style="width:${h.precip}%"></div></div></div>
+          <span class="dd-precip-pct">${h.precip}%</span>
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  // Stats grid
+  const statHTML = (label, val, unit) => val != null ? `
+    <div class="dd-stat">
+      <div class="dd-stat-label">${label}</div>
+      <div class="dd-stat-val">${val}<span class="dd-stat-unit"> ${unit}</span></div>
+    </div>` : '';
+
+  const statsHTML = `
+    <div class="dd-section">
+      <div class="dd-section-title">Conditions</div>
+      <div class="dd-stat-grid">
+        ${statHTML('UV Index', maxUV != null ? maxUV.toFixed(1) : null, 'max')}
+        ${statHTML('Humidity', avgHumid, '% avg')}
+        ${statHTML('Wind Low', minWind, 'mph')}
+        ${statHTML('Wind High', maxWind, 'mph')}
+        ${maxGust ? statHTML('Max Gust', maxGust, 'mph') : ''}
+        ${avgPressure ? statHTML('Pressure', avgPressure, 'mb') : ''}
+        ${minVis && maxVis ? `<div class="dd-stat"><div class="dd-stat-label">Visibility</div><div class="dd-stat-val">${minVis}–${maxVis}<span class="dd-stat-unit"> mi</span></div></div>` : ''}
+      </div>
+    </div>`;
+
+  document.getElementById('dayModalBody').innerHTML = `
+    <div class="dd-section">
+      <div class="dd-section-title">${d.shortForecast || ''}</div>
+      <div class="dd-hero-temps">
+        <span class="dd-temp-hi ${tempClass(highTemp)}">${highTemp}°</span>
+        <span class="dd-temp-sep">/</span>
+        <span class="dd-temp-lo">${lowTemp}°</span>
+      </div>
+      ${summary && summary !== d.shortForecast ? `<div class="dd-summary">${summary}</div>` : ''}
+    </div>
+    ${hourlyHTML}
+    ${precipDetailHTML}
+    ${statsHTML}
+  `;
+
+  document.getElementById('dayModalOverlay').classList.add('open');
+  document.getElementById('dayModal').classList.add('open');
+}
+
+function closeDayModal() {
+  document.getElementById('dayModalOverlay').classList.remove('open');
+  document.getElementById('dayModal').classList.remove('open');
 }
 
 // ── PATCH HOURLY TEMPS FROM OPEN-METEO ───────────
@@ -1827,13 +1967,15 @@ async function fetchOpenMeteo(lat, lon) {
         'visibility'
       ].join(','),
       hourly: [
-        'temperature_2m','cape','lifted_index','convective_inhibition',
-        'freezing_level_height','precipitation_probability','precipitation'
+        'temperature_2m','apparent_temperature','cape','lifted_index','convective_inhibition',
+        'freezing_level_height','precipitation_probability','precipitation',
+        'wind_speed_10m','wind_gusts_10m','wind_direction_10m',
+        'relative_humidity_2m','surface_pressure','visibility','uv_index'
       ].join(','),
       wind_speed_unit: 'mph',
       temperature_unit: 'fahrenheit',
-      forecast_days: 1,
-      forecast_hours: 24,
+      forecast_days: 7,
+
       timezone: 'auto'
     });
     const res = await fetch(`${OM}?${params}`);
