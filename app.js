@@ -758,20 +758,18 @@ function openDayModal(dayIdx) {
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
   // ── Hero card ──
-  const heroHTML = `<div class="dm-hero">
-    <div class="dm-hero-top">
-      <div class="dm-hero-dow">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</div>
-      <div class="dm-hero-period">${d.isDaytime ? 'Daytime' : 'Evening'}</div>
+  const heroHTML = `<div class="fc-hero">
+    <div class="fch-top">
+      <div class="fch-day">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</div>
+      <div class="fch-time">${d.isDaytime ? 'Daytime' : 'Evening'}</div>
     </div>
-    <div class="dm-hero-body">
-      <div>
-        <div class="dm-hero-temp">${highTemp}<sup style="font-size:22px;vertical-align:super">°F</sup><span class="dm-hero-lo"> / ${lowTemp}°</span></div>
-        <div class="dm-hero-short">${d.shortForecast}</div>
-        <div class="dm-hero-wind">Wind: <b>${d.windDirection||''} ${d.windSpeed||''}</b></div>
-      </div>
-      <div class="dm-hero-icon">${wxIcon(d.shortForecast, 52)}</div>
+    <div class="fch-temp">${highTemp}<sup>°F</sup><span style="font-size:28px;font-weight:300;opacity:.55"> / ${lowTemp}°</span></div>
+    <div class="fch-icon">${wxIcon(d.shortForecast, 56)}</div>
+    <div class="fch-meta">
+      <div>${d.shortForecast}</div>
+      <div>Wind: <b>${d.windDirection||''} ${d.windSpeed||''}</b></div>
     </div>
-    ${d.detailedForecast && d.detailedForecast !== d.shortForecast ? `<div class="dm-hero-detail">${d.detailedForecast}</div>` : ''}
+    ${d.detailedForecast && d.detailedForecast !== d.shortForecast ? `<div class="fch-extras" style="margin-top:8px;font-size:12px;opacity:.7;line-height:1.5">${d.detailedForecast}</div>` : ''}
   </div>`;
 
   // ── Hourly data for this day ──
