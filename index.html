@@ -27,7 +27,7 @@ body { color: var(--text); font-family: var(--sans); font-size: 16px; line-heigh
 body { min-height: 100%; }
 ::-webkit-scrollbar { display: none; }
 
-#app { display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; }
+#app { display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-repeat: no-repeat; animation: bgbreathe 20s ease-in-out infinite; }
 .sa-top { flex-shrink: 0; height: env(safe-area-inset-top, 0px); background: var(--bg); }
 
 /* ── HEADER ── */
@@ -106,7 +106,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .alert-badge { margin-left: auto; font-family: var(--mono); font-size: 9px; padding: 2px 8px; border-radius: 5px; flex-shrink: 0; background: rgba(248,113,113,.1); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
 
 /* ── BODY ── */
-#body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; background: transparent; animation: bgbreathe 20s ease-in-out infinite; }
+#body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; background: transparent; }
 #body.radar-active { overflow: hidden; }
 .tab-panel { display: none; }
 .tab-panel.on { display: block; }
@@ -185,7 +185,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .hourly-toggle-chevron .caret-down  { display: none; }
 .hourly-toggle.open .hourly-toggle-chevron .caret-right { display: none; }
 .hourly-toggle.open .hourly-toggle-chevron .caret-down  { display: inline; }
-.hourly-scroll { display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; margin-bottom: 4px; }
+.hourly-scroll { display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 20px 8px; margin: 0 -20px 4px; }
 .hourly-scroll::-webkit-scrollbar { display: none; }
 .hourly-scroll.open { display: block; }
 .hourly-track { display: flex; gap: 9px; padding: 6px 2px; width: max-content; }
@@ -364,7 +364,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 
 /* Hourly wind sparkline */
 .wind-hourly { background: var(--card); border-radius: var(--r); padding: 15px 16px; }
-.wind-hourly-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 8px; }
+.wind-hourly-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 8px -18px 0; padding: 0 18px; }
 .wind-hourly-scroll::-webkit-scrollbar { display: none; }
 .wind-hourly-track { display: flex; gap: 7px; width: max-content; padding: 2px; }
 .wind-hour-card { display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--card2); border-radius: var(--rsm); padding: 13px 11px; min-width: 62px; }
@@ -418,17 +418,17 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .data-note { font-size: 10px; color: var(--muted); font-family: var(--mono); letter-spacing: .5px; text-align: center; padding: 6px 4px; }
 
 /* ── TICKER ── */
-.ticker-wrap { flex-shrink: 0; padding: 8px 14px 0; }
-.ticker { background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 14px 14px 0 0; height: 36px; display: flex; align-items: center; overflow: hidden; }
-.ticker-lbl { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); font-size: 9px; font-weight: 700; letter-spacing: 2px; padding: 0 11px; height: 36px; display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.08); }
-.ticker-track { overflow: hidden; flex: 1; height: 36px; display: flex; align-items: center; }
+.ticker-wrap { flex-shrink: 0; padding: 8px 16px calc(env(safe-area-inset-bottom,0px) + 12px); display: flex; flex-direction: column; gap: 7px; border-top: 1px solid rgba(255,255,255,0.28); }
+.ticker { background: rgba(255,255,255,0.10); backdrop-filter: blur(24px) saturate(1.4); -webkit-backdrop-filter: blur(24px) saturate(1.4); border-radius: var(--r); border: 1px solid rgba(255,255,255,0.28); box-shadow: 0 4px 24px rgba(0,0,0,0.25); height: 38px; display: flex; align-items: center; overflow: hidden; }
+.ticker-lbl { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.6); font-size: 9px; font-weight: 700; letter-spacing: 2px; text-indent: 2px; padding: 0 11px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.10); }
+.ticker-track { overflow: hidden; flex: 1; height: 38px; display: flex; align-items: center; padding: 0 4px; }
 .ticker-inner { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.5); white-space: nowrap; animation: ticker 40s linear infinite; letter-spacing: .5px; }
 @keyframes ticker { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
-.tsep { color: rgba(255,255,255,0.25); margin: 0 14px; }
+.tsep { color: rgba(255,255,255,0.2); margin: 0 14px; }
 .ticker-credit { display: none; }
-.ticker-info-btn { flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-left: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); cursor: pointer; padding: 0; -webkit-appearance: none; }
+.ticker-info-btn { flex-shrink: 0; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-left: 1px solid rgba(255,255,255,0.10); color: rgba(255,255,255,0.4); cursor: pointer; padding: 0; -webkit-appearance: none; }
 .ticker-info-btn:active { color: rgba(255,255,255,0.8); }
-.ticker-byline { text-align: center; padding: 5px 0 calc(env(safe-area-inset-bottom,0px) + 6px); font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: rgba(255,255,255,0.18); }
+.ticker-byline { text-align: center; font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: rgba(255,255,255,0.18); }
 /* Info Modal */
 .info-modal { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; }
 .info-modal.open { display: flex; }
@@ -472,7 +472,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
 .day-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; display:none; }
 .day-modal-overlay.open { display:block; }
-.day-modal { position:fixed; inset:0; background-color:#000000; background-image:none; z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; overflow:hidden; animation: bgbreathe 20s ease-in-out infinite; }
+.day-modal { position:fixed; inset:0; background-color:#000000; background-image:none; z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; overflow:hidden; }
 .day-modal.open { transform:translateX(0); }
 .day-modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; padding-top:calc(env(safe-area-inset-top, 0px) + 16px); border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; background:rgba(14,16,19,0.6); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
 .day-modal-back { display:flex; align-items:center; gap:4px; background:none; border:none; color:var(--blue); font-size:14px; font-weight:500; cursor:pointer; padding:4px 0; }
@@ -494,7 +494,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .dd-stat-val { font-size:22px; font-weight:500; color:var(--text); line-height:1.1; }
 .dd-stat-unit { font-size:11px; color:var(--dim); }
 
-.dd-hourly-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -18px; padding:0 18px; }
+.dd-hourly-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -22px; padding:0 22px; }
 .dd-hourly-scroll::-webkit-scrollbar { display:none; }
 .dd-hourly-track { display:flex; gap:8px; padding-bottom:4px; width:max-content; }
 .dd-hour-col { display:flex; flex-direction:column; align-items:center; gap:5px; min-width:52px; background:var(--card3); border-radius:var(--rsm); padding:10px 6px; }
@@ -816,7 +816,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.6.2</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.6.6</div>
     </div>
   </div>
 </div>
@@ -835,7 +835,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.6.2"></script>
+<script src="app.js?v=2.6.6"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>

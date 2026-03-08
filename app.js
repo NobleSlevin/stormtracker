@@ -127,11 +127,11 @@ document.querySelectorAll('.tab').forEach(btn => {
     const map = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby', radar:'tabRadar', tornado:'tabTornado'};
     document.getElementById(map[t]).classList.add('on');
     document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
-    const bodyEl = document.getElementById('body');
+    const bodyEl = document.getElementById('app');
     if (bodyEl) bodyEl.classList.toggle('radar-active', t === 'radar');
     // Restore gradient when returning to forecast tab
     if (t === 'forecast') {
-      const bodyEl2 = document.getElementById('body');
+      const bodyEl2 = document.getElementById('app');
       const gradTemp = window._lastGradTemp ?? window._omCurrentTemp ?? window._forecastPeriods?.[0]?.temperature;
       const gradFc   = window._lastGradFc   ?? window._forecastPeriods?.[0]?.shortForecast;
       if (gradTemp != null && gradFc && bodyEl2) {
@@ -334,7 +334,7 @@ function weatherGradient(tempF, shortForecast, targetEl) {
 }
 
 function clearWeatherGradient() {
-  const bodyEl = document.getElementById('body');
+  const bodyEl = document.getElementById('app');
   if (bodyEl) bodyEl.style.background = '';
 }
 
@@ -889,7 +889,7 @@ function renderForecast(periods){
   if (hero) {
     // Use live observed temp if available, fall back to NWS period temp
     const _gradTemp = window._omCurrentTemp ?? hero.temperature;
-    const _accent = weatherGradient(_gradTemp, hero.shortForecast, document.getElementById('body'));
+    const _accent = weatherGradient(_gradTemp, hero.shortForecast, document.getElementById('app'));
     // accent stored in window._weatherAccent for future use
   }
   // Hero always renders with placeholder temp — OM patch fills in real current value
@@ -1257,7 +1257,7 @@ function closeDayModal() {
   document.getElementById('dayModal').classList.remove('open');
   // Restore today's gradient when returning to forecast tab
   const hp = window._forecastPeriods?.[0];
-  if (hp) weatherGradient(hp.temperature, hp.shortForecast, document.getElementById('body'));
+  if (hp) weatherGradient(hp.temperature, hp.shortForecast, document.getElementById('app'));
 }
 
 // ── PATCH HOURLY TEMPS FROM OPEN-METEO ───────────
@@ -2416,7 +2416,7 @@ async function fetchOpenMeteo(lat, lon) {
       window._omCurrentTemp = Math.round(c.temperature_2m);
       // Re-paint gradient now that we have the real observed temp
       const _fp = window._forecastPeriods?.[0];
-      const _bodyEl = document.getElementById('body');
+      const _bodyEl = document.getElementById('app');
       if (_fp && _bodyEl) {
         const _acc = weatherGradient(window._omCurrentTemp, _fp.shortForecast, _bodyEl);
         if (_acc) {
