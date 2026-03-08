@@ -129,6 +129,13 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
     const bodyEl = document.getElementById('body');
     if (bodyEl) bodyEl.classList.toggle('radar-active', t === 'radar');
+    // Apply/remove body gradient based on active tab
+    if (t === 'forecast') {
+      const hp = window._forecastPeriods?.[0];
+      if (hp) weatherGradient(hp.temperature, hp.shortForecast);
+    } else {
+      clearWeatherGradient();
+    }
     // Leaflet needs size invalidation when its container becomes visible
     if (t === 'radar') {
       if (!rvInited && curLat) {
@@ -139,6 +146,62 @@ document.querySelectorAll('.tab').forEach(btn => {
     }
   });
 });
+
+// ── BODY BACKGROUND GRADIENT ─────────────────────
+// Paints a 3-stop gradient on document.body based on temperature + conditions.
+// Fades from accent color at top → mid tone at 55% → var(--bg) at bottom.
+function weatherGradient(tempF, shortForecast) {
+  const fc = (shortForecast || '').toLowerCase();
+  const isWet   = /rain|shower|storm|thunder|drizzle|sleet|snow|flurr|blizzard|precip/.test(fc);
+  const isSnowy = /snow|flurr|blizzard|sleet|ice|freezing/.test(fc);
+  const isFoggy = /fog|mist|haze/.test(fc);
+
+  // Base hue from temperature (cold=blue, mild=teal/green, warm=amber, hot=red)
+  let top, mid;
+  if (tempF <= 25) {
+    // Deep freeze — indigo/purple
+    top = isSnowy ? 'rgba(139,120,220,0.22)' : 'rgba(99,102,241,0.20)';
+    mid = isSnowy ? 'rgba(100,80,180,0.10)'  : 'rgba(79,82,200,0.09)';
+  } else if (tempF <= 40) {
+    // Cold — steel blue / icy
+    top = isWet  ? 'rgba(96,165,250,0.22)'   : 'rgba(147,197,253,0.18)';
+    mid = isWet  ? 'rgba(71,130,210,0.10)'   : 'rgba(120,165,230,0.08)';
+  } else if (tempF <= 55) {
+    // Cool — teal/cyan
+    top = isWet  ? 'rgba(45,180,180,0.20)'   : 'rgba(94,234,212,0.16)';
+    mid = isWet  ? 'rgba(30,150,160,0.09)'   : 'rgba(70,200,190,0.07)';
+  } else if (tempF <= 68) {
+    // Mild — soft green
+    top = isWet  ? 'rgba(74,180,130,0.18)'   : 'rgba(134,239,172,0.15)';
+    mid = isWet  ? 'rgba(50,150,110,0.08)'   : 'rgba(100,210,150,0.07)';
+  } else if (tempF <= 80) {
+    // Warm — golden amber
+    top = isWet  ? 'rgba(180,140,60,0.20)'   : 'rgba(251,191,36,0.18)';
+    mid = isWet  ? 'rgba(150,110,40,0.09)'   : 'rgba(220,160,30,0.08)';
+  } else if (tempF <= 92) {
+    // Hot — deep orange
+    top = isWet  ? 'rgba(220,100,40,0.20)'   : 'rgba(251,146,60,0.20)';
+    mid = isWet  ? 'rgba(190,80,30,0.09)'    : 'rgba(220,120,40,0.09)';
+  } else {
+    // Scorching — red
+    top = 'rgba(248,113,113,0.22)';
+    mid = 'rgba(200,60,60,0.10)';
+  }
+
+  // Fog pulls everything toward grey-green
+  if (isFoggy) {
+    top = 'rgba(120,140,120,0.18)';
+    mid = 'rgba(90,110,90,0.08)';
+  }
+
+  document.body.style.background =
+    `linear-gradient(to bottom, ${top} 0%, ${mid} 45%, #0e1013 78%)`;
+}
+
+function clearWeatherGradient() {
+  document.body.style.background = '';
+}
+
 
 // ── HELPERS ───────────────────────────────────────
 async function nwsFetch(url) {
@@ -657,9 +720,12 @@ function renderForecast(periods){
   }
   const dayPairs = [...dayPairMap.values()].slice(0, 6);
   window._dayPairsCache = dayPairs;
+  window._forecastPeriods = periods; // cache for gradient restore
   const days = [hero_p, ...dayPairs.map(pair => pair.day || pair.night)];
   const now=new Date(), hero=days[0];
   if (hero?.temperature) window._nwsHeroTemp = hero.temperature;
+  // Paint body gradient based on today's conditions
+  if (hero) weatherGradient(hero.temperature, hero.shortForecast);
   // Hero always renders with placeholder temp — OM patch fills in real current value
   const heroHTML=hero?`<div class="fc-hero">
     <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div><div class="fch-time">${now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div>
@@ -990,6 +1056,9 @@ function openDayModal(dayIdx) {
     (windCardHTML || '') +
     tilesHTML;
 
+  // Paint gradient for this specific day
+  const _gp = d;
+  weatherGradient(highTemp, _gp.shortForecast);
   document.getElementById('dayModalOverlay').classList.add('open');
   document.getElementById('dayModal').classList.add('open');
 }
@@ -998,6 +1067,9 @@ function openDayModal(dayIdx) {
 function closeDayModal() {
   document.getElementById('dayModalOverlay').classList.remove('open');
   document.getElementById('dayModal').classList.remove('open');
+  // Restore today's gradient when returning to forecast tab
+  const hp = window._forecastPeriods?.[0];
+  if (hp) weatherGradient(hp.temperature, hp.shortForecast);
 }
 
 // ── PATCH HOURLY TEMPS FROM OPEN-METEO ───────────
