@@ -22,7 +22,7 @@
   --mono:ui-monospace,'SF Mono',monospace;
   --sans:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
 }
-html, body { height: 100%; margin: 0; padding: 0; background: var(--card); overflow: hidden; }
+html, body { height: 100%; margin: 0; padding: 0; background: #16181d; overflow: hidden; }
 body { color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.65; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
 body { min-height: 100%; }
 ::-webkit-scrollbar { display: none; }
@@ -800,7 +800,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.9.3d</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.9.4</div>
     </div>
   </div>
 </div>
@@ -810,29 +810,6 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 if (window.navigator.standalone === true) {
   document.documentElement.classList.add('is-standalone');
 }
-window.addEventListener('load', function() {
-  const app = document.getElementById('app');
-  const ticker = document.querySelector('.ticker-wrap');
-  const appRect = app.getBoundingClientRect();
-  const tickerRect = ticker.getBoundingClientRect();
-  const dbg = document.createElement('div');
-  dbg.style.cssText = 'position:fixed;top:40%;left:8px;right:8px;background:rgba(200,0,0,.92);color:#fff;font-size:12px;padding:10px;z-index:99999;border-radius:8px;font-family:monospace;line-height:1.8';
-  dbg.innerHTML = 
-    'screen.height: ' + window.screen.height + '<br>' +
-    'innerHeight: ' + window.innerHeight + '<br>' +
-    'app.bottom: ' + Math.round(appRect.bottom) + '<br>' +
-    'app.height: ' + Math.round(appRect.height) + '<br>' +
-    'ticker.bottom: ' + Math.round(tickerRect.bottom) + '<br>' +
-    'ticker.height: ' + Math.round(tickerRect.height) + '<br>' +
-    'standalone: ' + window.navigator.standalone + '<br>' +
-    'gap below ticker: ' + Math.round(appRect.bottom - tickerRect.bottom);
-  document.body.appendChild(dbg);
-  setTimeout(function() {
-    const appRect2 = app.getBoundingClientRect();
-    const tickerRect2 = ticker.getBoundingClientRect();
-    dbg.innerHTML += '<br>--- after 1s ---<br>app.bottom: ' + Math.round(appRect2.bottom) + '<br>ticker.bottom: ' + Math.round(tickerRect2.bottom);
-  }, 1000);
-});
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="app.js"></script>
