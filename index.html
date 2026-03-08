@@ -14,7 +14,7 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg:#0e1013; --card:#16181d; --card2:#16181d; --card3:#252930;
+  --bg:#0e1013; --card:#111111; --card2:#16181d; --card3:#252930;
   --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.14);
   --text:#eef0f4; --dim:#7a8499; --muted:#3a4050;
   --green:#4ade80; --red:#f87171; --orange:#fb923c; --yellow:#fbbf24; --blue:#93c5fd;
@@ -31,7 +31,7 @@ body { min-height: 100%; }
 .sa-top { flex-shrink: 0; height: env(safe-area-inset-top, 0px); background: var(--bg); }
 
 /* ── HEADER ── */
-header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 16px) 18px 16px; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 16px) 18px 16px; background: #000000; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .hdr-row1 { display: flex; align-items: center; gap: 10px; }
 .hdr-row2 { display: flex; align-items: center; gap: 8px; }
 .hdr-row2 .search-wrap { flex: 1; }
@@ -89,9 +89,9 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .sv-blue{color:var(--text)} .sv-red{color:var(--red)} .sv-orange{color:var(--orange)}
 
 /* ── TABS ── */
-.tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
+.tabs { display: flex; border-bottom: 1px solid var(--border); background: #000000; flex-shrink: 0; }
 .tab { flex: 1; padding: 13px 2px; font-size: 13px; font-weight: 500; color: var(--dim); cursor: pointer; border: none; background: none; font-family: var(--sans); border-bottom: 2px solid transparent; display: flex; align-items: center; justify-content: center; gap: 4px; transition: color .15s; -webkit-appearance: none; }
-.tab.on { color: var(--blue); border-bottom-color: var(--blue); }
+.tab.on { color: var(--text); border-bottom-color: var(--text); }
 
 /* ── FILTER ROW ── */
 .filter-row { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--card); flex-shrink: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -810,7 +810,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.4.7</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.4.9</div>
     </div>
   </div>
 </div>
