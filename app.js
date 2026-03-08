@@ -849,7 +849,7 @@ function openDayModal(dayIdx) {
   const _acBorder = _dmAccent ? `rgba(${_dmAccent},0.15)` : 'rgba(147,197,253,0.15)';
 
   // ── Hero card — fully inline styles to avoid fc-hero CSS conflicts ──
-  const heroHTML = `<div style="background:rgba(255,255,255,0.13);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(255,255,255,0.18);display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+  const heroHTML = `<div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(32px) saturate(1.4);-webkit-backdrop-filter:blur(32px) saturate(1.4);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(255,255,255,0.28);box-shadow:0 4px 24px rgba(0,0,0,0.25);display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:13px;font-weight:600;color:${_acFaint}">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</span>
       <span style="font-size:13px;color:${_acDim}">${d.isDaytime ? 'Daytime' : 'Evening'}</span>
