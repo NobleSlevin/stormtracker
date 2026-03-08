@@ -149,15 +149,15 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .fc-hero { background: rgba(255,255,255,0.18); backdrop-filter: blur(32px) saturate(1.4); -webkit-backdrop-filter: blur(32px) saturate(1.4); border-radius: var(--r); padding: 24px; position: relative; overflow: hidden; min-height: 150px; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.28); box-shadow: 0 4px 24px rgba(0,0,0,0.25); }
 .fc-hero::before { display: none; }
 .fch-top { display: flex; justify-content: space-between; align-items: flex-start; }
-.fch-day { font-size: 13px; font-weight: 600; color: var(--hero-accent-faint, rgba(147,197,253,.7)); }
-.fch-time { font-size: 13px; color: var(--hero-accent-dim, rgba(147,197,253,.5)); }
+.fch-day { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.90); }
+.fch-time { font-size: 13px; color: rgba(255,255,255,0.75); }
 .fch-temp { font-size: 62px; font-weight: 300; line-height: 1; margin: 6px 0 1px; color: var(--text); }
 .fch-temp sup { font-size: 24px; vertical-align: super; }
-.fch-feels { font-size: 13px; color: rgba(255,255,255,.6); margin-bottom: 3px; }
+.fch-feels { font-size: 13px; color: rgba(255,255,255,0.85); margin-bottom: 3px; }
 .fch-icon { position: absolute; right: 18px; top: 50%; transform: translateY(-55%); opacity: .2; color: rgba(255,255,255,1); }
-.fch-meta { font-size: 13px; color: var(--hero-accent-dim, rgba(147,197,253,.6)); display: flex; flex-direction: column; gap: 2px; }
-.fch-extras { font-size: 13px; color: rgba(255,255,255,.45); margin-top: 2px; }
-.fch-meta b { font-weight: 600; color: var(--hero-accent, rgba(147,197,253,.85)); }
+.fch-meta { font-size: 13px; color: rgba(255,255,255,0.90); display: flex; flex-direction: column; gap: 2px; }
+.fch-extras { font-size: 13px; color: rgba(255,255,255,0.70); margin-top: 2px; }
+.fch-meta b { font-weight: 600; color: rgba(255,255,255,1); }
 .fc-days { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .fc-day-row { display: flex; align-items: center; gap: 10px; background: var(--card2); border: 1px solid var(--border); border-radius: var(--rsm); padding: 15px 18px; }
 .fdr-name { font-size: 14px; font-weight: 500; color: var(--dim); width: 36px; flex-shrink: 0; }
@@ -810,7 +810,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.5.1</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.5.3</div>
     </div>
   </div>
 </div>

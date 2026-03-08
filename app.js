@@ -768,11 +768,7 @@ function renderForecast(periods){
     // Use live observed temp if available, fall back to NWS period temp
     const _gradTemp = window._omCurrentTemp ?? hero.temperature;
     const _accent = weatherGradient(_gradTemp, hero.shortForecast, document.getElementById('body'));
-    if (_accent) {
-      document.documentElement.style.setProperty('--hero-accent', `rgb(${_accent})`);
-      document.documentElement.style.setProperty('--hero-accent-faint', `rgba(${_accent},0.75)`);
-      document.documentElement.style.setProperty('--hero-accent-dim', `rgba(${_accent},0.55)`);
-    }
+    // accent stored in window._weatherAccent for future use
   }
   // Hero always renders with placeholder temp — OM patch fills in real current value
   const heroHTML=hero?`<div class="fc-hero">
@@ -874,10 +870,11 @@ function openDayModal(dayIdx) {
   // Fire gradient early so accent color is available for hero HTML
   const _gradTemp = (dayIdx === 0 && window._omCurrentTemp != null) ? window._omCurrentTemp : highTemp;
   const _dmAccent = weatherGradient(_gradTemp, d.shortForecast, document.querySelector('.day-modal'));
-  const _ac = _dmAccent ? `rgb(${_dmAccent})` : 'rgb(147,197,253)';
-  const _acFaint = _dmAccent ? `rgba(${_dmAccent},0.55)` : 'rgba(147,197,253,0.55)';
-  const _acDim = _dmAccent ? `rgba(${_dmAccent},0.38)` : 'rgba(147,197,253,0.38)';
-  const _acBorder = _dmAccent ? `rgba(${_dmAccent},0.15)` : 'rgba(147,197,253,0.15)';
+  // Hero text is always white — gradient provides the color
+  const _ac      = 'rgba(255,255,255,1.0)';
+  const _acFaint = 'rgba(255,255,255,0.90)';
+  const _acDim   = 'rgba(255,255,255,0.75)';
+  const _acBorder= 'rgba(255,255,255,0.20)';
 
   // ── Hero card — fully inline styles to avoid fc-hero CSS conflicts ──
   const heroHTML = `<div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(32px) saturate(1.4);-webkit-backdrop-filter:blur(32px) saturate(1.4);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(255,255,255,0.28);box-shadow:0 4px 24px rgba(0,0,0,0.25);display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
