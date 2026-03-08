@@ -429,6 +429,12 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .ticker-info-btn { flex-shrink: 0; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-left: 1px solid rgba(255,255,255,0.10); color: rgba(255,255,255,0.4); cursor: pointer; padding: 0; -webkit-appearance: none; }
 .ticker-info-btn:active { color: rgba(255,255,255,0.8); }
 .ticker-byline { text-align: center; font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: rgba(255,255,255,0.18); }
+.ticker-fade { 
+  position: fixed; bottom: 0; left: 0; right: 0; 
+  height: calc(env(safe-area-inset-bottom, 34px) + 20px);
+  background: linear-gradient(to bottom, transparent 0%, #080808 60%);
+  pointer-events: none; z-index: 1;
+}
 /* Info Modal */
 .info-modal { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; }
 .info-modal.open { display: flex; }
@@ -718,6 +724,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   </div>
   <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA</div>
   </div>
+  <div class="ticker-fade"></div>
 
 </div>
 
@@ -816,7 +823,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.6.6</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.6.7</div>
     </div>
   </div>
 </div>
@@ -835,7 +842,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.6.6"></script>
+<script src="app.js?v=2.6.7"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>
