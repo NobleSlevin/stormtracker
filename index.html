@@ -281,7 +281,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .dm-tile-unit { font-size: 13px; font-weight: 400; color: var(--dim); margin-left: 3px; }
 .dm-tile-badge { font-size: 11px; font-weight: 600; border: 1px solid; border-radius: 4px; padding: 2px 7px; align-self: flex-start; margin-top: 2px; }
 .dm-tile-sub { font-size: 12px; color: var(--dim); margin-top: 1px; }
-.day-modal-body .fc-hero { overflow: hidden; min-height: 0; }
+.day-modal-body .fc-hero { overflow: hidden; min-height: 0; height: auto; justify-content: flex-start; gap: 6px; }
 .aqi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 4px; }
 .aqi-header { display: flex; align-items: center; gap: 13px; padding: 16px 17px; border-bottom: 1px solid var(--border); }
 .aqi-icon-wrap { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -809,7 +809,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.1.5</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.1.6</div>
     </div>
   </div>
 </div>
