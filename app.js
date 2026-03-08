@@ -344,17 +344,19 @@ function compassSVG(windDeg, deviceDeg, arrowColor) {
     return degLabel + `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${isCard?'rgba(255,255,255,.75)':'rgba(255,255,255,.38)'}" font-size="${isCard?13:9}" font-family="ui-monospace,monospace" font-weight="${isCard?700:500}">${lbl}</text>`;
   }).join('');
 
-  // Wind arrow — drawn pointing straight up (north = 0°) then rotated to windDeg.
-  // windDeg is meteorological FROM direction: arrowhead points into the wind source.
+  // Wind arrow — arrowhead points DOWNWIND (where wind is going), tail circle at source.
+  // windDeg is FROM direction: rotate so tail is at windDeg, head points to windDeg+180.
+  // Draw at 0°: tail circle at top (cy-lineR = upwind/source), arrowhead at bottom (cy+lineR = downwind).
+  // Then rotate by windDeg so the tail circle sits at the FROM direction on the compass.
   let windArrowHTML = '';
   if (windDeg != null) {
     const lineR = 88;
     const ac = arrowColor || 'white';
-    const hw = 7, hh = 14; // arrowhead half-width, height
+    const hw = 7, hh = 14;
     windArrowHTML = `<g transform="rotate(${windDeg}, ${cx}, ${cy})">
-      <line x1="${cx}" y1="${cy + lineR}" x2="${cx}" y2="${cy - lineR}" stroke="${ac}" stroke-width="2.5" stroke-linecap="round"/>
-      <polygon points="${cx},${cy - lineR} ${cx - hw},${cy - lineR + hh} ${cx + hw},${cy - lineR + hh}" fill="${ac}"/>
-      <circle cx="${cx}" cy="${cy + lineR}" r="4.5" fill="none" stroke="${ac}" stroke-width="2.2"/>
+      <line x1="${cx}" y1="${cy - lineR}" x2="${cx}" y2="${cy + lineR}" stroke="${ac}" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="${cx},${cy + lineR} ${cx - hw},${cy + lineR - hh} ${cx + hw},${cy + lineR - hh}" fill="${ac}"/>
+      <circle cx="${cx}" cy="${cy - lineR}" r="4.5" fill="none" stroke="${ac}" stroke-width="2.2"/>
     </g>`;
   }
 
