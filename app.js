@@ -118,41 +118,70 @@ let omData = null; // Open-Meteo current data
 // ── TABS ──────────────────────────────────────────
 // Forecast is now the default tab — hide filter row on init
 document.getElementById('filterRow').style.display = 'none';
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const t = btn.dataset.tab;
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
-    btn.classList.add('on');
-    const map = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby', radar:'tabRadar', tornado:'tabTornado'};
-    document.getElementById(map[t]).classList.add('on');
-    document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
-    const bodyEl = document.getElementById('app');
-    if (bodyEl) bodyEl.classList.toggle('radar-active', t === 'radar');
-    // Restore gradient when returning to forecast tab
-    if (t === 'forecast') {
-      const bodyEl2 = document.getElementById('app');
-      const gradTemp = window._lastGradTemp ?? window._omCurrentTemp ?? window._forecastPeriods?.[0]?.temperature;
-      const gradFc   = window._lastGradFc   ?? window._forecastPeriods?.[0]?.shortForecast;
-      if (gradTemp != null && gradFc && bodyEl2) {
-        const _acc = weatherGradient(gradTemp, gradFc, bodyEl2);
-        if (_acc) {
-          document.documentElement.style.setProperty('--hero-accent',       `rgb(${_acc})`);
-          document.documentElement.style.setProperty('--hero-accent-faint', `rgba(${_acc},0.75)`);
-          document.documentElement.style.setProperty('--hero-accent-dim',   `rgba(${_acc},0.55)`);
-        }
+const TAB_ORDER = ['alerts','forecast','nearby','radar','tornado'];
+const TAB_MAP   = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby', radar:'tabRadar', tornado:'tabTornado'};
+
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
+  const btn = document.querySelector(`.tab[data-tab="${t}"]`);
+  if (btn) btn.classList.add('on');
+  document.getElementById(TAB_MAP[t]).classList.add('on');
+  document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
+  const bodyEl = document.getElementById('app');
+  if (bodyEl) bodyEl.classList.toggle('radar-active', t === 'radar');
+  if (t === 'forecast') {
+    const gradTemp = window._lastGradTemp ?? window._omCurrentTemp ?? window._forecastPeriods?.[0]?.temperature;
+    const gradFc   = window._lastGradFc   ?? window._forecastPeriods?.[0]?.shortForecast;
+    if (gradTemp != null && gradFc && bodyEl) {
+      const _acc = weatherGradient(gradTemp, gradFc, bodyEl);
+      if (_acc) {
+        document.documentElement.style.setProperty('--hero-accent',       `rgb(${_acc})`);
+        document.documentElement.style.setProperty('--hero-accent-faint', `rgba(${_acc},0.75)`);
+        document.documentElement.style.setProperty('--hero-accent-dim',   `rgba(${_acc},0.55)`);
       }
     }
-    // Leaflet needs size invalidation when its container becomes visible
-    if (t === 'radar') {
-      if (!rvInited && curLat) {
-        initRadar(curLat, curLon);
-      } else if (rvMap) {
+  }
+  if (t === 'radar') {
+    if (!rvInited && curLat) {
+      initRadar(curLat, curLon);
+    } else if (rvMap) {
         setTimeout(() => rvMap.invalidateSize(), 60);
       }
     }
-  });
+}
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
+
+// ── SWIPE LEFT/RIGHT TO CHANGE TABS ──────────────
+(function() {
+  const body = document.getElementById('body');
+  if (!body) return;
+  let tx = 0, ty = 0, locked = false;
+  body.addEventListener('touchstart', e => {
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+    locked = false;
+  }, { passive: true });
+  body.addEventListener('touchend', e => {
+    if (locked) return;
+    const dx = e.changedTouches[0].clientX - tx;
+    const dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.8) return;
+    const cur = document.querySelector('.tab.on')?.dataset?.tab;
+    const idx = TAB_ORDER.indexOf(cur);
+    if (idx === -1) return;
+    if (dx < 0 && idx < TAB_ORDER.length - 1) switchTab(TAB_ORDER[idx + 1]);
+    if (dx > 0 && idx > 0) switchTab(TAB_ORDER[idx - 1]);
+  }, { passive: true });
+  body.addEventListener('touchmove', e => {
+    const dx = Math.abs(e.touches[0].clientX - tx);
+    const dy = Math.abs(e.touches[0].clientY - ty);
+    if (dy > dx * 0.8) locked = true;
+  }, { passive: true });
+})();
 
 // ── BODY BACKGROUND GRADIENT ─────────────────────
 // Paints a 3-stop gradient on document.body based on temperature + conditions.
