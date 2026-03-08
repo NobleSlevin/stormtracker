@@ -2514,13 +2514,19 @@ async function fetchSuggestions(q) {
   }
 }
 
+let _selecting = false;
 async function selectSuggestion(lat, lon, label, state) {
+  if (_selecting) return;
+  _selecting = true;
   closeDropdown();
-  document.getElementById('searchInput').value = '';
-  document.getElementById('searchInput').blur();
+  const inp = document.getElementById('searchInput');
+  inp.removeEventListener('input', _inputHandler); // stop input event from re-triggering
+  inp.value = '';
+  inp.blur();
   if (lat === null) {
-    // ZIP fallback — use doSearch
-    document.getElementById('searchInput').value = label;
+    inp.value = label;
+    inp.addEventListener('input', _inputHandler);
+    _selecting = false;
     await doSearch();
     return;
   }
@@ -2529,23 +2535,27 @@ async function selectSuggestion(lat, lon, label, state) {
   document.getElementById('locName').textContent = label;
   document.getElementById('locSub').textContent = '';
   setActiveLocBtn(null);
+  inp.addEventListener('input', _inputHandler);
+  _selecting = false;
   await fetchForPoint(curLat, curLon);
 }
 
 // ── INIT ─────────────────────────────────────────
+function _inputHandler(e) {
+  clearTimeout(_acTimer);
+  const q = e.target.value.trim();
+  if (!q) { closeDropdown(); return; }
+  _acTimer = setTimeout(() => fetchSuggestions(q), 300);
+}
+
 window.addEventListener('load',()=>{
   document.getElementById('searchInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') { closeDropdown(); doSearch(); }
     if (e.key === 'Escape') closeDropdown();
   });
-  document.getElementById('searchInput').addEventListener('input', e => {
-    clearTimeout(_acTimer);
-    const q = e.target.value.trim();
-    if (!q) { closeDropdown(); return; }
-    _acTimer = setTimeout(() => fetchSuggestions(q), 300);
-  });
+  document.getElementById('searchInput').addEventListener('input', _inputHandler);
   document.getElementById('searchInput').addEventListener('blur', () => {
-    // Delay close so tap on item registers first
+    if (_selecting) return; // don't close while selection is in progress
     setTimeout(closeDropdown, 350);
   });
   document.getElementById('btnSearch').addEventListener('click',doSearch);
