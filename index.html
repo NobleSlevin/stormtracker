@@ -800,24 +800,32 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.8.8</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.8.9</div>
     </div>
   </div>
 </div>
 
 <div id="tipbox"></div>
 <script>
+// Measure safe-area-inset-bottom via a sentinel element
+function getSafeAreaBottom() {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;';
+  document.body.appendChild(el);
+  const h = el.offsetHeight;
+  document.body.removeChild(el);
+  return h;
+}
 function setAppHeight() {
-  const h = window.innerHeight;
-  document.documentElement.style.setProperty('--app-h', h + 'px');
+  const sab = getSafeAreaBottom();
+  const h = window.innerHeight - sab;
   const app = document.getElementById('app');
   if (app) app.style.height = h + 'px';
 }
-// Run immediately and after a short delay for iOS PWA to settle
 setAppHeight();
 window.addEventListener('resize', setAppHeight);
 window.addEventListener('load', setAppHeight);
-setTimeout(setAppHeight, 100);
+setTimeout(setAppHeight, 300);
 if (window.navigator.standalone === true) {
   document.documentElement.classList.add('is-standalone');
 }
