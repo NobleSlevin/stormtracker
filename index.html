@@ -472,6 +472,10 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .day-modal-back { display:flex; align-items:center; gap:4px; background:none; border:none; color:var(--blue); font-size:14px; font-weight:500; cursor:pointer; padding:4px 0; }
 .day-modal-title { font-size:16px; font-weight:600; color:var(--text); }
 .day-modal-body { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:16px; }
+.day-modal-body .fc-hero { min-height: 0; height: auto; overflow: hidden; padding-bottom: 28px; }
+.day-modal-body .fch-icon { display: none; }
+.day-modal-body .fch-meta { margin-top: 4px; }
+.day-modal-body .fch-extras { margin-top: 6px; }
 
 .dd-section { background:var(--card2); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; }
 .dd-section-title { font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--dim); margin-bottom:14px; }
@@ -809,7 +813,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.2.2</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.2.3</div>
     </div>
   </div>
 </div>
