@@ -279,22 +279,13 @@ function weatherGradient(tempF, shortForecast, targetEl) {
     });
   }
 
-  // Mesh gradient: multiple radial blobs layered over a black base
-  // c1 = primary hue blob (top-left), c2 = secondary hue blob (bottom-right),
-  // c3 = accent blob (top-right, smaller), all bleed together for a mesh feel
-  const mesh = [
-    `radial-gradient(ellipse 90% 70% at 20% 10%,  ${c1} 0%, transparent 70%)`,
-    `radial-gradient(ellipse 80% 80% at 85% 75%,  ${c2} 0%, transparent 65%)`,
-    `radial-gradient(ellipse 55% 50% at 75% 15%,  ${c3} 0%, transparent 60%)`,
-    `radial-gradient(ellipse 60% 55% at 15% 80%,  ${c2} 0%, transparent 55%)`,
-    `radial-gradient(ellipse 40% 40% at 50% 50%,  ${c1} 0%, transparent 50%)`,
-    `#000000`,
-  ].join(', ');
+  // 4-stop linear: vivid hue A at top → contrasting hue B at 38% → dim fade at 62% → black base
+  const grad = `linear-gradient(to bottom, ${c1} 0%, ${c2} 38%, ${c3} 62%, #000000 84%)`;
   const el = targetEl || document.body;
   if (el.classList && el.classList.contains('day-modal')) {
-    el.style.backgroundImage = mesh;
+    el.style.backgroundImage = grad;
   } else {
-    el.style.background = mesh;
+    el.style.background = grad;
     window._lastGradTemp = tempF;
     window._lastGradFc   = shortForecast;
   }
