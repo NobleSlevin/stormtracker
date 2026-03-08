@@ -800,14 +800,13 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.8.9</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.8.9d</div>
     </div>
   </div>
 </div>
 
 <div id="tipbox"></div>
 <script>
-// Measure safe-area-inset-bottom via a sentinel element
 function getSafeAreaBottom() {
   const el = document.createElement('div');
   el.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);pointer-events:none;';
@@ -821,6 +820,10 @@ function setAppHeight() {
   const h = window.innerHeight - sab;
   const app = document.getElementById('app');
   if (app) app.style.height = h + 'px';
+  // Debug overlay
+  let dbg = document.getElementById('_dbg');
+  if (!dbg) { dbg = document.createElement('div'); dbg.id='_dbg'; dbg.style.cssText='position:fixed;top:50%;left:10px;right:10px;background:rgba(255,0,0,.85);color:#fff;font-size:13px;padding:10px;z-index:99999;border-radius:8px;font-family:monospace;'; document.body.appendChild(dbg); }
+  dbg.innerHTML = `innerHeight: ${window.innerHeight}<br>safeAreaBottom: ${sab}<br>appHeight set: ${h}<br>screenHeight: ${window.screen.height}<br>standalone: ${window.navigator.standalone}`;
 }
 setAppHeight();
 window.addEventListener('resize', setAppHeight);
