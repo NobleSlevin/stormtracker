@@ -129,12 +129,14 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
     const bodyEl = document.getElementById('body');
     if (bodyEl) bodyEl.classList.toggle('radar-active', t === 'radar');
-    // Apply/remove body gradient based on active tab
+    // Restore gradient when returning to forecast tab
     if (t === 'forecast') {
-      const hp = window._forecastPeriods?.[0];
-      if (hp) weatherGradient(hp.temperature, hp.shortForecast, document.getElementById('body'));
-    } else {
-      clearWeatherGradient();
+      const bodyEl2 = document.getElementById('body');
+      const gradTemp = window._omCurrentTemp ?? window._forecastPeriods?.[0]?.temperature;
+      const gradFc   = window._forecastPeriods?.[0]?.shortForecast;
+      if (gradTemp != null && gradFc && bodyEl2) {
+        weatherGradient(gradTemp, gradFc, bodyEl2);
+      }
     }
     // Leaflet needs size invalidation when its container becomes visible
     if (t === 'radar') {
@@ -736,7 +738,9 @@ function renderForecast(periods){
   if (hero?.temperature) window._nwsHeroTemp = hero.temperature;
   // Paint body gradient based on today's conditions
   if (hero) {
-    const _accent = weatherGradient(hero.temperature, hero.shortForecast, document.getElementById('body'));
+    // Use live observed temp if available, fall back to NWS period temp
+    const _gradTemp = window._omCurrentTemp ?? hero.temperature;
+    const _accent = weatherGradient(_gradTemp, hero.shortForecast, document.getElementById('body'));
     if (_accent) {
       document.documentElement.style.setProperty('--hero-accent', `rgb(${_accent})`);
       document.documentElement.style.setProperty('--hero-accent-faint', `rgba(${_accent},0.75)`);
@@ -2262,7 +2266,20 @@ async function fetchOpenMeteo(lat, lon) {
       gust:      c.wind_gusts_10m   != null ? Math.round(c.wind_gusts_10m)   : null,
       direction: c.wind_direction_10m != null ? Math.round(c.wind_direction_10m) : null,
     };
-    if (c.temperature_2m != null) window._omCurrentTemp = Math.round(c.temperature_2m);
+    if (c.temperature_2m != null) {
+      window._omCurrentTemp = Math.round(c.temperature_2m);
+      // Re-paint gradient now that we have the real observed temp
+      const _fp = window._forecastPeriods?.[0];
+      const _bodyEl = document.getElementById('body');
+      if (_fp && _bodyEl && _bodyEl.style.background) {
+        const _acc = weatherGradient(window._omCurrentTemp, _fp.shortForecast, _bodyEl);
+        if (_acc) {
+          document.documentElement.style.setProperty('--hero-accent', `rgb(${_acc})`);
+          document.documentElement.style.setProperty('--hero-accent-faint', `rgba(${_acc},0.75)`);
+          document.documentElement.style.setProperty('--hero-accent-dim', `rgba(${_acc},0.55)`);
+        }
+      }
+    }
 
     // UV index
     if (c.uv_index != null) {
