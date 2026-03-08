@@ -757,19 +757,21 @@ function openDayModal(dayIdx) {
   const lo = pair.night?.temperature ?? pair.day?.temperature ?? hi;
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
-  // ── Hero card ──
-  const heroHTML = `<div class="fc-hero">
-    <div class="fch-top">
-      <div class="fch-day">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</div>
-      <div class="fch-time">${d.isDaytime ? 'Daytime' : 'Evening'}</div>
+  // ── Hero card — fully inline styles to avoid fc-hero CSS conflicts ──
+  const heroHTML = `<div style="background:linear-gradient(135deg,#1a3a5c 0%,#1e4976 50%,#1a3a5c 100%);border-radius:14px;padding:20px 22px;border:1px solid rgba(147,197,253,0.15);display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:13px;font-weight:600;color:rgba(147,197,253,.7)">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</span>
+      <span style="font-size:13px;color:rgba(147,197,253,.5)">${d.isDaytime ? 'Daytime' : 'Evening'}</span>
     </div>
-    <div class="fch-temp">${highTemp}<sup>°F</sup><span style="font-size:28px;font-weight:300;opacity:.55"> / ${lowTemp}°</span></div>
-    <div class="fch-icon">${wxIcon(d.shortForecast, 56)}</div>
-    <div class="fch-meta">
-      <div>${d.shortForecast}</div>
-      <div>Wind: <b>${d.windDirection||''} ${d.windSpeed||''}</b></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-size:60px;font-weight:300;line-height:1;color:#eef0f4">${highTemp}<sup style="font-size:22px;vertical-align:super">°F</sup><span style="font-size:26px;font-weight:300;opacity:.5"> / ${lowTemp}°</span></div>
+      </div>
+      <div style="opacity:.25;color:rgba(147,197,253,1);flex-shrink:0">${wxIcon(d.shortForecast, 52)}</div>
     </div>
-    ${d.detailedForecast && d.detailedForecast !== d.shortForecast ? `<div class="fch-extras" style="margin-top:8px;font-size:12px;opacity:.7;line-height:1.5">${d.detailedForecast}</div>` : ''}
+    <div style="font-size:14px;color:rgba(147,197,253,.7);line-height:1.4">${d.shortForecast}</div>
+    <div style="font-size:13px;color:rgba(147,197,253,.55)">Wind: <b style="color:rgba(147,197,253,.9);font-weight:600">${d.windDirection||''} ${d.windSpeed||''}</b></div>
+    ${d.detailedForecast && d.detailedForecast !== d.shortForecast ? `<div style="font-size:12px;color:rgba(147,197,253,.4);line-height:1.6;border-top:1px solid rgba(147,197,253,.1);padding-top:10px;margin-top:2px">${d.detailedForecast}</div>` : ''}
   </div>`;
 
   // ── Hourly data for this day ──
