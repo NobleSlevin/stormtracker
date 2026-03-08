@@ -758,7 +758,7 @@ function openDayModal(dayIdx) {
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
   // ── Hero card ──
-  const heroHTML = `<div class="fc-hero" style="overflow:visible">
+  const heroHTML = `<div class="fc-hero">
     <div class="fch-top">
       <div class="fch-day">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</div>
       <div class="fch-time">${d.isDaytime ? 'Daytime' : 'Evening'}</div>
@@ -858,7 +858,8 @@ function openDayModal(dayIdx) {
     const uvColor = _uvC.hex, uvBg = _uvC.bg, uvBorder = _uvC.border;
     const advice  = uv < 3 ? 'No protection needed' : uv < 6 ? 'Wear sunscreen SPF 30+' : uv < 8 ? 'Seek shade midday' : uv < 11 ? 'Minimize sun 10am–4pm' : 'Avoid sun exposure';
     const burnMins = uv <= 0 ? '∞' : uv < 3 ? '60+ min' : uv < 6 ? '30–45 min' : uv < 8 ? '15–25 min' : uv < 11 ? '10–15 min' : '<10 min';
-    return `<div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">UV Index</div>
+    return `<div>
+    <div class="section-ttl" style="margin-bottom:8px;padding-left:2px">UV Index</div>
     <div class="uv-card">
       <div class="uv-header">
         <div class="uv-icon-wrap" style="background:${uvBg};border:1.5px solid ${uvBorder}">
@@ -876,6 +877,7 @@ function openDayModal(dayIdx) {
         <div class="uv-cell"><span class="uv-cell-lbl">Burn Time</span><span class="uv-cell-val" style="font-size:14px;padding-top:4px">${burnMins}</span><span class="uv-cell-sub">fair skin</span></div>
         <div class="uv-cell"><span class="uv-cell-lbl">Advice</span><span class="uv-cell-val" style="font-size:11px;line-height:1.3;padding-top:2px;color:var(--dim)">${advice}</span><span class="uv-cell-sub">&nbsp;</span></div>
       </div>
+    </div>
     </div>`;
   })() : '';
 
@@ -953,7 +955,7 @@ function openDayModal(dayIdx) {
   })() : '';
 
   const gridTiles = [windTileHTML, humidTileHTML, visTileHTML, pressTileHTML].filter(Boolean).join('');
-  const tilesHTML = gridTiles ? `<div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">Conditions</div><div class="dm-grid">${gridTiles}</div>` : '';
+  const tilesHTML = gridTiles ? `<div><div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Conditions</div><div class="dm-grid">${gridTiles}</div></div>` : '';
 
   const metricCards = [aqiCardHTML, uvCardHTML].filter(Boolean).join('');
 
@@ -1060,7 +1062,8 @@ function aqiHTML(aq) {
   const padCells = aq.pollutants.length < 3
     ? Array(3 - aq.pollutants.length).fill('<div class="aqi-cell"></div>').join('') : '';
   return `
-    <div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">Air Quality</div>
+    <div>
+    <div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Air Quality</div>
     <div class="aqi-card">
       <div class="aqi-header">
         <div class="aqi-icon-wrap" style="background:${aqiBg};border-color:${aqiBorder}">
@@ -1076,6 +1079,7 @@ function aqiHTML(aq) {
       </div>
       ${rangeBar(aq.aqi, 300, 'linear-gradient(to right, #4ade80 0%, #a3e635 12%, #fbbf24 25%, #fb923c 40%, #f87171 55%, #c084fc 75%, #7c3aed 100%)')}
       <div class="aqi-cells">${pollCells}${padCells}</div>
+    </div>
     </div>`;
 }
 
