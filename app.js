@@ -841,7 +841,7 @@ function openDayModal(dayIdx) {
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
   // Fire gradient early so accent color is available for hero HTML
-  const _dmAccent = weatherGradient(highTemp, _gp.shortForecast, document.querySelector('.day-modal'));
+  const _dmAccent = weatherGradient(highTemp, d.shortForecast, document.querySelector('.day-modal'));
   const _ac = _dmAccent ? `rgb(${_dmAccent})` : 'rgb(147,197,253)';
   const _acFaint = _dmAccent ? `rgba(${_dmAccent},0.55)` : 'rgba(147,197,253,0.55)';
   const _acDim = _dmAccent ? `rgba(${_dmAccent},0.38)` : 'rgba(147,197,253,0.38)';
@@ -857,7 +857,7 @@ function openDayModal(dayIdx) {
       <div>
         <div style="font-size:60px;font-weight:300;line-height:1;color:#eef0f4">${highTemp}<sup style="font-size:22px;vertical-align:super">°F</sup><span style="font-size:26px;font-weight:300;opacity:.5"> / ${lowTemp}°</span></div>
       </div>
-      <div style="opacity:.25;color:${_ac};flex-shrink:0">${wxIcon(d.shortForecast, 52)}</div>
+      <div style="opacity:.2;color:rgba(255,255,255,1);flex-shrink:0">${wxIcon(d.shortForecast, 52)}</div>
     </div>
     <div style="font-size:14px;color:${_acFaint};line-height:1.4">${d.shortForecast}</div>
     <div style="font-size:13px;color:${_acDim}">Wind: <b style="color:${_ac};font-weight:600">${d.windDirection||''} ${d.windSpeed||''}</b></div>
