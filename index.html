@@ -14,7 +14,7 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg:#0e1013; --card:#111111; --card2:#16181d; --card3:#252930;
+  --bg:#0e1013; --card:#111111; --card2:#151515; --card3:#252930;
   --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.14);
   --text:#eef0f4; --dim:#7a8499; --muted:#3a4050;
   --green:#4ade80; --red:#f87171; --orange:#fb923c; --yellow:#fbbf24; --blue:#93c5fd;
@@ -466,7 +466,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
 .day-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; display:none; }
 .day-modal-overlay.open { display:block; }
-.day-modal { position:fixed; inset:0; background-color:#0e1013; background-image:none; z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; overflow:hidden; }
+.day-modal { position:fixed; inset:0; background-color:#000000; background-image:none; z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; overflow:hidden; }
 .day-modal.open { transform:translateX(0); }
 .day-modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; padding-top:calc(env(safe-area-inset-top, 0px) + 16px); border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; background:rgba(14,16,19,0.6); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
 .day-modal-back { display:flex; align-items:center; gap:4px; background:none; border:none; color:var(--blue); font-size:14px; font-weight:500; cursor:pointer; padding:4px 0; }
@@ -810,7 +810,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.4.9</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.5.1</div>
     </div>
   </div>
 </div>

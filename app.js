@@ -163,50 +163,67 @@ function weatherGradient(tempF, shortForecast, targetEl) {
   const isSnowy = /snow|flurr|blizzard|sleet|ice|freezing/.test(fc);
   const isFoggy = /fog|mist|haze/.test(fc);
 
-  // top/mid: gradient stops. accent: solid RGB for hero text tinting
-  let top, mid, accent;
+  // Each condition gets: a vivid top color, a contrasting/shifted mid color, and an accent for text
+  // Strategy: top is a saturated spotlight, mid shifts hue slightly for depth, both fade to #000
+  let c1, c2, c3, accent;
+
   if (tempF <= 25) {
-    top = isSnowy ? 'rgba(139,120,220,0.55)' : 'rgba(99,102,241,0.50)';
-    mid = isSnowy ? 'rgba(100,80,180,0.28)'  : 'rgba(79,82,200,0.22)';
-    accent = isSnowy ? '180,160,255' : '160,150,255';
+    // Arctic — deep violet to indigo
+    c1 = isSnowy ? 'rgba(160,100,255,0.72)' : 'rgba(120,80,255,0.68)';
+    c2 = isSnowy ? 'rgba(80,60,200,0.45)'   : 'rgba(60,40,200,0.42)';
+    c3 = isSnowy ? 'rgba(40,20,120,0.18)'   : 'rgba(30,10,100,0.15)';
+    accent = isSnowy ? '190,150,255' : '170,140,255';
   } else if (tempF <= 40) {
-    top = isWet  ? 'rgba(96,165,250,0.55)'   : 'rgba(147,197,253,0.48)';
-    mid = isWet  ? 'rgba(71,130,210,0.28)'   : 'rgba(120,165,230,0.22)';
-    accent = isWet ? '140,190,255' : '170,210,255';
+    // Cold — electric blue to deep blue
+    c1 = isWet  ? 'rgba(50,130,255,0.72)'   : 'rgba(100,180,255,0.68)';
+    c2 = isWet  ? 'rgba(20,80,220,0.45)'    : 'rgba(60,130,230,0.42)';
+    c3 = isWet  ? 'rgba(10,40,140,0.18)'    : 'rgba(30,70,160,0.15)';
+    accent = isWet ? '130,190,255' : '160,215,255';
   } else if (tempF <= 55) {
-    top = isWet  ? 'rgba(45,180,180,0.52)'   : 'rgba(94,234,212,0.44)';
-    mid = isWet  ? 'rgba(30,150,160,0.26)'   : 'rgba(70,200,190,0.20)';
-    accent = isWet ? '100,220,210' : '130,240,215';
+    // Cool — cyan to teal
+    c1 = isWet  ? 'rgba(0,200,210,0.70)'    : 'rgba(0,230,200,0.65)';
+    c2 = isWet  ? 'rgba(0,140,160,0.44)'    : 'rgba(0,180,160,0.40)';
+    c3 = isWet  ? 'rgba(0,80,100,0.18)'     : 'rgba(0,110,100,0.15)';
+    accent = isWet ? '80,220,220' : '100,240,210';
   } else if (tempF <= 68) {
-    top = isWet  ? 'rgba(74,180,130,0.50)'   : 'rgba(134,239,172,0.42)';
-    mid = isWet  ? 'rgba(50,150,110,0.24)'   : 'rgba(100,210,150,0.18)';
-    accent = isWet ? '120,210,160' : '160,245,185';
+    // Mild — fresh green to emerald
+    c1 = isWet  ? 'rgba(30,200,120,0.68)'   : 'rgba(60,220,140,0.65)';
+    c2 = isWet  ? 'rgba(20,150,90,0.42)'    : 'rgba(30,170,100,0.38)';
+    c3 = isWet  ? 'rgba(10,80,50,0.18)'     : 'rgba(10,100,60,0.15)';
+    accent = isWet ? '80,210,150' : '120,240,170';
   } else if (tempF <= 80) {
-    top = isWet  ? 'rgba(180,140,60,0.52)'   : 'rgba(251,191,36,0.48)';
-    mid = isWet  ? 'rgba(150,110,40,0.26)'   : 'rgba(220,160,30,0.22)';
-    accent = isWet ? '220,185,100' : '255,210,80';
+    // Warm — golden amber with orange undertone
+    c1 = isWet  ? 'rgba(220,160,20,0.72)'   : 'rgba(255,200,0,0.70)';
+    c2 = isWet  ? 'rgba(180,100,10,0.45)'   : 'rgba(220,140,0,0.42)';
+    c3 = isWet  ? 'rgba(100,50,0,0.20)'     : 'rgba(140,80,0,0.18)';
+    accent = isWet ? '230,185,80' : '255,215,60';
   } else if (tempF <= 92) {
-    top = isWet  ? 'rgba(220,100,40,0.52)'   : 'rgba(251,146,60,0.50)';
-    mid = isWet  ? 'rgba(190,80,30,0.26)'    : 'rgba(220,120,40,0.24)';
-    accent = isWet ? '240,140,90' : '255,175,100';
+    // Hot — vivid orange to burnt red
+    c1 = isWet  ? 'rgba(255,100,20,0.72)'   : 'rgba(255,130,20,0.72)';
+    c2 = isWet  ? 'rgba(200,50,10,0.45)'    : 'rgba(230,80,10,0.45)';
+    c3 = isWet  ? 'rgba(120,20,0,0.20)'     : 'rgba(150,30,0,0.20)';
+    accent = isWet ? '255,130,80' : '255,160,80';
   } else {
-    top = 'rgba(248,113,113,0.55)';
-    mid = 'rgba(200,60,60,0.28)';
-    accent = '255,150,140';
+    // Scorching — deep red to crimson
+    c1 = 'rgba(255,60,60,0.75)';
+    c2 = 'rgba(200,20,30,0.48)';
+    c3 = 'rgba(120,10,10,0.22)';
+    accent = '255,120,110';
   }
   if (isFoggy) {
-    top = 'rgba(120,140,120,0.46)';
-    mid = 'rgba(90,110,90,0.22)';
-    accent = '170,195,175';
+    c1 = 'rgba(140,160,150,0.60)';
+    c2 = 'rgba(90,110,100,0.38)';
+    c3 = 'rgba(50,70,60,0.16)';
+    accent = '180,200,190';
   }
 
-  const grad = `linear-gradient(to bottom, ${top} 0%, ${mid} 40%, #0e1013 72%)`;
+  // 4-stop gradient: vivid top → shifted mid → deep fade → black base
+  const grad = `linear-gradient(to bottom, ${c1} 0%, ${c2} 35%, ${c3} 60%, #000000 82%)`;
   const el = targetEl || document.body;
   if (el.classList && el.classList.contains('day-modal')) {
     el.style.backgroundImage = grad;
   } else {
     el.style.background = grad;
-    // Cache params so tab switches can reliably restore
     window._lastGradTemp = tempF;
     window._lastGradFc   = shortForecast;
   }
