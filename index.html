@@ -272,11 +272,16 @@ header { display: flex; flex-direction: column; gap: 10px; padding: calc(env(saf
 .hurr-cell-val { font-size: 16px; font-weight: 500; line-height: 1.2; }
 .hurr-threat { padding: 13px 17px; background: rgba(251,146,60,.06); border-top: 1px solid var(--border); font-size: 12px; color: var(--orange); font-family: var(--mono); display: flex; align-items: center; gap: 7px; }
 /* ── AQI Card ── */
-.dd-htbl-head, .dd-htbl-row { display: grid; grid-template-columns: 52px 44px 64px 44px 1fr 40px; align-items: center; padding: 7px 12px; gap: 4px; font-size: 13px; }
-.dd-htbl-head { font-size: 11px; color: var(--dim); border-bottom: 1px solid var(--border); padding-bottom: 6px; }
-.dd-htbl-row { border-bottom: 1px solid var(--border); }
-.dd-htbl-row:last-child { border-bottom: none; }
-.dd-htbl-time { color: var(--dim); font-size: 12px; } font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin: 10px 0 4px; }
+.dm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dm-tile { background: var(--card2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 4px; min-height: 140px; }
+.dm-tile-ttl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); }
+.dm-tile-compass { display: flex; justify-content: center; align-items: center; margin: 2px 0; }
+.dm-tile-big { font-size: 38px; font-weight: 300; line-height: 1; color: var(--text); margin-top: 4px; }
+.dm-tile-main { font-size: 30px; font-weight: 300; line-height: 1; color: var(--text); }
+.dm-tile-unit { font-size: 13px; font-weight: 400; color: var(--dim); margin-left: 3px; }
+.dm-tile-badge { font-size: 11px; font-weight: 600; border: 1px solid; border-radius: 4px; padding: 2px 7px; align-self: flex-start; margin-top: 2px; }
+.dm-tile-sub { font-size: 12px; color: var(--dim); margin-top: 1px; }
+.day-modal-body .fc-hero { overflow: visible; min-height: 0; }
 .aqi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 4px; }
 .aqi-header { display: flex; align-items: center; gap: 13px; padding: 16px 17px; border-bottom: 1px solid var(--border); }
 .aqi-icon-wrap { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -804,7 +809,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.1.1</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.1.2</div>
     </div>
   </div>
 </div>

@@ -749,7 +749,6 @@ function openDayModal(dayIdx) {
   const d = pair.day || pair.night;
   const dt = new Date(d.startTime);
   const dn = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const dns = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   document.getElementById('dayModalTitle').textContent = `${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}`;
@@ -758,8 +757,8 @@ function openDayModal(dayIdx) {
   const lo = pair.night?.temperature ?? pair.day?.temperature ?? hi;
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
-  // ── Hero card (mirrors fc-hero) ──
-  const heroHTML = `<div class="fc-hero">
+  // ── Hero card ──
+  const heroHTML = `<div class="fc-hero" style="overflow:visible">
     <div class="fch-top">
       <div class="fch-day">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</div>
       <div class="fch-time">${d.isDaytime ? 'Daytime' : 'Evening'}</div>
@@ -773,7 +772,7 @@ function openDayModal(dayIdx) {
     ${d.detailedForecast && d.detailedForecast !== d.shortForecast ? `<div class="fch-extras" style="margin-top:8px;font-size:12px;opacity:.7;line-height:1.5">${d.detailedForecast}</div>` : ''}
   </div>`;
 
-  // ── Hourly strip for this day (mirrors hourly-scroll / hour-card) ──
+  // ── Hourly data for this day ──
   const dateStr = dt.toISOString().slice(0, 10);
   let hours = [];
   if (oh && oh.time) {
@@ -786,6 +785,7 @@ function openDayModal(dayIdx) {
           precip: oh.precipitation_probability?.[i] ?? null,
           wind: oh.wind_speed_10m?.[i] != null ? Math.round(oh.wind_speed_10m[i]) : null,
           gust: oh.wind_gusts_10m?.[i] != null ? Math.round(oh.wind_gusts_10m[i]) : null,
+          windDeg: oh.wind_direction_10m?.[i] != null ? Math.round(oh.wind_direction_10m[i]) : null,
           windDir: oh.wind_direction_10m?.[i] != null ? degToCard(Math.round(oh.wind_direction_10m[i])) : null,
           humid: oh.relative_humidity_2m?.[i] != null ? Math.round(oh.relative_humidity_2m[i]) : null,
           pressure: oh.surface_pressure?.[i] != null ? Math.round(oh.surface_pressure[i]) : null,
@@ -797,8 +797,9 @@ function openDayModal(dayIdx) {
     });
   }
 
+  // ── Horizontal hourly scroll (same hour-card style as forecast tab) ──
   const hourlyHTML = hours.length ? `
-    <div class="hourly-scroll" style="display:block;margin-bottom:10px">
+    <div class="hourly-scroll" style="display:block">
       <div class="hourly-track">
         ${hours.map((h, idx) => {
           const hr = new Date(h.time).toLocaleTimeString([], {hour:'numeric'});
@@ -816,28 +817,39 @@ function openDayModal(dayIdx) {
       </div>
     </div>` : '';
 
-  // ── Aggregates for metric cards ──
-  const avgHumid = hours.length ? Math.round(hours.reduce((a,h) => a+(h.humid??0),0) / (hours.filter(h=>h.humid!=null).length||1)) : null;
-  const maxWind = hours.length ? Math.max(...hours.filter(h=>h.wind!=null).map(h=>h.wind)) : null;
+  // ── Aggregates ──
+  const avgHumid = hours.filter(h=>h.humid!=null).length ? Math.round(hours.filter(h=>h.humid!=null).reduce((a,h)=>a+h.humid,0)/hours.filter(h=>h.humid!=null).length) : null;
+  const minHumid = hours.filter(h=>h.humid!=null).length ? Math.min(...hours.filter(h=>h.humid!=null).map(h=>h.humid)) : null;
+  const maxHumid = hours.filter(h=>h.humid!=null).length ? Math.max(...hours.filter(h=>h.humid!=null).map(h=>h.humid)) : null;
+  const maxWind = hours.filter(h=>h.wind!=null).length ? Math.max(...hours.filter(h=>h.wind!=null).map(h=>h.wind)) : null;
   const avgWind = hours.filter(h=>h.wind!=null).length ? Math.round(hours.filter(h=>h.wind!=null).reduce((a,h)=>a+h.wind,0)/hours.filter(h=>h.wind!=null).length) : null;
-  const maxGust = hours.length ? Math.max(...hours.filter(h=>h.gust!=null).map(h=>h.gust)) : null;
-  const maxUV = (() => {
-    const fromHourly = hours.filter(h=>h.uv!=null && h.uv > 0);
-    if (fromHourly.length) return Math.max(...fromHourly.map(h=>h.uv));
-    // fallback to current UV for today's modal
-    if (window._uvData != null && dayIdx === 0) return window._uvData;
-    return null;
+  const maxGust = hours.filter(h=>h.gust!=null).length ? Math.max(...hours.filter(h=>h.gust!=null).map(h=>h.gust)) : null;
+  const dominantWindDeg = (() => {
+    const dirs = hours.filter(h=>h.windDeg!=null);
+    if (!dirs.length) return null;
+    const sinSum = dirs.reduce((a,h)=>a+Math.sin(h.windDeg*Math.PI/180),0);
+    const cosSum = dirs.reduce((a,h)=>a+Math.cos(h.windDeg*Math.PI/180),0);
+    return Math.round(Math.atan2(sinSum/dirs.length, cosSum/dirs.length)*180/Math.PI + 360) % 360;
   })();
+  const dominantDir = dominantWindDeg != null ? degToCard(dominantWindDeg) : '';
   const pressures = hours.filter(h=>h.pressure!=null).map(h=>h.pressure);
   const avgPressure = pressures.length ? Math.round(pressures.reduce((a,v)=>a+v,0)/pressures.length) : null;
+  const minPress = pressures.length ? Math.min(...pressures) : null;
+  const maxPress = pressures.length ? Math.max(...pressures) : null;
   const visibs = hours.filter(h=>h.vis!=null).map(h=>parseFloat(h.vis));
   const minVis = visibs.length ? Math.min(...visibs).toFixed(1) : null;
   const maxVis = visibs.length ? Math.max(...visibs).toFixed(1) : null;
+  const maxUV = (() => {
+    const from = hours.filter(h=>h.uv!=null && h.uv > 0);
+    if (from.length) return Math.max(...from.map(h=>h.uv));
+    if (window._uvData != null && dayIdx === 0) return window._uvData;
+    return null;
+  })();
 
-  // ── AQI card ──
+  // ── AQI card (full-width, existing style) ──
   const aqiCardHTML = _aqiCache ? aqiHTML(_aqiCache) : '';
 
-  // ── UV card ──
+  // ── UV card (full-width, existing style) ──
   const uvCardHTML = maxUV != null ? (() => {
     const uv = maxUV;
     const uvRounded = Math.round(uv * 10) / 10;
@@ -867,155 +879,94 @@ function openDayModal(dayIdx) {
     </div>`;
   })() : '';
 
-  // ── Wind card ──
-  const windCardHTML = maxWind != null ? (() => {
-    const dominantDir = hours.filter(h=>h.windDir).reduce((acc,h) => { acc[h.windDir]=(acc[h.windDir]||0)+1; return acc; }, {});
-    const topDir = Object.entries(dominantDir).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
-    const wC = gradientColor(Math.min(maxWind/60, 1));
-    return `<div class="aqi-section-ttl">Wind</div>
-    <div class="aqi-card">
-      <div class="aqi-header">
-        <div class="aqi-icon-wrap" style="background:${wC.bg};border-color:${wC.border}">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${wC.hex}" viewBox="0 0 16 16">
-            <path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2h-5a.5.5 0 0 1 0-1h5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>
-          </svg>
-        </div>
-        <div class="aqi-info"><div class="aqi-area">${topDir ? 'Primarily ' + topDir : 'Hourly avg'}</div></div>
-        <div class="aqi-badge" style="background:${wC.bg};color:${wC.hex};border:1px solid ${wC.border}">${maxWind} mph peak</div>
-        <div class="aqi-score" style="color:${wC.hex}">${avgWind}</div>
-      </div>
-      ${rangeBar(maxWind, 60, 'linear-gradient(to right, #4ade80, #fbbf24, #fb923c, #f87171)')}
-      <div class="aqi-cells">
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Avg</span><span class="aqi-cell-val" style="color:${wC.hex}">${avgWind}</span><span class="aqi-cell-sub">mph</span></div>
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Peak</span><span class="aqi-cell-val" style="color:${wC.hex}">${maxWind}</span><span class="aqi-cell-sub">mph</span></div>
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Gusts</span><span class="aqi-cell-val">${maxGust ?? '—'}</span><span class="aqi-cell-sub">${maxGust ? 'mph' : ''}</span></div>
-      </div>
-    </div>`;
-  })() : '';
+  // ── Mini compass SVG (120×120) ──
+  function miniCompass(deg) {
+    if (deg == null) return '';
+    const cx = 60, cy = 60, r = 50;
+    const a = deg * Math.PI / 180;
+    const pts = [['N',0],['E',90],['S',180],['W',270]];
+    const labels = pts.map(([l,d]) => {
+      const la = d * Math.PI / 180;
+      const x = cx + (r-14)*Math.sin(la), y = cy - (r-14)*Math.cos(la);
+      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" fill="${d===0?'#f87171':'rgba(255,255,255,.45)'}" font-size="10" font-family="ui-monospace,monospace" font-weight="${d===0?700:500}">${l}</text>`;
+    }).join('');
+    const ticks = [0,45,90,135,180,225,270,315].map(d => {
+      const ta = d * Math.PI / 180;
+      const ro = r, ri = r-(d%90===0?10:6);
+      return `<line x1="${(cx+ro*Math.sin(ta)).toFixed(1)}" y1="${(cy-ro*Math.cos(ta)).toFixed(1)}" x2="${(cx+ri*Math.sin(ta)).toFixed(1)}" y2="${(cy-ri*Math.cos(ta)).toFixed(1)}" stroke="rgba(255,255,255,${d%90===0?.35:.18})" stroke-width="${d%90===0?1.5:1}"/>`;
+    }).join('');
+    const lineR = 36;
+    const hw = 5, hh = 10;
+    const arrow = `<g transform="rotate(${deg},${cx},${cy})">
+      <line x1="${cx}" y1="${cy-lineR}" x2="${cx}" y2="${cy+lineR}" stroke="#93c5fd" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="${cx},${cy+lineR} ${cx-hw},${cy+lineR-hh} ${cx+hw},${cy+lineR-hh}" fill="#93c5fd"/>
+      <circle cx="${cx}" cy="${cy-lineR}" r="3.5" fill="none" stroke="#93c5fd" stroke-width="2"/>
+    </g>`;
+    return `<svg viewBox="0 0 120 120" width="96" height="96" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
+      ${ticks}${labels}${arrow}
+    </svg>`;
+  }
 
-  // ── Humidity card ──
-  const humidCardHTML = avgHumid != null ? (() => {
-    const minHumid = Math.min(...hours.filter(h=>h.humid!=null).map(h=>h.humid));
-    const maxHumid = Math.max(...hours.filter(h=>h.humid!=null).map(h=>h.humid));
-    const hC = gradientColor(avgHumid / 100);
+  // ── Compact square metric tiles (2×2 grid) ──
+  const windTileHTML = maxWind != null ? `
+    <div class="dm-tile">
+      <div class="dm-tile-ttl">Wind</div>
+      <div class="dm-tile-compass">${miniCompass(dominantWindDeg)}</div>
+      <div class="dm-tile-main">${avgWind}<span class="dm-tile-unit">mph avg</span></div>
+      <div class="dm-tile-sub">Peak ${maxWind}${maxGust ? ' · Gusts '+maxGust : ''} mph</div>
+      <div class="dm-tile-sub">${dominantDir || ''}</div>
+    </div>` : '';
+
+  const humidTileHTML = avgHumid != null ? (() => {
     const hLabel = avgHumid < 30 ? 'Dry' : avgHumid < 60 ? 'Comfortable' : avgHumid < 80 ? 'Humid' : 'Very Humid';
-    return `<div class="aqi-section-ttl">Humidity</div>
-    <div class="aqi-card">
-      <div class="aqi-header">
-        <div class="aqi-icon-wrap" style="background:${hC.bg};border-color:${hC.border}">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${hC.hex}" viewBox="0 0 16 16">
-            <path d="M8 16a6 6 0 0 0 6-6c0-1.655-1.122-2.904-2.432-4.362C10.254 4.176 8.75 2.503 8 0c0 0-6 5.686-6 10a6 6 0 0 0 6 6M6.646 4.646l.708.708c-.29.29-1.128 1.311-1.907 2.87l-.894-.448c.82-1.641 1.717-2.753 2.093-3.13"/>
-          </svg>
-        </div>
-        <div class="aqi-info"><div class="aqi-area">Relative humidity</div></div>
-        <div class="aqi-badge" style="background:${hC.bg};color:${hC.hex};border:1px solid ${hC.border}">${hLabel}</div>
-        <div class="aqi-score" style="color:${hC.hex}">${avgHumid}%</div>
-      </div>
-      ${rangeBar(avgHumid, 100, 'linear-gradient(to right, #fbbf24, #4ade80, #93c5fd)')}
-      <div class="aqi-cells">
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Low</span><span class="aqi-cell-val">${minHumid}%</span><span class="aqi-cell-sub">driest</span></div>
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Avg</span><span class="aqi-cell-val" style="color:${hC.hex}">${avgHumid}%</span><span class="aqi-cell-sub">${hLabel}</span></div>
-        <div class="aqi-cell"><span class="aqi-cell-lbl">High</span><span class="aqi-cell-val">${maxHumid}%</span><span class="aqi-cell-sub">most humid</span></div>
-      </div>
+    const hC = gradientColor(avgHumid / 100);
+    return `<div class="dm-tile">
+      <div class="dm-tile-ttl">Humidity</div>
+      <div class="dm-tile-big" style="color:${hC.hex}">${avgHumid}<span class="dm-tile-unit">%</span></div>
+      <div class="dm-tile-badge" style="color:${hC.hex};border-color:${hC.border};background:${hC.bg}">${hLabel}</div>
+      <div class="dm-tile-sub">Low ${minHumid}% · High ${maxHumid}%</div>
     </div>`;
   })() : '';
 
-  // ── Visibility card ──
-  const visCardHTML = minVis != null ? (() => {
+  const visTileHTML = minVis != null ? (() => {
     const vF = parseFloat(minVis);
     const vColor = vF < 1 ? '#f87171' : vF < 3 ? '#fb923c' : vF < 5 ? '#fbbf24' : '#4ade80';
-    const vBg = vColor + '22', vBorder = vColor + '55';
     const vLabel = vF < 0.25 ? 'Dense Fog' : vF < 1 ? 'Fog' : vF < 3 ? 'Mist' : vF < 5 ? 'Haze' : 'Clear';
-    return `<div class="aqi-section-ttl">Visibility</div>
-    <div class="aqi-card">
-      <div class="aqi-header">
-        <div class="aqi-icon-wrap" style="background:${vBg};border-color:${vBorder}">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${vColor}" viewBox="0 0 16 16">
-            <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
-            <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
-          </svg>
-        </div>
-        <div class="aqi-info"><div class="aqi-area">Lowest during day</div></div>
-        <div class="aqi-badge" style="background:${vBg};color:${vColor};border:1px solid ${vBorder}">${vLabel}</div>
-        <div class="aqi-score" style="color:${vColor}">${minVis}</div>
-      </div>
-      ${rangeBar(vF, 10, 'linear-gradient(to right, #f87171, #fb923c, #fbbf24, #4ade80)')}
-      <div class="aqi-cells">
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Min</span><span class="aqi-cell-val" style="color:${vColor}">${minVis}</span><span class="aqi-cell-sub">mi</span></div>
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Max</span><span class="aqi-cell-val">${maxVis}</span><span class="aqi-cell-sub">mi</span></div>
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Status</span><span class="aqi-cell-val" style="font-size:12px;padding-top:3px;color:${vColor}">${vLabel}</span><span class="aqi-cell-sub">&nbsp;</span></div>
-      </div>
+    return `<div class="dm-tile">
+      <div class="dm-tile-ttl">Visibility</div>
+      <div class="dm-tile-big" style="color:${vColor}">${minVis}<span class="dm-tile-unit">mi min</span></div>
+      <div class="dm-tile-badge" style="color:${vColor};border-color:${vColor}44;background:${vColor}18">${vLabel}</div>
+      <div class="dm-tile-sub">Max ${maxVis} mi</div>
     </div>`;
   })() : '';
 
-  // ── Pressure card ──
-  const pressCardHTML = avgPressure != null ? (() => {
-    const minPress = Math.min(...pressures);
-    const maxPress = Math.max(...pressures);
+  const pressTileHTML = avgPressure != null ? (() => {
     const trend = pressures.length > 1 ? (pressures[pressures.length-1] > pressures[0] ? '↑ Rising' : pressures[pressures.length-1] < pressures[0] ? '↓ Falling' : '→ Steady') : '→ Steady';
     const tColor = trend.startsWith('↑') ? '#4ade80' : trend.startsWith('↓') ? '#f87171' : '#93c5fd';
-    const pNorm = Math.min(Math.max((avgPressure - 980) / (1040 - 980), 0), 1);
-    const pC = gradientColor(1 - pNorm);
-    return `<div class="aqi-section-ttl">Pressure</div>
-    <div class="aqi-card">
-      <div class="aqi-header">
-        <div class="aqi-icon-wrap" style="background:${pC.bg};border-color:${pC.border}">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${pC.hex}" viewBox="0 0 16 16">
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-            <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8"/>
-          </svg>
-        </div>
-        <div class="aqi-info"><div class="aqi-area">Barometric · mb</div></div>
-        <div class="aqi-badge" style="background:${pC.bg};color:${tColor};border:1px solid ${pC.border}">${trend}</div>
-        <div class="aqi-score" style="color:${pC.hex}">${avgPressure}</div>
-      </div>
-      ${rangeBar(avgPressure - 980, 60, 'linear-gradient(to right, #f87171, #fbbf24, #4ade80, #93c5fd)')}
-      <div class="aqi-cells">
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Low</span><span class="aqi-cell-val">${minPress}</span><span class="aqi-cell-sub">mb</span></div>
-        <div class="aqi-cell"><span class="aqi-cell-lbl">Avg</span><span class="aqi-cell-val" style="color:${pC.hex}">${avgPressure}</span><span class="aqi-cell-sub">mb</span></div>
-        <div class="aqi-cell"><span class="aqi-cell-lbl">High</span><span class="aqi-cell-val">${maxPress}</span><span class="aqi-cell-sub">mb</span></div>
-      </div>
+    return `<div class="dm-tile">
+      <div class="dm-tile-ttl">Pressure</div>
+      <div class="dm-tile-big" style="color:${tColor}">${avgPressure}<span class="dm-tile-unit">mb</span></div>
+      <div class="dm-tile-badge" style="color:${tColor};border-color:${tColor}44;background:${tColor}18">${trend}</div>
+      <div class="dm-tile-sub">Low ${minPress} · High ${maxPress}</div>
     </div>`;
   })() : '';
 
-  // ── Detailed hourly table (temp, feels, precip, wind, humidity) ──
-  const hourlyTableHTML = hours.length ? (() => {
-    const rows = hours.map(h => {
-      const hr = new Date(h.time).toLocaleTimeString([], {hour:'numeric'});
-      return `<div class="dd-htbl-row">
-        <span class="dd-htbl-time">${hr}</span>
-        <span class="dd-htbl-temp ${h.temp!=null?tempClass(h.temp):''}">${h.temp!=null?h.temp+'°':'—'}</span>
-        <span class="dd-htbl-feels" style="color:var(--dim);font-size:12px">${h.feelsLike!=null?'Feels '+h.feelsLike+'°':''}</span>
-        <span class="dd-htbl-precip" style="color:#93c5fd">${h.precip!=null?h.precip+'%':''}</span>
-        <span class="dd-htbl-wind" style="color:var(--dim);font-size:12px">${h.wind!=null?h.wind+'mph':''} ${h.windDir||''}</span>
-        <span class="dd-htbl-humid" style="color:var(--dim);font-size:12px">${h.humid!=null?h.humid+'%':''}</span>
-      </div>`;
-    }).join('');
-    return `<div class="aqi-section-ttl">Hourly</div>
-    <div class="aqi-card" style="padding:0">
-      <div class="dd-htbl-head">
-        <span class="dd-htbl-time"></span>
-        <span class="dd-htbl-temp">Temp</span>
-        <span class="dd-htbl-feels"></span>
-        <span class="dd-htbl-precip" style="color:#93c5fd">Precip</span>
-        <span class="dd-htbl-wind">Wind</span>
-        <span class="dd-htbl-humid">Humid</span>
-      </div>
-      ${rows}
-    </div>`;
-  })() : '';
+  const gridTiles = [windTileHTML, humidTileHTML, visTileHTML, pressTileHTML].filter(Boolean).join('');
+  const tilesHTML = gridTiles ? `<div class="aqi-section-ttl">Conditions</div><div class="dm-grid">${gridTiles}</div>` : '';
 
-  const metricCards = [aqiCardHTML, uvCardHTML, windCardHTML, humidCardHTML, visCardHTML, pressCardHTML].filter(Boolean).join('');
+  const metricCards = [aqiCardHTML, uvCardHTML].filter(Boolean).join('');
 
   document.getElementById('dayModalBody').innerHTML =
     heroHTML +
     hourlyHTML +
-    hourlyTableHTML +
-    metricCards;
+    metricCards +
+    tilesHTML;
 
   document.getElementById('dayModalOverlay').classList.add('open');
   document.getElementById('dayModal').classList.add('open');
 }
+
 
 function closeDayModal() {
   document.getElementById('dayModalOverlay').classList.remove('open');
