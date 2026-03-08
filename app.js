@@ -844,7 +844,8 @@ function openDayModal(dayIdx) {
   })() : '';
 
   // ── AQI card (uses cached AQI data — same day, close enough) ──
-  const aqiCardHTML = window._aqiCache ? aqiHTML(window._aqiCache) : '';
+  const aqiCardHTML = _aqiCache ? aqiHTML(_aqiCache) : '';
+
 
   // ── Wind card ──
   const windCardHTML = (maxWind != null) ? (() => {
@@ -1391,6 +1392,7 @@ async function fetchAQI(lat, lon) {
 
   return { aqi, category: catName, categoryNum: catNum, dominant, reportingArea: 'Open-Meteo', stateCode: '', pollutants };
 }
+
 
 
 async function fetchNearby(lat, lon, stationsUrl) {
@@ -2212,7 +2214,7 @@ async function fetchForPoint(lat, lon) {
   await Promise.all([
     fetchObservations(stationUrl),
     fetchNearby(lat, lon, stationUrl),
-    renderAQISlot(lat, lon)
+    renderAQISlot(lat, lon),
   ]);
   if (periods && periods.length) computeTornadoRisk(periods, lat, lon, allAlerts);
 
