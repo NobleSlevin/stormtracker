@@ -107,7 +107,7 @@ header { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 16
 .alert-badge { margin-left: auto; font-family: var(--mono); font-size: 9px; padding: 2px 8px; border-radius: 5px; flex-shrink: 0; background: rgba(248,113,113,.1); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
 
 /* ── BODY ── */
-#body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
+#body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; padding-bottom: env(safe-area-inset-bottom, 16px); }
 #body.radar-active { overflow: hidden; }
 .tab-panel { display: none; }
 .tab-panel.on { display: block; }
@@ -460,7 +460,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .day-modal-overlay.open { display:block; }
 .day-modal { position:fixed; inset:0; background:var(--bg); z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; overflow:hidden; }
 .day-modal.open { transform:translateX(0); }
-.day-modal-header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--card); }
+.day-modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; padding-top:calc(env(safe-area-inset-top, 0px) + 16px); border-bottom:1px solid var(--border); flex-shrink:0; background:var(--card); }
 .day-modal-back { display:flex; align-items:center; gap:4px; background:none; border:none; color:var(--blue); font-size:14px; font-weight:500; cursor:pointer; padding:4px 0; }
 .day-modal-title { font-size:16px; font-weight:600; color:var(--text); }
 .day-modal-body { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:16px; }
@@ -521,6 +521,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   <symbol id="bi-arrow-repeat" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5 5 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z"/></symbol>
   <symbol id="bi-broadcast" viewBox="0 0 16 16"><path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708m2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></symbol>
   <symbol id="bi-caret-down-fill" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></symbol>
+  <symbol id="bi-droplet-fill" viewBox="0 0 16 16"><path d="M8 16a6 6 0 0 0 6-6c0-1.655-1.122-2.904-2.432-4.362C10.254 4.176 8.75 2.503 8 0c0 0-6 5.686-6 10a6 6 0 0 0 6 6M6.646 4.646l.708.708c-.29.29-1.128 1.311-1.907 2.87l-.894-.448c.82-1.641 1.717-2.753 2.093-3.13"/></symbol>
   <symbol id="bi-caret-right-fill" viewBox="0 0 16 16"><path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/></symbol>
   <symbol id="bi-thermometer-half" viewBox="0 0 16 16"><path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/></symbol>
 </svg>
@@ -802,7 +803,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.8.3</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v1.8.4</div>
     </div>
   </div>
 </div>

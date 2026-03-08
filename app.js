@@ -793,7 +793,7 @@ function openDayModal(dayIdx) {
             <span class="dd-hour-temp ${h.temp != null ? tempClass(h.temp) : ''}">${h.temp != null ? h.temp+'°' : '—'}</span>
             ${h.precip != null ? `<span class="dd-hour-precip">${h.precip}%</span>` : '<span class="dd-hour-precip" style="color:var(--dim)">—</span>'}
             ${h.wind != null ? `<span class="dd-hour-wind">${h.wind}mph</span>` : ''}
-            ${h.humid != null ? `<span class="dd-hour-humid">${h.humid}%💧</span>` : ''}
+            ${h.humid != null ? `<span class="dd-hour-humid"><svg width="8" height="8" fill="#93c5fd" style="margin-right:1px;vertical-align:middle"><use href="#bi-droplet-fill"/></svg>${h.humid}%</span>` : ''}
           </div>`;
         }).join('')}
       </div></div>
