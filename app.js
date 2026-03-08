@@ -797,11 +797,12 @@ function openDayModal(dayIdx) {
     });
   }
 
+  const hoursWithData = hours.filter(h => h.temp != null);
   // ── Horizontal hourly scroll (same hour-card style as forecast tab) ──
-  const hourlyHTML = hours.length ? `
+  const hourlyHTML = hoursWithData.length ? `
     <div class="hourly-scroll" style="display:block">
       <div class="hourly-track">
-        ${hours.map((h, idx) => {
+        ${hoursWithData.map((h, idx) => {
           const hr = new Date(h.time).toLocaleTimeString([], {hour:'numeric'});
           const label = idx === 0 ? 'Now' : hr;
           const shortFx = h.wcode != null ? wcodeToShort(h.wcode) : '';
