@@ -341,11 +341,11 @@ const _OVERLAY_BASE = 'https://raw.githubusercontent.com/NobleSlevin/stormtracke
 // Maps current conditions → overlay filename (null = no overlay)
 function wxOverlayFile(shortForecast) {
   const fc = (shortForecast || '').toLowerCase();
-  if (/thunder|tstm/.test(fc))                          return 'tstorm.png';    // future
-  if (/snow|blizzard|flurr/.test(fc))                   return 'snow.png';      // future
-  if (/rain|shower|drizzle|sleet/.test(fc))             return 'rain.png';      // future
-  if (/fog|mist/.test(fc))                              return 'fog.png';       // future
-  if (/overcast|mostly cloudy|cloud/.test(fc))          return 'clouds.png';    // ✓ live
+  if (/thunder|tstm/.test(fc))                                    return 'tstorm.png';  // future
+  if (/snow|blizzard|flurr/.test(fc))                             return 'snow.png';    // future
+  if (/rain|shower|drizzle|sleet/.test(fc))                       return 'rain.png';    // ✓ live
+  if (/fog|mist/.test(fc))                                        return 'fog.png';     // future
+  if (/cloud|overcast|partly|mostly|hazy/.test(fc))               return 'clouds.png';  // ✓ live
   return null;
 }
 
