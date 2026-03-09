@@ -3140,6 +3140,43 @@ function withNotifBanner(fn) {
   }
 }
 
+// ── Notification test + status ───────────────────────────────────────────────
+async function sendTestNotification() {
+  if (!('Notification' in window)) {
+    alert('Notifications are not supported on this device.');
+    return;
+  }
+  if (Notification.permission !== 'granted') {
+    alert('Notifications are not enabled. Open the Alerts tab to turn them on.');
+    return;
+  }
+  const reg = await navigator.serviceWorker.ready;
+  await reg.showNotification('⛈️ Severe Thunderstorm Warning', {
+    body: 'Johnson County · 70 mph winds and golf ball hail · until 6:15 PM',
+    icon: '/icon.png',
+    badge: '/icon.png',
+    tag: 'stormwatch-test',
+    vibrate: [200, 100, 200],
+  });
+}
+
+// Update the notification status text in the info modal whenever it opens
+function updateNotifStatus() {
+  const el = document.getElementById('notifStatusText');
+  if (!el) return;
+  if (!('Notification' in window)) {
+    el.textContent = 'Not supported on this device.';
+  } else if (Notification.permission === 'granted') {
+    el.textContent = '✓ Enabled — background alerts are active.';
+    el.style.color = 'var(--green)';
+  } else if (Notification.permission === 'denied') {
+    el.textContent = 'Blocked — enable in iOS Settings › StormWatch.';
+    el.style.color = 'var(--orange)';
+  } else {
+    el.textContent = 'Not yet enabled. Open the Alerts tab to turn on.';
+  }
+}
+
 // ── Smart refresh interval ───────────────────────────────────────────────────
 // 3 min when rain conditions are elevated, 15 min otherwise.
 function smartRefreshInterval() {
