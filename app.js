@@ -905,7 +905,7 @@ function renderForecast(periods){
   const heroHTML=hero?`<div class="fc-hero">
     <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div></div>
     <div class="fch-temp">—<sup>°F</sup></div>
-    <div class="fch-icon">${wxIcon(hero.shortForecast, 100)}</div>
+    <div class="fch-icon">${wxIcon(hero.shortForecast, 130)}</div>
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
     <div class="fch-extras" id="fchExtras"></div>
   </div>`:'';
