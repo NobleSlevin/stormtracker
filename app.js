@@ -3281,4 +3281,12 @@ function nwrToggle(callsign, url, btn) {
       hidden = false;
     }
   }, { passive: true });
+
+  // ── Parallax on wx overlay PNG ──
+  body.addEventListener('scroll', () => {
+    const ov = document.getElementById('wxOverlay');
+    if (!ov || !ov.style.backgroundImage) return;
+    const offset = Math.round(body.scrollTop * 0.3);
+    ov.style.backgroundPositionY = `calc(0px + ${offset}px)`;
+  }, { passive: true });
 })();
