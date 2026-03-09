@@ -559,8 +559,8 @@ function heroWxIcon(forecast, isDay = true, code = null) {
   return `<img src="${_ICON_BASE}${file}" style="width:87px;height:87px;object-fit:contain;display:block" alt="${forecast}" onerror="this.style.display='none'">`;
 }
 
-function rowWxIcon(forecast, isDay = true, size = 36) {
-  const full = heroWxIcon(forecast, isDay);
+function rowWxIcon(forecast, isDay = true, size = 36, code = null) {
+  const full = heroWxIcon(forecast, isDay, code);
   return full.replace(/width:\d+px;height:\d+px/, `width:${size}px;height:${size}px`);
 }
 
@@ -2744,12 +2744,20 @@ async function fetchOpenMeteo(lat, lon) {
       }
     }
 
-    // UV index
-    if (c.uv_index != null) {
-      set('obsUV', c.uv_index.toFixed(1));
-      window._uvData = c.uv_index;
-      renderUVSlot();
+    // Patch hero icon from OM current weather_code — same source as hourly cards
+    if (c.weather_code != null) {
+      const isDay = c.is_day === 1;
+      const iconEl = document.querySelector('.fch-icon');
+      if (iconEl) iconEl.innerHTML = heroWxIcon(null, isDay, c.weather_code);
+      // Also patch the "Now" hourly card icon (first card)
+      const firstCard = document.querySelector('#hourlyTrack .hour-card');
+      if (firstCard) {
+        const iconSpan = firstCard.querySelector('.hc-icon');
+        if (iconSpan) iconSpan.innerHTML = rowWxIcon(null, isDay, 32, c.weather_code);
+      }
     }
+
+    renderUVSlot();
 
     // Visibility (OM returns meters, convert to miles)
     if (c.visibility != null) {
