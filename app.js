@@ -420,10 +420,63 @@ function wxIcon(s, size=18) {
 }
 // ── HERO PNG WEATHER ICON (Tomorrow.io icon set) ──────────────
 const _ICON_BASE = 'https://raw.githubusercontent.com/NobleSlevin/stormtracker/main/png/';
-function heroWxIcon(forecast, isDay = true) {
-  const s = (forecast || '').toLowerCase();
-  const n = isDay ? '0' : '1'; // day=0, night=1 suffix
+const _TOMORROW_KEY = 'OYdoRFMcUUb6PIwfWWTjLwCxH9gNLDGG';
+let _tomorrowCode = null; // cached weatherCode for current location
+
+// Tomorrow.io weatherCode → icon filename (day=0, night=1 suffix)
+const _WX_CODE_MAP = {
+  1000: n => `1000${n}_clear_large@2x.png`,
+  1100: n => `1100${n}_mostly_clear_large@2x.png`,
+  1101: n => `1101${n}_partly_cloudy_large@2x.png`,
+  1102: _  => `11020_mostly_cloudy_large@2x.png`,
+  1001: _  => `11020_mostly_cloudy_large@2x.png`,
+  2000: _  => `20000_fog_large@2x.png`,
+  2100: _  => `21000_fog_light_large@2x.png`,
+  4000: _  => `40000_drizzle_large@2x.png`,
+  4001: _  => `40010_rain_large@2x.png`,
+  4200: _  => `42000_rain_light_large@2x.png`,
+  4201: _  => `42010_rain_heavy_large@2x.png`,
+  5000: _  => `50000_snow_large@2x.png`,
+  5001: _  => `50010_flurries_large@2x.png`,
+  5100: _  => `51000_snow_light_large@2x.png`,
+  5101: _  => `51010_snow_heavy_large@2x.png`,
+  6000: _  => `60010_freezing_rain_large@2x.png`,
+  6001: _  => `62010_freezing_rain_heavy_large@2x.png`,
+  6200: _  => `62000_freezing_rain_light_large@2x.png`,
+  6201: _  => `62010_freezing_rain_heavy_large@2x.png`,
+  7000: _  => `70000_ice_pellets_large@2x.png`,
+  7101: _  => `70000_ice_pellets_large@2x.png`,
+  7102: _  => `70000_ice_pellets_large@2x.png`,
+  8000: _  => `80000_tstorm_large@2x.png`,
+};
+
+async function fetchTomorrowRealtime(lat, lon) {
+  try {
+    const url = `https://api.tomorrow.io/v4/weather/realtime?location=${lat},${lon}&fields=weatherCode&apikey=${_TOMORROW_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const data = await res.json();
+    const code = data?.data?.values?.weatherCode;
+    if (code != null) {
+      _tomorrowCode = code;
+      // Re-render hero icon with accurate code if hero is already showing
+      const iconEl = document.querySelector('.fch-icon');
+      if (iconEl) {
+        const isDay = window._forecastPeriods?.[0]?.isDaytime !== false;
+        iconEl.innerHTML = heroWxIcon(null, isDay, code);
+      }
+    }
+  } catch(e) { /* non-fatal */ }
+}
+function heroWxIcon(forecast, isDay = true, code = null) {
+  const n = isDay ? '0' : '1';
   let file;
+  // Use Tomorrow.io weatherCode if available — more reliable than text parsing
+  const resolvedCode = code ?? _tomorrowCode;
+  if (resolvedCode != null && _WX_CODE_MAP[resolvedCode]) {
+    file = _WX_CODE_MAP[resolvedCode](n);
+  } else {
+  const s = (forecast || '').toLowerCase();
   // Thunder / tstorm
   if (s.includes('thunder') || s.includes('tstm')) {
     if (s.includes('partly'))        file = `80030_tstorm_partly_cloudy_large@2x.png`;
@@ -502,6 +555,7 @@ function heroWxIcon(forecast, isDay = true) {
   else {
     file = `11020_mostly_cloudy_large@2x.png`;
   }
+  } // end else (text-parsing fallback)
   return `<img src="${_ICON_BASE}${file}" style="width:130px;height:130px;object-fit:contain;display:block" alt="${forecast}" onerror="this.style.display='none'">`;
 }
 
@@ -1555,7 +1609,7 @@ function renderHourly(periods) {
     const windMax = Math.max(...windNums.map(Number));
     return `<div class="hour-card" data-time="${p.startTime}">
       <span class="hc-time">${hr}</span>
-      <span class="hc-icon">${wxIcon(p.shortForecast)}</span>
+      <span class="hc-icon">${rowWxIcon(p.shortForecast, p.isDaytime !== false, 32)}</span>
       <span class="hc-label">${wxLabel(p.shortForecast)}</span>
       <span class="hc-temp ${tempClass(p.temperature)}">${p.temperature}°</span>
       ${precip != null ? `<span class="hc-precip">${precip}%</span>` : ''}
@@ -2595,7 +2649,8 @@ async function fetchForPoint(lat, lon) {
   const [fc] = await Promise.all([
     fetchForecast(lat, lon),
     fetchAlerts(`${NWS}/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`),
-    fetchOpenMeteo(lat, lon)
+    fetchOpenMeteo(lat, lon),
+    fetchTomorrowRealtime(lat, lon),
   ]);
   const { periods, stationUrl } = fc;
   await Promise.all([

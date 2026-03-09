@@ -221,7 +221,7 @@ header { display: none; }
 .hourly-track { display: flex; gap: 9px; padding: 6px 2px; width: max-content; }
 .hour-card { display: flex; flex-direction: column; align-items: center; gap: 7px; background: var(--card2); border-radius: var(--rsm); padding: 14px 13px; min-width: 76px; }
 .hc-time { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .5px; }
-.hc-icon { color: var(--text); opacity: .7; display: flex; align-items: center; justify-content: center; overflow: visible; width: 20px; height: 20px; }
+.hc-icon { display: flex; align-items: center; justify-content: center; overflow: visible; width: 32px; height: 32px; }
 .hc-label { font-size: 11px; font-weight: 500; color: var(--dim); text-align: center; white-space: nowrap; }
 .hc-temp { font-size: 18px; font-weight: 400; }
 .hc-precip { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.55); }
@@ -773,7 +773,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v3.1.2</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.0.0</div>
   </div>
 
 </div>
@@ -866,6 +866,18 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         <div class="info-row-desc">US AQI with per-pollutant breakdown (PM2.5, PM10, Ozone, NO₂, CO) · Free, no key required · Updated hourly</div>
       </div>
 
+      <div class="info-row">
+        <div class="info-row-name">Open-Meteo Air Quality</div>
+        <div class="info-row-url">air-quality-api.open-meteo.com</div>
+        <div class="info-row-desc">US AQI with per-pollutant breakdown (PM2.5, PM10, Ozone, NO₂, CO) · Free, no key required · Updated hourly</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-row-name">Tomorrow.io</div>
+        <div class="info-row-url">api.tomorrow.io</div>
+        <div class="info-row-desc">Real-time weather code for accurate condition icons · Fires in parallel with NWS on every location load</div>
+      </div>
+
       <div class="info-section-ttl" style="margin-top:20px">Tornado Risk Model</div>
       <div class="info-blurb">The Risk tab scores 8 atmospheric factors using a combination of NWS forecast text (wind, hail, tornado mentions), real CAPE/CIN values from Open-Meteo, active alert counts, and time-of-day weighting. It is a supplemental awareness tool — always follow official NWS guidance.</div>
 
@@ -875,7 +887,12 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v3.1.2</div>
+      <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
+      <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:1.8">
+        <b>v2.0.0</b> — Tomorrow.io weatherCode integration for accurate condition icons · Tomorrow.io PNG icon set across hero, hourly, and day modal · Redesigned hero card with large weather icon · Swipe-free navigation · Improved border radius and spacing throughout
+      </div>
+
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.0.0</div>
     </div>
   </div>
 </div>
@@ -894,7 +911,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=3.1.2"></script>
+<script src="app.js?v=2.0.0"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>
