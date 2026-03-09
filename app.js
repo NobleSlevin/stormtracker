@@ -1269,7 +1269,13 @@ function openDayModal(dayIdx) {
   // Fire gradient early so accent color is available for hero HTML
   const _gradTemp = (dayIdx === 0 && window._omCurrentTemp != null) ? window._omCurrentTemp : highTemp;
   const _dmAccent = weatherGradient(_gradTemp, d.shortForecast, document.querySelector('.day-modal'));
-  setTimeout(() => updateWxOverlay(d.shortForecast, 'dmWxOverlay'), 300);
+  // Cancel any pending overlay timer from a previous open or close
+  if (window._dmOverlayTimer) { clearTimeout(window._dmOverlayTimer); window._dmOverlayTimer = null; }
+  if (window._dmClearTimer)   { clearTimeout(window._dmClearTimer);   window._dmClearTimer = null; }
+  // Reset cache so the overlay always fades in fresh
+  const _dmEl = document.getElementById('dmWxOverlay');
+  if (_dmEl) { _dmEl.style.opacity = '0'; _dmEl.style.backgroundImage = ''; delete _dmEl.dataset.overlayFile; }
+  window._dmOverlayTimer = setTimeout(() => { updateWxOverlay(d.shortForecast, 'dmWxOverlay'); window._dmOverlayTimer = null; }, 300);
   // Hero text is always white — gradient provides the color
   const _ac      = 'rgba(255,255,255,1.0)';
   const _acFaint = 'rgba(255,255,255,0.90)';
@@ -1648,10 +1654,16 @@ function openDayModal(dayIdx) {
 
 function closeDayModal() {
   window._dayModalOpen = false;
+  if (window._dmOverlayTimer) { clearTimeout(window._dmOverlayTimer); window._dmOverlayTimer = null; }
+  if (window._dmClearTimer)   { clearTimeout(window._dmClearTimer);   window._dmClearTimer = null; }
   document.getElementById('dayModalOverlay').classList.remove('open');
   document.getElementById('dayModal').classList.remove('open');
   const _dmOv = document.getElementById('dmWxOverlay');
-  if (_dmOv) { _dmOv.style.opacity = '0'; setTimeout(() => { _dmOv.style.backgroundImage = ''; }, 1300); }
+  if (_dmOv) {
+    _dmOv.style.opacity = '0';
+    delete _dmOv.dataset.overlayFile;
+    window._dmClearTimer = setTimeout(() => { _dmOv.style.backgroundImage = ''; window._dmClearTimer = null; }, 1300);
+  }
   // Restore today's gradient when returning to forecast tab
   const hp = window._forecastPeriods?.[0];
   if (hp) weatherGradient(hp.temperature, hp.shortForecast, document.getElementById('app'));
