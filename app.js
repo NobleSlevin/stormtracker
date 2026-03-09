@@ -26,7 +26,8 @@ if ('serviceWorker' in navigator) {
 // Called once we have a location — starts SW polling
 function startAlertPolling(lat, lon) {
   if (!_swReg?.active) return;
-  _swReg.active.postMessage({ type: 'START_ALERT_POLL', lat, lon });
+  const prefs = loadSettings().alertPrefs || {};
+  _swReg.active.postMessage({ type: 'START_ALERT_POLL', lat, lon, prefs });
   if (_seenAlertIds.size > 0) {
     _swReg.active.postMessage({ type: 'SEEN_IDS', ids: [..._seenAlertIds] });
   }
@@ -1352,7 +1353,7 @@ function openDayModal(dayIdx) {
   const _acBorder= 'rgba(255,255,255,0.20)';
 
   // ── Hero card — fully inline styles to avoid fc-hero CSS conflicts ──
-  const heroHTML = `<div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(32px) saturate(1.4);-webkit-backdrop-filter:blur(32px) saturate(1.4);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(255,255,255,0.28);box-shadow:0 4px 24px rgba(0,0,0,0.25);display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+  const heroHTML = `<div style="backdrop-filter:blur(18px) saturate(1.6) brightness(1.05);-webkit-backdrop-filter:blur(18px) saturate(1.6) brightness(1.05);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(255,255,255,0.18);box-shadow:0 4px 32px rgba(0,0,0,0.30),inset 0 0 0 200px rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:8px;flex-shrink:0;overflow:hidden;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:13px;font-weight:600;color:${_acFaint}">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</span>
     </div>
@@ -3140,6 +3141,100 @@ function withNotifBanner(fn) {
   }
 }
 
+// ── Settings modal ───────────────────────────────────────────────────────────
+const SETTINGS_KEY = 'sw_settings';
+
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch { return {}; }
+}
+
+function saveSettings(obj) {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...loadSettings(), ...obj })); } catch {}
+}
+
+function openSettings() {
+  const modal = document.getElementById('settingsModal');
+  if (!modal) return;
+  modal.classList.add('open');
+  updateSettingsUI();
+}
+
+function updateSettingsUI() {
+  const s = loadSettings();
+
+  // Default location label
+  const locEl = document.getElementById('settingsDefaultLocName');
+  if (locEl) {
+    const defLoc = s.defaultLocation;
+    locEl.textContent = defLoc ? defLoc.name || `${defLoc.lat.toFixed(2)}, ${defLoc.lon.toFixed(2)}` : 'Not set';
+    locEl.style.color = defLoc ? 'var(--text)' : 'var(--dim)';
+  }
+
+  // Alert toggles — default all ON if no setting saved
+  const toggles = {
+    stNotifTornado: 'tornado',
+    stNotifThunder: 'thunder',
+    stNotifFlood:   'flood',
+    stNotifWind:    'wind',
+    stNotifWinter:  'winter',
+    stNotifOther:   'other',
+  };
+  const prefs = s.alertPrefs || {};
+  Object.entries(toggles).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    if (el) el.checked = prefs[key] !== false; // default true
+  });
+
+  // Notification status + test button
+  updateNotifStatus();
+}
+
+function saveNotifSettings() {
+  const toggles = {
+    stNotifTornado: 'tornado',
+    stNotifThunder: 'thunder',
+    stNotifFlood:   'flood',
+    stNotifWind:    'wind',
+    stNotifWinter:  'winter',
+    stNotifOther:   'other',
+  };
+  const prefs = {};
+  Object.entries(toggles).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    if (el) prefs[key] = el.checked;
+  });
+  saveSettings({ alertPrefs: prefs });
+  // Push updated prefs to SW
+  const sw = _swReg?.active;
+  if (sw) sw.postMessage({ type: 'UPDATE_PREFS', prefs });
+}
+
+function setDefaultLocation() {
+  if (!curLat) return;
+  const name = document.getElementById('locName')?.textContent || 'My Location';
+  saveSettings({ defaultLocation: { lat: curLat, lon: curLon, name } });
+  updateSettingsUI();
+}
+
+function clearDefaultLocation() {
+  saveSettings({ defaultLocation: null });
+  updateSettingsUI();
+}
+
+// On startup, load default location from settings if no cached location exists
+function applyDefaultLocationIfNeeded() {
+  const cached = localStorage.getItem('sw_loc');
+  if (cached) return; // already has a last-used location
+  const s = loadSettings();
+  if (s.defaultLocation) {
+    const { lat, lon, name } = s.defaultLocation;
+    curLat = lat; curLon = lon; curMode = 'search';
+    const locEl = document.getElementById('locName');
+    if (locEl) locEl.textContent = name;
+    fetchForPoint(lat, lon);
+  }
+}
+
 // ── Notification test + status ───────────────────────────────────────────────
 async function sendTestNotification() {
   if (!('Notification' in window)) {
@@ -3399,6 +3494,8 @@ window.addEventListener('load', async () => {
   document.getElementById('btnNational').addEventListener('click',doNational);
   document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.f)));
   document.querySelectorAll('.cmb').forEach(b=>b.addEventListener('click',()=>applySpiderMode(b.dataset.cm)));
+  // Apply default location if no cached location exists
+  applyDefaultLocationIfNeeded();
   // Auto-load last location on startup
   const cached = loadCachedLocation();
   if (cached) {

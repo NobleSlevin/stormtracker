@@ -1,5 +1,5 @@
-const CACHE = 'stormwatch-v2.7.8';
-const ASSETS = ['/', '/index.html', '/app.js?v=2.7.8', '/icon.png', '/manifest.json'];
+const CACHE = 'stormwatch-v1.8.1';
+const ASSETS = ['/', '/index.html', '/app.js?v=1.8.1', '/icon.png', '/manifest.json'];
 
 // ── Install ──────────────────────────────────────────────────────────────────
 self.addEventListener('install', e => {
@@ -33,6 +33,7 @@ let _alertPollLat   = null;
 let _alertPollLon   = null;
 let _seenAlertIds   = new Set();
 let _seenLoaded     = false;
+let _alertPrefs     = {}; // keyed: tornado, thunder, flood, wind, winter, other
 
 const NWS = 'https://api.weather.gov';
 
@@ -43,12 +44,17 @@ self.addEventListener('message', e => {
   if (msg.type === 'START_ALERT_POLL') {
     _alertPollLat = msg.lat;
     _alertPollLon = msg.lon;
+    if (msg.prefs) _alertPrefs = msg.prefs;
     if (!_alertPollTimer) scheduleAlertPoll(0); // fire immediately
   }
 
   if (msg.type === 'UPDATE_LOCATION') {
     _alertPollLat = msg.lat;
     _alertPollLon = msg.lon;
+  }
+
+  if (msg.type === 'UPDATE_PREFS') {
+    _alertPrefs = msg.prefs || {};
   }
 
   if (msg.type === 'STOP_ALERT_POLL') {
@@ -134,7 +140,7 @@ async function runAlertPoll() {
       _seenAlertIds.add(id);
       const p = alert.properties || {};
       if (p.severity === 'Extreme' || p.severity === 'Severe') _seenSevereIds.add(id);
-      await fireAlertNotification(p);
+      if (alertPassesFilter(p)) await fireAlertNotification(p);
     }
 
     // All-clear notification if a previous severe alert just expired
@@ -164,6 +170,18 @@ async function runAlertPoll() {
 // Track which seen IDs were severe (for all-clear logic)
 const _seenSevereIds = new Set();
 
+function alertPassesFilter(p) {
+  // If no prefs set, allow all
+  if (!_alertPrefs || Object.keys(_alertPrefs).length === 0) return true;
+  const ev = (p.event || '').toLowerCase();
+  if (/tornado/.test(ev))                            return _alertPrefs.tornado !== false;
+  if (/thunderstorm|tstm/.test(ev))                  return _alertPrefs.thunder !== false;
+  if (/flood/.test(ev))                              return _alertPrefs.flood   !== false;
+  if (/wind/.test(ev))                               return _alertPrefs.wind    !== false;
+  if (/winter|snow|blizzard|ice|sleet|freeze|frost/.test(ev)) return _alertPrefs.winter !== false;
+  return _alertPrefs.other !== false;
+}
+
 async function fireAlertNotification(p) {
   const sev   = p.severity || 'Unknown';
   const event = p.event || 'Weather Alert';
@@ -191,7 +209,7 @@ async function fireAlertNotification(p) {
     const expDate = new Date(expires);
     const h = expDate.getHours(), m = expDate.getMinutes();
     const timeStr = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
-    if (body.length < 80) body += ` · until ${timeStr}`;
+    if (body.length < 80) body += ` · Until ${timeStr}`;
   }
 
   // Urgency-based vibration pattern
