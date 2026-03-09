@@ -1,7 +1,73 @@
-// ── SERVICE WORKER ────────────────────────────────
+// ── SERVICE WORKER + PUSH NOTIFICATIONS ──────────────────────────────────────
+let _swReg = null;
+let _seenAlertIds = new Set();
+let _notifPromptShown = false;
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW:', e));
+  window.addEventListener('load', async () => {
+    try {
+      _swReg = await navigator.serviceWorker.register('sw.js');
+
+      // Listen for messages from SW
+      navigator.serviceWorker.addEventListener('message', e => {
+        const msg = e.data || {};
+        if (msg.type === 'SEEN_IDS_SYNC') {
+          _seenAlertIds = new Set(msg.ids);
+        }
+        if (msg.type === 'OPEN_TAB') {
+          switchTab(msg.tab || 'alerts');
+        }
+      });
+
+    } catch(e) { console.warn('SW:', e); }
+  });
+}
+
+// Called once we have a location — starts SW polling
+function startAlertPolling(lat, lon) {
+  if (!_swReg?.active) return;
+  _swReg.active.postMessage({ type: 'START_ALERT_POLL', lat, lon });
+  if (_seenAlertIds.size > 0) {
+    _swReg.active.postMessage({ type: 'SEEN_IDS', ids: [..._seenAlertIds] });
+  }
+}
+
+// Called when location changes
+function updatePollingLocation(lat, lon) {
+  const sw = _swReg?.active || _swReg?.waiting || _swReg?.installing;
+  if (sw) sw.postMessage({ type: 'UPDATE_LOCATION', lat, lon });
+}
+
+// Ask for notification permission — shown when user first opens Alerts tab
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') return;
+  if (Notification.permission === 'denied') return;
+  if (_notifPromptShown) return;
+  _notifPromptShown = true;
+
+  const banner = document.createElement('div');
+  banner.id = 'notifBanner';
+  banner.innerHTML = `
+    <div class="notif-banner-inner">
+      <div class="notif-banner-text">
+        <strong>Get warned instantly</strong>
+        <span>Enable notifications to receive alerts for tornados, severe storms, and floods.</span>
+      </div>
+      <div class="notif-banner-btns">
+        <button class="notif-btn-yes" id="notifYes">Enable</button>
+        <button class="notif-btn-no" id="notifNo">Not now</button>
+      </div>
+    </div>`;
+  document.getElementById('panelAlerts').prepend(banner);
+
+  document.getElementById('notifYes').addEventListener('click', async () => {
+    banner.remove();
+    const result = await Notification.requestPermission();
+    if (result === 'granted' && curLat) startAlertPolling(curLat, curLon);
+  });
+  document.getElementById('notifNo').addEventListener('click', () => {
+    banner.remove();
   });
 }
 
@@ -163,6 +229,7 @@ function switchTab(t) {
   if (btn) btn.classList.add('on');
   document.getElementById(TAB_MAP[t]).classList.add('on');
   document.getElementById('filterRow').style.display = t === 'alerts' ? 'flex' : 'none';
+  if (t === 'alerts') requestNotifPermission();
   const bodyEl = document.getElementById('app');
   if (bodyEl) bodyEl.classList.toggle('radar-active', t === 'radar');
   if (t === 'forecast') {
@@ -1036,7 +1103,7 @@ async function fetchAlerts(url){
     renderAlerts(allAlerts);
     setLive('ok',`LIVE · ${allAlerts.length}`);
     if(refreshTimer)clearTimeout(refreshTimer);
-    refreshTimer=setTimeout(refresh,120000);
+    refreshTimer=setTimeout(refresh, smartRefreshInterval());
   }catch(e){
     setLive('err','ERROR');
     document.getElementById('panelAlerts').innerHTML=`<div class="state-center"><div class="state-icon"><svg width="28" height="28" fill="var(--orange)"><use href="#bi-exclamation-triangle"/></svg></div><div class="state-ttl">Failed</div><div class="state-sub" style="margin-bottom:10px">${e.message}</div><button class="cbtn" id="retryBtn"><svg width="12" height="12" fill="currentColor"><use href="#bi-arrow-repeat"/></svg> Retry</button></div>`;
@@ -2939,6 +3006,11 @@ async function fetchOpenMeteo(lat, lon) {
 async function fetchForPoint(lat, lon) {
   // Fire Tomorrow.io non-blocking — it only updates the hero icon, not critical data
   fetchTomorrowRealtime(lat, lon);
+  // Start or update SW background alert polling
+  if (Notification.permission === 'granted') {
+    if (_swReg?.active) startAlertPolling(lat, lon);
+    else updatePollingLocation(lat, lon);
+  }
 
   const [fc] = await Promise.all([
     fetchForecast(lat, lon),
@@ -3043,6 +3115,39 @@ async function doNational(){
   document.getElementById('locSub').textContent='National View';
   const _os2=document.getElementById('obsStrip');delete _os2.dataset.active;document.getElementById('obsStripWrap')?.classList.add('collapsed');
   await fetchAlerts(`${NWS}/alerts/active`);
+}
+
+
+// ── Smart refresh interval ───────────────────────────────────────────────────
+// 3 min when rain conditions are elevated, 15 min otherwise.
+function smartRefreshInterval() {
+  const FAST = 3 * 60 * 1000;   // 3 min
+  const SLOW = 15 * 60 * 1000;  // 15 min
+
+  // 1. Active NWS alert for rain/storm/flood/tornado
+  const stormAlertTypes = /tornado|thunderstorm|flash.?flood|flood|severe.?storm|tropical/i;
+  const hasStormAlert = (allAlerts || []).some(a => {
+    const ev = a.properties?.event || '';
+    const sev = a.properties?.severity || '';
+    return stormAlertTypes.test(ev) || sev === 'Extreme' || sev === 'Severe';
+  });
+  if (hasStormAlert) return FAST;
+
+  // 2. Storm/thunder in current NWS forecast periods (today + tonight)
+  const periods = window._forecastPeriods || [];
+  const stormFcText = /thunder|tstm|storm|tornado/i;
+  const nearTermStorm = periods.slice(0, 2).some(p =>
+    stormFcText.test(p.shortForecast || '') || stormFcText.test(p.detailedForecast || '')
+  );
+  if (nearTermStorm) return FAST;
+
+  // 3. Precipitation probability >50% in next 2 NWS periods
+  const highPrecip = periods.slice(0, 2).some(p =>
+    (p.probabilityOfPrecipitation?.value ?? 0) > 50
+  );
+  if (highPrecip) return FAST;
+
+  return SLOW;
 }
 
 async function refresh(){
