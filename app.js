@@ -51,12 +51,12 @@ async function requestNotifPermission() {
   banner.innerHTML = `
     <div class="notif-banner-inner">
       <div class="notif-banner-text">
-        <strong>Get warned instantly</strong>
+        <strong>GET WARNED INSTANTLY</strong>
         <span>Enable notifications to receive alerts for tornados, severe storms, and floods.</span>
       </div>
       <div class="notif-banner-btns">
-        <button class="notif-btn-yes" id="notifYes">Enable</button>
-        <button class="notif-btn-no" id="notifNo">Not now</button>
+        <button class="notif-btn-yes" id="notifYes">ENABLE</button>
+        <button class="notif-btn-no" id="notifNo">NOT NOW</button>
       </div>
     </div>`;
   document.getElementById('panelAlerts').prepend(banner);
@@ -750,6 +750,7 @@ function renderAlerts(alerts) {
   document.getElementById('sUpdated').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   updateTicker(alerts);
   const box=document.getElementById('panelAlerts');
+  withNotifBanner(() => {
   if(!filtered.length){
     box.innerHTML=`<div class="state-center"><div class="state-icon">${total>0?'<svg width="28" height="28" fill="currentColor"><use href="#bi-search"/></svg>':'<svg width="28" height="28" fill="var(--green)"><use href="#bi-check-circle"/></svg>'}</div><div class="state-ttl">${total>0?'No Match':'All Clear'}</div><div class="state-sub">${total>0?'Try a different filter':'No active NWS alerts'}</div></div>`;
     return;
@@ -767,6 +768,7 @@ function renderAlerts(alerts) {
       </div></div>`;
   }).join('');
   box.querySelectorAll('.alert-card').forEach(el=>el.addEventListener('click',()=>el.classList.toggle('open')));
+  }); // withNotifBanner
 }
 function updateTicker(alerts) {
   const inner=document.getElementById('tickerInner');
@@ -1096,7 +1098,7 @@ function setFilter(f){
 }
 async function fetchAlerts(url){
   setLive('loading','LOADING…');
-  document.getElementById('panelAlerts').innerHTML=`<div class="state-center"><div class="spinner"></div><div class="state-sub" style="margin-top:10px">Querying NWS…</div></div>`;
+  withNotifBanner(() => { document.getElementById('panelAlerts').innerHTML=`<div class="state-center"><div class="spinner"></div><div class="state-sub" style="margin-top:10px">Querying NWS…</div></div>`; });
   try{
     const d=await nwsFetch(url);
     allAlerts=(d.features||[]).sort((a,b)=>{const o={Extreme:0,Severe:1,Moderate:2,Minor:3};return(o[a.properties.severity]??4)-(o[b.properties.severity]??4);});
@@ -1106,7 +1108,7 @@ async function fetchAlerts(url){
     refreshTimer=setTimeout(refresh, smartRefreshInterval());
   }catch(e){
     setLive('err','ERROR');
-    document.getElementById('panelAlerts').innerHTML=`<div class="state-center"><div class="state-icon"><svg width="28" height="28" fill="var(--orange)"><use href="#bi-exclamation-triangle"/></svg></div><div class="state-ttl">Failed</div><div class="state-sub" style="margin-bottom:10px">${e.message}</div><button class="cbtn" id="retryBtn"><svg width="12" height="12" fill="currentColor"><use href="#bi-arrow-repeat"/></svg> Retry</button></div>`;
+    withNotifBanner(() => { document.getElementById('panelAlerts').innerHTML=`<div class="state-center"><div class="state-icon"><svg width="28" height="28" fill="var(--orange)"><use href="#bi-exclamation-triangle"/></svg></div><div class="state-ttl">Failed</div><div class="state-sub" style="margin-bottom:10px">${e.message}</div><button class="cbtn" id="retryBtn"><svg width="12" height="12" fill="currentColor"><use href="#bi-arrow-repeat"/></svg> Retry</button></div>`; });
     const rb=document.getElementById('retryBtn'); if(rb) rb.addEventListener('click', refresh);
   }
 }
@@ -3117,6 +3119,26 @@ async function doNational(){
   await fetchAlerts(`${NWS}/alerts/active`);
 }
 
+
+// Preserve the notification permission banner across panel re-renders
+function withNotifBanner(fn) {
+  const existing = document.getElementById('notifBanner');
+  const clone = existing ? existing.cloneNode(true) : null;
+  fn();
+  if (clone && !document.getElementById('notifBanner')) {
+    const box = document.getElementById('panelAlerts');
+    if (box) {
+      box.prepend(clone);
+      // Re-attach button listeners since cloneNode strips them
+      clone.querySelector('#notifYes')?.addEventListener('click', async () => {
+        clone.remove();
+        const result = await Notification.requestPermission();
+        if (result === 'granted' && curLat) startAlertPolling(curLat, curLon);
+      });
+      clone.querySelector('#notifNo')?.addEventListener('click', () => clone.remove());
+    }
+  }
+}
 
 // ── Smart refresh interval ───────────────────────────────────────────────────
 // 3 min when rain conditions are elevated, 15 min otherwise.
