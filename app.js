@@ -1865,7 +1865,7 @@ async function fetchObservations(stationsUrl) {
     set('obsWind',  windMph);
     set('obsPress', pressMb);
     set('obsVis',   visMi);
-    const _os=document.getElementById('obsStrip');_os.dataset.active='1';document.getElementById('obsStripWrap')?.classList.add('show');
+    const _os=document.getElementById('obsStrip');_os.dataset.active='1';document.getElementById('obsStripWrap')?.classList.remove('collapsed');
     // Store station id for Nearby tab
     return { stationId, name: st.features?.[0]?.properties?.name || stationId };
   } catch(e) { console.warn('Obs error:', e); }
@@ -2830,7 +2830,7 @@ async function fetchOpenMeteo(lat, lon) {
     if (document.getElementById('obsWind').textContent === '—' && c.wind_speed_10m != null)
       set('obsWind', Math.round(c.wind_speed_10m));
 
-    const _os=document.getElementById('obsStrip');_os.dataset.active='1';document.getElementById('obsStripWrap')?.classList.add('show');
+    const _os=document.getElementById('obsStrip');_os.dataset.active='1';document.getElementById('obsStripWrap')?.classList.remove('collapsed');
 
     // Open-Meteo owns the hero temp — it is spatially accurate and up-to-the-hour.
     // NWS obs stations can be miles away and report stale readings; they do not set the hero.
@@ -2966,7 +2966,7 @@ async function doNational(){
   curMode='national'; curState=null;
   document.getElementById('locName').textContent='United States';
   document.getElementById('locSub').textContent='National View';
-  const _os2=document.getElementById('obsStrip');delete _os2.dataset.active;document.getElementById('obsStripWrap')?.classList.remove('show');
+  const _os2=document.getElementById('obsStrip');delete _os2.dataset.active;document.getElementById('obsStripWrap')?.classList.add('collapsed');
   await fetchAlerts(`${NWS}/alerts/active`);
 }
 
@@ -3276,10 +3276,10 @@ function nwrToggle(callsign, url, btn) {
       const wrap  = document.getElementById('obsStripWrap');
       if (strip && wrap && strip.dataset.active) {
         if (y > 12 && !hidden) {
-          wrap.classList.remove('show');
+          wrap.classList.add('collapsed');
           hidden = true;
         } else if (y <= 4 && hidden) {
-          wrap.classList.add('show');
+          wrap.classList.remove('collapsed');
           hidden = false;
         }
       }
