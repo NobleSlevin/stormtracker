@@ -330,9 +330,45 @@ function weatherGradient(tempF, shortForecast, targetEl) {
     el.style.backgroundImage = bgImage;
     window._lastGradTemp = tempF;
     window._lastGradFc   = shortForecast;
+    updateWxOverlay(shortForecast);
   }
   window._weatherAccent = null;
   return null;
+}
+
+const _OVERLAY_BASE = 'https://raw.githubusercontent.com/NobleSlevin/stormtracker/main/overlays/';
+
+// Maps current conditions → overlay filename (null = no overlay)
+function wxOverlayFile(shortForecast) {
+  const fc = (shortForecast || '').toLowerCase();
+  if (/thunder|tstm/.test(fc))                          return 'tstorm.png';    // future
+  if (/snow|blizzard|flurr/.test(fc))                   return 'snow.png';      // future
+  if (/rain|shower|drizzle|sleet/.test(fc))             return 'rain.png';      // future
+  if (/fog|mist/.test(fc))                              return 'fog.png';       // future
+  if (/overcast|mostly cloudy|cloud/.test(fc))          return 'clouds.png';    // ✓ live
+  return null;
+}
+
+function updateWxOverlay(shortForecast) {
+  const el = document.getElementById('wxOverlay');
+  if (!el) return;
+  const file = wxOverlayFile(shortForecast);
+  if (!file) {
+    el.style.opacity = '0';
+    setTimeout(() => { if (el.style.opacity === '0') el.style.backgroundImage = ''; }, 1300);
+    return;
+  }
+  const url = `url('${_OVERLAY_BASE}${file}')`;
+  // Cross-fade: if switching images, reset opacity first
+  if (el.style.backgroundImage !== url) {
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.style.backgroundImage = url;
+      el.style.opacity = '0.55';
+    }, el.style.backgroundImage ? 400 : 0);
+  } else {
+    el.style.opacity = '0.55';
+  }
 }
 
 function clearWeatherGradient() {
@@ -831,18 +867,28 @@ function renderWindModal() {
   const oh = window._omHourly;
   if (oh && oh.time && oh.wind_speed_10m) {
     const now = Date.now();
+    const dn = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    let lastDate = null;
     const cards = oh.time.map((t, i) => {
       const ms = new Date(t).getTime();
-      if (ms < now - 3600000 || i > 23) return null;
+      if (ms < now - 1800000) return null;  // skip more than 30min in the past
+      if (ms > now + 48 * 3600000) return null; // cap at 48h ahead
       const spd = oh.wind_speed_10m[i] != null ? Math.round(oh.wind_speed_10m[i]) : null;
       const gst = oh.wind_gusts_10m?.[i]  != null ? Math.round(oh.wind_gusts_10m[i])  : null;
       const wdir = oh.wind_direction_10m?.[i] ?? null;
-      const hr = new Date(t).toLocaleTimeString([],{hour:'numeric'});
-      // Arrow emoji by direction
+      const dt = new Date(t);
+      const hr = dt.toLocaleTimeString([],{hour:'numeric'});
+      const dateKey = dt.toDateString();
+      // Day divider card when date changes
+      let divider = '';
+      if (lastDate && lastDate !== dateKey) {
+        divider = `<div class="whc-day-divider">${dn[dt.getDay()]}</div>`;
+      }
+      lastDate = dateKey;
       const arrowMap = ['↑','↗','→','↘','↓','↙','←','↖'];
       const arrow = wdir != null ? arrowMap[(Math.round(wdir/45) + 4) % 8] : '·';
       const color = spd != null && spd > 30 ? 'var(--orange)' : spd != null && spd > 20 ? 'var(--yellow)' : 'var(--text)';
-      return `<div class="wind-hour-card">
+      return divider + `<div class="wind-hour-card">
         <span class="whc-time">${hr}</span>
         <span class="whc-arrow" title="${wdir != null ? wdir+'° '+degToCard(wdir) : ''}">${arrow}</span>
         <span class="whc-speed" style="color:${color}">${spd ?? '—'}</span>
