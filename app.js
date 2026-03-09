@@ -3266,19 +3266,24 @@ function nwrToggle(callsign, url, btn) {
 (function() {
   const body = document.getElementById('body');
   if (!body) return;
-  let lastY = 0;
-  let hidden = false;
+  let lastY = 0, hidden = false, ticking = false;
   body.addEventListener('scroll', () => {
-    const y = body.scrollTop;
-    const strip = document.getElementById('obsStrip');
-    if (!strip || !strip.dataset.active) { lastY = y; return; }
-    if (y > 10) {
-      // scrolled down enough — always hide
-      if (!hidden) { strip.classList.remove('show'); hidden = true; }
-    } else {
-      // near top — always show
-      if (hidden) { strip.classList.add('show'); hidden = false; }
-    }
-    lastY = y;
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const y = body.scrollTop;
+      const strip = document.getElementById('obsStrip');
+      if (strip && strip.dataset.active) {
+        if (y > 12 && !hidden) {
+          strip.classList.remove('show');
+          hidden = true;
+        } else if (y <= 4 && hidden) {
+          strip.classList.add('show');
+          hidden = false;
+        }
+      }
+      lastY = y;
+      ticking = false;
+    });
   }, { passive: true });
 })();
