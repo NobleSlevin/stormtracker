@@ -182,16 +182,16 @@ function weatherGradient(tempF, shortForecast, targetEl) {
   //  ≤25°F  ARCTIC    clear → violet / icy cyan / indigo
   //                   snowy → pale lavender / deep navy / ice blue
   //  ≤40°F  COLD      clear → electric blue / teal / cobalt
-  //                   wet   → steel blue / slate-purple / deep blue
+  //                   wet   → deep royal blue / dark navy / bright steel blue
   //  ≤55°F  COOL      clear → cyan / cobalt blue / teal-green
-  //                   wet   → teal / dark indigo / blue
+  //                   wet   → strong blue / dark indigo-blue / sky blue
   //  ≤68°F  MILD      clear → lime-green / sky blue / emerald
-  //                   wet   → forest green / deep teal / cyan
+  //                   wet   → medium blue / very dark navy / light blue
   //  ≤80°F  WARM      clear → golden yellow / magenta / amber
-  //                   wet   → amber / sienna / orange
+  //                   wet   → deep blue / near-black navy / bright blue
   //  ≤92°F  HOT       clear → vivid orange / purple-violet / yellow
-  //                   wet   → red-orange / deep magenta / orange
-  //                   stormy→ crimson / dark purple / red
+  //                   wet   → deep royal blue / dark navy / bright blue
+  //                   stormy→ very dark blue / near-black navy / electric blue
   //  >92°F  SCORCHING → deep red / burnt orange / crimson
   //  FOG               → grey-green / dusty mauve / slate
   //  CLOUDY modifier   → all saturations reduced by ~40%
@@ -217,9 +217,9 @@ function weatherGradient(tempF, shortForecast, targetEl) {
     if (isWet) {
       base = 'hsla(220,60%,4%,1)';
       d    = 'hsla(220,60%,5%,1)';
-      v1   = 'hsla(213,90%,60%,1)';   // steel blue
-      v2   = 'hsla(255,70%,50%,1)';   // slate-purple
-      v3   = 'hsla(230,85%,40%,1)';   // deep blue
+      v1   = 'hsla(215,100%,45%,1)';  // deep royal blue
+      v2   = 'hsla(235,90%,25%,1)';   // dark navy
+      v3   = 'hsla(205,95%,55%,1)';   // bright steel blue
     } else {
       base = 'hsla(210,60%,4%,1)';
       d    = 'hsla(210,60%,5%,1)';
@@ -229,11 +229,11 @@ function weatherGradient(tempF, shortForecast, targetEl) {
     }
   } else if (tempF <= 55) {
     if (isWet) {
-      base = 'hsla(185,60%,4%,1)';
-      d    = 'hsla(185,60%,5%,1)';
-      v1   = 'hsla(178,100%,42%,1)';  // stormy teal
-      v2   = 'hsla(248,80%,40%,1)';   // dark indigo
-      v3   = 'hsla(210,90%,50%,1)';   // blue
+      base = 'hsla(218,60%,4%,1)';
+      d    = 'hsla(218,60%,5%,1)';
+      v1   = 'hsla(212,100%,42%,1)';  // strong blue
+      v2   = 'hsla(238,85%,28%,1)';   // dark indigo-blue
+      v3   = 'hsla(200,90%,50%,1)';   // sky blue
     } else {
       base = 'hsla(165,55%,4%,1)';
       d    = 'hsla(165,55%,5%,1)';
@@ -243,11 +243,11 @@ function weatherGradient(tempF, shortForecast, targetEl) {
     }
   } else if (tempF <= 68) {
     if (isWet) {
-      base = 'hsla(145,55%,4%,1)';
-      d    = 'hsla(145,55%,5%,1)';
-      v1   = 'hsla(141,80%,38%,1)';   // forest green
-      v2   = 'hsla(195,80%,35%,1)';   // deep teal
-      v3   = 'hsla(173,75%,45%,1)';   // cyan
+      base = 'hsla(215,60%,4%,1)';
+      d    = 'hsla(215,60%,5%,1)';
+      v1   = 'hsla(210,95%,40%,1)';   // medium blue
+      v2   = 'hsla(233,88%,25%,1)';   // very dark navy
+      v3   = 'hsla(198,85%,50%,1)';   // light blue
     } else {
       base = 'hsla(130,55%,4%,1)';
       d    = 'hsla(130,55%,5%,1)';
@@ -257,11 +257,11 @@ function weatherGradient(tempF, shortForecast, targetEl) {
     }
   } else if (tempF <= 80) {
     if (isWet) {
-      base = 'hsla(35,60%,4%,1)';
-      d    = 'hsla(35,60%,5%,1)';
-      v1   = 'hsla(38,100%,48%,1)';   // amber
-      v2   = 'hsla(16,80%,40%,1)';    // burnt sienna
-      v3   = 'hsla(25,90%,52%,1)';    // orange
+      base = 'hsla(218,60%,4%,1)';
+      d    = 'hsla(218,60%,5%,1)';
+      v1   = 'hsla(214,100%,38%,1)';  // deep blue
+      v2   = 'hsla(235,85%,22%,1)';   // near-black navy
+      v3   = 'hsla(202,90%,52%,1)';   // bright blue
     } else {
       base = 'hsla(45,60%,4%,1)';
       d    = 'hsla(45,60%,5%,1)';
@@ -271,17 +271,17 @@ function weatherGradient(tempF, shortForecast, targetEl) {
     }
   } else if (tempF <= 92) {
     if (isStormy) {
-      base = 'hsla(0,60%,4%,1)';
-      d    = 'hsla(0,60%,5%,1)';
-      v1   = 'hsla(0,95%,48%,1)';     // crimson
-      v2   = 'hsla(275,90%,38%,1)';   // dark purple
-      v3   = 'hsla(10,90%,45%,1)';    // deep red
+      base = 'hsla(225,60%,4%,1)';
+      d    = 'hsla(225,60%,5%,1)';
+      v1   = 'hsla(220,100%,30%,1)';  // very dark blue
+      v2   = 'hsla(240,90%,18%,1)';   // near-black navy
+      v3   = 'hsla(205,95%,42%,1)';   // electric blue
     } else if (isWet) {
-      base = 'hsla(15,60%,4%,1)';
-      d    = 'hsla(15,60%,5%,1)';
-      v1   = 'hsla(18,100%,54%,1)';   // red-orange
-      v2   = 'hsla(305,90%,38%,1)';   // deep magenta
-      v3   = 'hsla(28,95%,52%,1)';    // orange
+      base = 'hsla(218,60%,4%,1)';
+      d    = 'hsla(218,60%,5%,1)';
+      v1   = 'hsla(216,100%,35%,1)';  // deep royal blue
+      v2   = 'hsla(237,88%,22%,1)';   // dark navy
+      v3   = 'hsla(200,95%,48%,1)';   // bright blue
     } else {
       base = 'hsla(28,60%,4%,1)';
       d    = 'hsla(28,60%,5%,1)';
