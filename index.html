@@ -75,8 +75,10 @@ header { display: none; }
 .cbtn.primary { background: rgba(96,165,250,0.1); border-color: rgba(96,165,250,0.3); color: var(--blue); }
 
 /* ── OBS STRIP ── */
-.obs-strip { display: grid; grid-template-columns: repeat(8,1fr); border-bottom: none; background: var(--card2); flex-shrink: 0; overflow: hidden; max-height: 96px; transform: translateY(-100%); opacity: 0; transition: transform .28s cubic-bezier(.4,0,.2,1), opacity .28s ease; pointer-events: none; }
-.obs-strip.show { border-bottom: 1px solid var(--border); transform: translateY(0); opacity: 1; pointer-events: auto; }
+.obs-strip-wrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s cubic-bezier(.4,0,.2,1); }
+.obs-strip-wrap.show { grid-template-rows: 1fr; }
+.obs-strip { display: grid; grid-template-columns: repeat(8,1fr); border-bottom: none; background: var(--card2); overflow: hidden; min-height: 0; }
+.obs-strip-wrap.show .obs-strip { border-bottom: 1px solid var(--border); }
 .obs-item { padding: 12px 6px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; }
 .obs-item:last-child { border-right: none; }
 .obs-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--dim); }
@@ -658,6 +660,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   </div>
 
   <!-- Observation strip — hidden until GPS/ZIP used -->
+  <div class="obs-strip-wrap" id="obsStripWrap">
   <div class="obs-strip" id="obsStrip">
     <div class="obs-item"><span class="obs-label">Temp</span><span class="obs-val" id="obsTemp">—</span><span class="obs-unit">°F</span></div>
     <div class="obs-item"><span class="obs-label">Feels</span><span class="obs-val" id="obsFeels">—</span><span class="obs-unit">°F</span></div>
@@ -667,6 +670,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
     <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Gust</span><span class="obs-val" id="obsGust">—</span><span class="obs-unit">mph</span><svg width="10" height="10" fill="var(--dim)" style="margin-top:2px"><use href="#bi-caret-down-fill"/></svg></div>
     <div class="obs-item"><span class="obs-label">UV</span><span class="obs-val" id="obsUV">—</span><span class="obs-unit">idx</span></div>
     <div class="obs-item"><span class="obs-label">Cloud</span><span class="obs-val" id="obsCloud">—</span><span class="obs-unit">%</span></div>
+  </div>
   </div>
 
   <div class="stat-strip">
@@ -786,7 +790,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.3.5</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.3.6</div>
   </div>
 
 </div>
@@ -896,12 +900,12 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
       <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
       <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:1.8;color:rgba(255,255,255,0.6)">
-        <b>v2.3.5</b> — Wind arrows on hourly forecast · Sunrise/sunset in day modal · Rain amount tile · Severe weather outlook blurb · Search overlay with recents · Modal gradient safe area fix<br>
+        <b>v2.3.6</b> — Wind arrows on hourly forecast · Sunrise/sunset in day modal · Rain amount tile · Severe weather outlook blurb · Search overlay with recents · Modal gradient safe area fix<br>
         <b>v2.1.0</b> — Auto-loads last used location on startup · Silent GPS refresh · First launch defaults to GPS then IP<br>
         <b>v2.0.0</b> — Tomorrow.io weatherCode integration · PNG icon set across hero, hourly, and day modal · Redesigned hero card · Improved border radius and spacing
       </div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.5</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.6</div>
     </div>
   </div>
 </div>
@@ -920,7 +924,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.3.5"></script>
+<script src="app.js?v=2.3.6"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>

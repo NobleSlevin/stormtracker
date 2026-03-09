@@ -1865,7 +1865,7 @@ async function fetchObservations(stationsUrl) {
     set('obsWind',  windMph);
     set('obsPress', pressMb);
     set('obsVis',   visMi);
-    const _os=document.getElementById('obsStrip');_os.classList.add('show');_os.dataset.active='1';
+    const _os=document.getElementById('obsStrip');_os.dataset.active='1';document.getElementById('obsStripWrap')?.classList.add('show');
     // Store station id for Nearby tab
     return { stationId, name: st.features?.[0]?.properties?.name || stationId };
   } catch(e) { console.warn('Obs error:', e); }
@@ -2830,7 +2830,7 @@ async function fetchOpenMeteo(lat, lon) {
     if (document.getElementById('obsWind').textContent === '—' && c.wind_speed_10m != null)
       set('obsWind', Math.round(c.wind_speed_10m));
 
-    const _os=document.getElementById('obsStrip');_os.classList.add('show');_os.dataset.active='1';
+    const _os=document.getElementById('obsStrip');_os.dataset.active='1';document.getElementById('obsStripWrap')?.classList.add('show');
 
     // Open-Meteo owns the hero temp — it is spatially accurate and up-to-the-hour.
     // NWS obs stations can be miles away and report stale readings; they do not set the hero.
@@ -2966,7 +2966,7 @@ async function doNational(){
   curMode='national'; curState=null;
   document.getElementById('locName').textContent='United States';
   document.getElementById('locSub').textContent='National View';
-  const _os2=document.getElementById('obsStrip');_os2.classList.remove('show');delete _os2.dataset.active;
+  const _os2=document.getElementById('obsStrip');delete _os2.dataset.active;document.getElementById('obsStripWrap')?.classList.remove('show');
   await fetchAlerts(`${NWS}/alerts/active`);
 }
 
@@ -3273,12 +3273,13 @@ function nwrToggle(callsign, url, btn) {
     requestAnimationFrame(() => {
       const y = body.scrollTop;
       const strip = document.getElementById('obsStrip');
-      if (strip && strip.dataset.active) {
+      const wrap  = document.getElementById('obsStripWrap');
+      if (strip && wrap && strip.dataset.active) {
         if (y > 12 && !hidden) {
-          strip.classList.remove('show');
+          wrap.classList.remove('show');
           hidden = true;
         } else if (y <= 4 && hidden) {
-          strip.classList.add('show');
+          wrap.classList.add('show');
           hidden = false;
         }
       }
