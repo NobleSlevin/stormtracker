@@ -155,24 +155,6 @@ document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
-// ── SWIPE LEFT/RIGHT ON TAB BAR TO CHANGE TABS ──────────────
-(function() {
-  const tabBar = document.querySelector('.tabs');
-  if (!tabBar) return;
-  let tx = 0;
-  tabBar.addEventListener('touchstart', e => {
-    tx = e.touches[0].clientX;
-  }, { passive: true });
-  tabBar.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - tx;
-    if (Math.abs(dx) < 40) return;
-    const cur = document.querySelector('.tab.on')?.dataset?.tab;
-    const idx = TAB_ORDER.indexOf(cur);
-    if (idx === -1) return;
-    if (dx < 0 && idx < TAB_ORDER.length - 1) switchTab(TAB_ORDER[idx + 1]);
-    if (dx > 0 && idx > 0) switchTab(TAB_ORDER[idx - 1]);
-  }, { passive: true });
-})();
 
 // ── BODY BACKGROUND GRADIENT ─────────────────────
 // Paints a 3-stop gradient on document.body based on temperature + conditions.
@@ -921,9 +903,9 @@ function renderForecast(periods){
   }
   // Hero always renders with placeholder temp — OM patch fills in real current value
   const heroHTML=hero?`<div class="fc-hero">
-    <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div><div class="fch-time">${now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div>
+    <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div></div>
     <div class="fch-temp">—<sup>°F</sup></div>
-    <div class="fch-icon">${wxIcon(hero.shortForecast, 56)}</div>
+    <div class="fch-icon">${wxIcon(hero.shortForecast, 100)}</div>
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
     <div class="fch-extras" id="fchExtras"></div>
   </div>`:'';
