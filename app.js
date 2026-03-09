@@ -418,8 +418,99 @@ function wxIcon(s, size=18) {
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="currentColor" viewBox="-1 -1 18 18" style="overflow:visible">${path}</svg>`;
 }
+// ── HERO PNG WEATHER ICON (Tomorrow.io icon set) ──────────────
+const _ICON_BASE = 'https://raw.githubusercontent.com/NobleSlevin/stormtracker/main/png/';
+function heroWxIcon(forecast, isDay = true) {
+  const s = (forecast || '').toLowerCase();
+  const n = isDay ? '0' : '1'; // day=0, night=1 suffix
+  let file;
+  // Thunder / tstorm
+  if (s.includes('thunder') || s.includes('tstm')) {
+    if (s.includes('partly'))        file = `80030_tstorm_partly_cloudy_large@2x.png`;
+    else if (s.includes('mostly cloudy') || s.includes('overcast')) file = `80020_tstorm_mostly_cloudy_large@2x.png`;
+    else if (s.includes('mostly clear') || s.includes('mostly sunny')) file = `80010_tstorm_mostly_clear_large@2x.png`;
+    else                             file = `80000_tstorm_large@2x.png`;
+  }
+  // Snow / blizzard / flurries / sleet / wintry mix
+  else if (s.includes('blizzard') || s.includes('heavy snow')) {
+    file = `51010_snow_heavy_large@2x.png`;
+  }
+  else if (s.includes('flurr')) {
+    if (s.includes('partly'))        file = `51160_flurries_partly_cloudy_large@2x.png`;
+    else if (s.includes('mostly cloudy')) file = `51170_flurries_mostly_cloudy_large@2x.png`;
+    else if (s.includes('mostly clear')) file = `51150_flurries_mostly_clear_large@2x.png`;
+    else                             file = `50010_flurries_large@2x.png`;
+  }
+  else if (s.includes('wintry mix') || s.includes('sleet')) {
+    file = `51080_wintry_mix_large@2x.png`;
+  }
+  else if (s.includes('ice pellet')) {
+    file = `70000_ice_pellets_large@2x.png`;
+  }
+  else if (s.includes('freezing')) {
+    if (s.includes('heavy'))         file = `62010_freezing_rain_heavy_large@2x.png`;
+    else if (s.includes('light'))    file = `62000_freezing_rain_light_large@2x.png`;
+    else                             file = `60010_freezing_rain_large@2x.png`;
+  }
+  else if (s.includes('snow')) {
+    if (s.includes('partly'))        file = `51060_snow_partly_cloudy_large@2x.png`;
+    else if (s.includes('mostly cloudy')) file = `51070_snow_mostly_cloudy_large@2x.png`;
+    else if (s.includes('mostly clear')) file = `51050_snow_mostly_clear_large@2x.png`;
+    else if (s.includes('light'))    file = `51000_snow_light_large@2x.png`;
+    else                             file = `50000_snow_large@2x.png`;
+  }
+  // Rain / showers / drizzle
+  else if (s.includes('drizzle')) {
+    if (s.includes('partly'))        file = `42040_drizzle_partly_cloudy_large@2x.png`;
+    else if (s.includes('mostly cloudy')) file = `42050_drizzle_mostly_cloudy_large@2x.png`;
+    else if (s.includes('mostly clear')) file = `42030_drizzle_mostly_clear_large@2x.png`;
+    else                             file = `40000_drizzle_large@2x.png`;
+  }
+  else if (s.includes('rain') || s.includes('shower')) {
+    if (s.includes('heavy') && s.includes('partly')) file = `42020_rain_heavy_partly_cloudy_large@2x.png`;
+    else if (s.includes('heavy'))    file = `42010_rain_heavy_large@2x.png`;
+    else if (s.includes('light') && s.includes('partly')) file = `42140_rain_light_partly_cloudy_large@2x.png`;
+    else if (s.includes('light'))    file = `42000_rain_light_large@2x.png`;
+    else if (s.includes('partly'))   file = `42080_rain_partly_cloudy_large@2x.png`;
+    else if (s.includes('mostly cloudy')) file = `42100_rain_mostly_cloudy_large@2x.png`;
+    else if (s.includes('mostly clear')) file = `42090_rain_mostly_clear_large@2x.png`;
+    else                             file = `40010_rain_large@2x.png`;
+  }
+  // Fog / mist / haze
+  else if (s.includes('fog') || s.includes('mist') || s.includes('haz')) {
+    if (s.includes('partly'))        file = `21070_fog_partly_cloudy_large@2x.png`;
+    else if (s.includes('mostly cloudy')) file = `21080_fog_mostly_cloudy_large@2x.png`;
+    else if (s.includes('mostly clear')) file = `21060_fog_mostly_clear_large@2x.png`;
+    else if (s.includes('light'))    file = `21000_fog_light_large@2x.png`;
+    else                             file = `20000_fog_large@2x.png`;
+  }
+  // Cloud conditions
+  else if (s.includes('mostly cloudy') || s.includes('overcast') || s.includes('cloudy')) {
+    file = `11020_mostly_cloudy_large@2x.png`;
+  }
+  else if (s.includes('partly cloudy') || s.includes('partly sunny')) {
+    file = `1101${n}_partly_cloudy_large@2x.png`;
+  }
+  else if (s.includes('mostly sunny') || s.includes('mostly clear')) {
+    file = `1100${n}_mostly_clear_large@2x.png`;
+  }
+  // Sunny / clear
+  else if (s.includes('sunny') || s.includes('clear')) {
+    file = `1000${n}_clear_large@2x.png`;
+  }
+  // Default: cloudy
+  else {
+    file = `11020_mostly_cloudy_large@2x.png`;
+  }
+  return `<img src="${_ICON_BASE}${file}" style="width:130px;height:130px;object-fit:contain;display:block" alt="${forecast}" onerror="this.style.display='none'">`;
+}
+
+function rowWxIcon(forecast, isDay = true, size = 36) {
+  const full = heroWxIcon(forecast, isDay);
+  return full.replace(/width:\d+px;height:\d+px/, `width:${size}px;height:${size}px`);
+}
+
 function wxLabel(s) {
-  s = (s||'').toLowerCase();
   if (s.includes('tornado'))                                            return 'Tornado';
   // Only "Storm" when thunder is the lead condition, not a rain modifier
   // "Thunderstorms" -> Storm, "Showers And Thunderstorms" -> Showers
@@ -905,7 +996,7 @@ function renderForecast(periods){
   const heroHTML=hero?`<div class="fc-hero">
     <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div></div>
     <div class="fch-temp">—<sup>°F</sup></div>
-    <div class="fch-icon">${wxIcon(hero.shortForecast, 130)}</div>
+    <div class="fch-icon">${heroWxIcon(hero.shortForecast, hero.isDaytime !== false)}</div>
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
     <div class="fch-extras" id="fchExtras"></div>
   </div>`:'';
@@ -1011,13 +1102,12 @@ function openDayModal(dayIdx) {
   const heroHTML = `<div style="background:rgba(255,255,255,0.18);backdrop-filter:blur(32px) saturate(1.4);-webkit-backdrop-filter:blur(32px) saturate(1.4);border-radius:14px;padding:20px 22px 24px;border:1px solid rgba(255,255,255,0.28);box-shadow:0 4px 24px rgba(0,0,0,0.25);display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:13px;font-weight:600;color:${_acFaint}">${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}</span>
-      <span style="font-size:13px;color:${_acDim}">${d.isDaytime ? 'Daytime' : 'Evening'}</span>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div>
         <div style="font-size:60px;font-weight:300;line-height:1;color:#eef0f4">${highTemp}<sup style="font-size:22px;vertical-align:super">°F</sup><span style="font-size:26px;font-weight:300;opacity:.5"> / ${lowTemp}°</span></div>
       </div>
-      <div style="opacity:.2;color:rgba(255,255,255,1);flex-shrink:0">${wxIcon(d.shortForecast, 52)}</div>
+      <div style="flex-shrink:0">${rowWxIcon(d.shortForecast, d.isDaytime !== false, 70)}</div>
     </div>
     <div style="font-size:14px;color:${_acFaint};line-height:1.4">${d.shortForecast}</div>
     <div style="font-size:13px;color:${_acDim}">Wind: <b style="color:${_ac};font-weight:600">${d.windDirection||''} ${d.windSpeed||''}</b></div>

@@ -163,7 +163,7 @@ header { display: none; }
   border-radius: var(--r); 
   padding: 24px; 
   position: relative; 
-  overflow: hidden; 
+  overflow: visible; 
   min-height: 150px; 
   display: flex; 
   flex-direction: column; 
@@ -189,7 +189,7 @@ header { display: none; }
 .fch-temp { font-size: 62px; font-weight: 300; line-height: 1; margin: 6px 0 1px; color: var(--text); }
 .fch-temp sup { font-size: 24px; vertical-align: super; }
 .fch-feels { font-size: 13px; color: rgba(255,255,255,0.85); margin-bottom: 3px; }
-.fch-icon { position: absolute; right: 12px; top: 10px; opacity: .45; color: rgba(255,255,255,1); }
+.fch-icon { position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin-top: -25px; margin-right: 20px; opacity: .95; }
 .fch-meta { font-size: 13px; color: rgba(255,255,255,0.90); display: flex; flex-direction: column; gap: 2px; }
 .fch-extras { font-size: 13px; color: rgba(255,255,255,0.70); margin-top: 2px; }
 .fch-meta b { font-weight: 600; color: rgba(255,255,255,1); }
@@ -773,7 +773,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v3.0.1</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v3.1.2</div>
   </div>
 
 </div>
@@ -875,7 +875,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-section-ttl" style="margin-top:20px">Privacy</div>
       <div class="info-blurb">No account required. No data is stored or transmitted beyond what's needed to fetch weather for your location. GPS coordinates are sent directly to NWS and Open-Meteo APIs — they are not logged by this app.</div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v3.0.1</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v3.1.2</div>
     </div>
   </div>
 </div>
@@ -894,7 +894,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=3.0.1"></script>
+<script src="app.js?v=3.1.2"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>
