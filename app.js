@@ -3151,23 +3151,10 @@ async function sendTestNotification() {
     return;
   }
   try {
-    // Use cached SW registration — don't wait on .ready which can hang
-    const reg = _swReg || await navigator.serviceWorker.getRegistration();
-    if (reg) {
-      await reg.showNotification('⛈️ Severe Thunderstorm Warning', {
-        body: 'Johnson County · 70 mph winds and golf ball hail · until 6:15 PM',
-        icon: '/icon.png',
-        badge: '/icon.png',
-        tag: 'stormwatch-test',
-        vibrate: [200, 100, 200],
-      });
-    } else {
-      // Fallback: fire directly via Notification API (no SW needed)
-      new Notification('⛈️ Severe Thunderstorm Warning', {
-        body: 'Johnson County · 70 mph winds and golf ball hail · until 6:15 PM',
-        icon: '/icon.png',
-      });
-    }
+    new Notification('⛈️ Severe Thunderstorm Warning', {
+      body: 'Johnson County · 70 mph winds and golf ball hail · until 6:15 PM',
+      icon: '/icon.png',
+    });
   } catch(e) {
     alert('Could not send test notification: ' + e.message);
   }
