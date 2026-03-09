@@ -123,18 +123,18 @@ const TAB_MAP   = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby
 
 // ── SECTION TITLE HELPER ──────────────────────────────────────────────────
 const _SECTION_ICONS = {
-  'Weekly Forecast':         'bi-calendar3',
+  'Weekly Forecast':         'bi-clouds',
   'Air Quality':             'bi-wind',
   'UV Index':                'bi-sun',
   'Wind':                    'bi-wind',
-  'Conditions':              'bi-grid',
+  'Conditions':              'bi-fog',
   'NOAA Weather Radio':      'bi-broadcast',
-  'River Gauges':            'bi-water',
+  'River Gauges':            'bi-droplet-fill',
   'Nearest Radar Station':   'bi-globe',
   'Active Tropical Storms':  'bi-cloud-lightning',
   'State Alerts':            'bi-exclamation-triangle',
-  'Hourly Forecast':         'bi-clock',
-  'Beaufort Scale':          'bi-bar-chart',
+  'Hourly Forecast':         'bi-thermometer-half',
+  'Beaufort Scale':          'bi-broadcast',
 };
 function sectionTtl(label, extraStyle = '') {
   const icon = _SECTION_ICONS[label] ?? 'bi-dot';
@@ -378,7 +378,7 @@ const _OVERLAY_LIVE = new Set(['clouds.png', 'rain.png', 'tstorm.png', 'partly-c
 function updateWxOverlay(shortForecast, elId = 'wxOverlay') {
   const el = document.getElementById(elId);
   if (!el) return;
-  // Don't touch dmWxOverlay unless explicitly targeting it
+  // Don't touch wxOverlay while day modal is open
   if (elId === 'wxOverlay' && window._dayModalOpen) return;
   const file = wxOverlayFile(shortForecast);
   if (!file || !_OVERLAY_LIVE.has(file)) {
@@ -387,16 +387,14 @@ function updateWxOverlay(shortForecast, elId = 'wxOverlay') {
     return;
   }
   const url = `url('${_OVERLAY_BASE}${file}')`;
-  // Cross-fade: if switching images, reset opacity first
-  if (el.style.backgroundImage !== url) {
-    el.style.opacity = '0';
-    setTimeout(() => {
-      el.style.backgroundImage = url;
-      el.style.opacity = '0.55';
-    }, el.style.backgroundImage ? 400 : 0);
-  } else {
+  // Only cross-fade if the file actually changed — prevents spurious switches on data refreshes
+  if (el.dataset.overlayFile === file) { el.style.opacity = '0.55'; return; }
+  el.dataset.overlayFile = file;
+  el.style.opacity = '0';
+  setTimeout(() => {
+    el.style.backgroundImage = url;
     el.style.opacity = '0.55';
-  }
+  }, el.style.backgroundImage ? 400 : 0);
 }
 
 function clearWeatherGradient() {
@@ -480,7 +478,7 @@ function wxIcon(s, size=18) {
     // cloudy / overcast / default
     path = `<path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.476A5.5 5.5 0 0 1 4.406 3.342"/>`;
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="currentColor" viewBox="-1 -1 18 18" style="overflow:visible">${path}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" fill="currentColor" viewBox="0 0 16 16">${path}</svg>`;
 }
 // ── HERO PNG WEATHER ICON (Tomorrow.io icon set) ──────────────
 const _ICON_BASE = 'https://raw.githubusercontent.com/NobleSlevin/stormtracker/main/png/';
@@ -2264,7 +2262,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const countColor = sa.length >= 10 ? 'var(--red)' : sa.length >= 5 ? 'var(--orange)' : sa.length > 0 ? 'var(--yellow)' : 'var(--green)';
       const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
       sections.push(`
-        ${sectionTtl('State Alerts', 'margin-top:4px')} — ${curState}
+        ${sectionTtl('State Alerts', 'margin-top:4px')}
         <div class="state-alert-card">
           <div class="state-alert-header">
             <div class="state-flag">${geoIcon}</div>

@@ -1,5 +1,5 @@
-const CACHE = 'stormwatch-v2.5.7';
-const ASSETS = ['/', '/index.html', '/app.js?v=2.5.7', '/icon.png', '/manifest.json'];
+const CACHE = 'stormwatch-v2.5.8';
+const ASSETS = ['/', '/index.html', '/app.js?v=2.5.8', '/icon.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
