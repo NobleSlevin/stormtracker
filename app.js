@@ -137,8 +137,8 @@ const _SECTION_ICONS = {
   'Beaufort Scale':          'bi-broadcast',
 };
 function sectionTtl(label, extraStyle = '') {
-  const icon = _SECTION_ICONS[label] ?? 'bi-dot';
-  return `<div class="section-ttl" style="margin-bottom:8px;padding-left:2px${extraStyle ? ';' + extraStyle : ''}"><svg width="11" height="11" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#${icon}"/></svg>${label}</div>`;
+  const icon = _SECTION_ICONS[label] ?? 'bi-sun';
+  return `<div class="section-ttl" style="padding-left:2px${extraStyle ? ';' + extraStyle : ''}"><svg width="13" height="13" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#${icon}"/></svg>${label}</div>`;
 }
 
 function switchTab(t) {
@@ -861,7 +861,7 @@ function renderWindModal() {
   // ── Beaufort bar ──
   const beaufortHTML = bf ? `
     <div class="wind-beaufort">
-      <div class="wind-section-ttl"><svg width="11" height="11" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#bi-bar-chart"/></svg>Beaufort Scale</div>
+      <div class="wind-section-ttl"><svg width="13" height="13" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#bi-broadcast"/></svg>Beaufort Scale</div>
       <div class="beaufort-bar-wrap">
         <div class="beaufort-bar-track">
           <div class="beaufort-bar-dot" style="left:${(bf.pct*100).toFixed(1)}%"></div>
@@ -923,7 +923,7 @@ function renderWindModal() {
     }).filter(Boolean);
     if (cards.length) {
       hourlyHTML = `<div class="wind-hourly">
-        <div class="wind-section-ttl"><svg width="11" height="11" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#bi-clock"/></svg>Hourly Forecast</div>
+        <div class="wind-section-ttl"><svg width="13" height="13" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#bi-thermometer-half"/></svg>Hourly Forecast</div>
         <div class="wind-hourly-scroll"><div class="wind-hourly-track">${cards.join('')}</div></div>
       </div>`;
     }
