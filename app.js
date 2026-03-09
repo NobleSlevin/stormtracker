@@ -1091,6 +1091,7 @@ function renderForecast(periods){
     +'<div class="hourly-scroll" id="hourlyScroll"><div class="hourly-track" id="hourlyTrack"></div></div>'
     +'<div id="aqiSlot"></div>'
     +'<div id="uvSlot"></div>'
+    +'<div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">Outlook</div>'
     +'<div class="fc-days">'+rows+'</div>';
   // Repaint cached AQI + UV immediately so slots never appear blank on re-render
   if (_aqiCache) { const s=document.getElementById('aqiSlot'); if(s) s.innerHTML=aqiHTML(_aqiCache); }
