@@ -121,6 +121,26 @@ document.getElementById('filterRow').style.display = 'none';
 const TAB_ORDER = ['alerts','forecast','nearby','radar','tornado'];
 const TAB_MAP   = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby', radar:'tabRadar', tornado:'tabTornado'};
 
+// ── SECTION TITLE HELPER ──────────────────────────────────────────────────
+const _SECTION_ICONS = {
+  'Weekly Forecast':         'bi-calendar3',
+  'Air Quality':             'bi-wind',
+  'UV Index':                'bi-sun',
+  'Wind':                    'bi-wind',
+  'Conditions':              'bi-grid',
+  'NOAA Weather Radio':      'bi-broadcast',
+  'River Gauges':            'bi-water',
+  'Nearest Radar Station':   'bi-globe',
+  'Active Tropical Storms':  'bi-cloud-lightning',
+  'State Alerts':            'bi-exclamation-triangle',
+  'Hourly Forecast':         'bi-clock',
+  'Beaufort Scale':          'bi-bar-chart',
+};
+function sectionTtl(label, extraStyle = '') {
+  const icon = _SECTION_ICONS[label] ?? 'bi-dot';
+  return `<div class="section-ttl" style="margin-bottom:8px;padding-left:2px${extraStyle ? ';' + extraStyle : ''}"><svg width="11" height="11" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#${icon}"/></svg>${label}</div>`;
+}
+
 function switchTab(t) {
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
@@ -342,16 +362,18 @@ const _OVERLAY_BASE = 'https://raw.githubusercontent.com/NobleSlevin/stormtracke
 // Maps current conditions → overlay filename (null = no overlay)
 function wxOverlayFile(shortForecast) {
   const fc = (shortForecast || '').toLowerCase();
-  if (/snow|blizzard|flurr/.test(fc))                             return 'snow.png';    // future
-  if (/fog|mist/.test(fc))                                        return 'fog.png';     // future
-  if (/thunder|tstm/.test(fc))                                    return 'tstorm.png';  // ✓ live
-  if (/rain|shower|drizzle|sleet/.test(fc))                       return 'rain.png';    // ✓ live
-  if (/cloud|overcast|partly|mostly|hazy/.test(fc))               return 'clouds.png';  // ✓ live
+  if (/snow|blizzard|flurr/.test(fc))                             return 'snow.png';          // future
+  if (/fog|mist/.test(fc))                                        return 'fog.png';            // future
+  if (/thunder|tstm/.test(fc))                                    return 'tstorm.png';         // ✓ live
+  if (/rain|shower|drizzle|sleet/.test(fc))                       return 'rain.png';           // ✓ live
+  if (/partly|mostly sunny|mostly clear/.test(fc))                return 'partly-cloudy.png';  // ✓ live
+  if (/cloud|overcast|mostly cloudy|hazy/.test(fc))               return 'clouds.png';         // ✓ live
+  if (/clear|sunny|fair/.test(fc))                                return 'sunny.png';          // ✓ live
   return null;
 }
 
 // Live overlay files — update as images are added to /overlays/
-const _OVERLAY_LIVE = new Set(['clouds.png', 'rain.png', 'tstorm.png']);
+const _OVERLAY_LIVE = new Set(['clouds.png', 'rain.png', 'tstorm.png', 'partly-cloudy.png', 'sunny.png']);
 
 function updateWxOverlay(shortForecast, elId = 'wxOverlay') {
   const el = document.getElementById(elId);
@@ -841,7 +863,7 @@ function renderWindModal() {
   // ── Beaufort bar ──
   const beaufortHTML = bf ? `
     <div class="wind-beaufort">
-      <div class="wind-section-ttl">Beaufort Scale</div>
+      <div class="wind-section-ttl"><svg width="11" height="11" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#bi-bar-chart"/></svg>Beaufort Scale</div>
       <div class="beaufort-bar-wrap">
         <div class="beaufort-bar-track">
           <div class="beaufort-bar-dot" style="left:${(bf.pct*100).toFixed(1)}%"></div>
@@ -903,7 +925,7 @@ function renderWindModal() {
     }).filter(Boolean);
     if (cards.length) {
       hourlyHTML = `<div class="wind-hourly">
-        <div class="wind-section-ttl">Hourly Forecast</div>
+        <div class="wind-section-ttl"><svg width="11" height="11" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#bi-clock"/></svg>Hourly Forecast</div>
         <div class="wind-hourly-scroll"><div class="wind-hourly-track">${cards.join('')}</div></div>
       </div>`;
     }
@@ -1184,7 +1206,7 @@ function renderForecast(periods){
     +'<div class="hourly-scroll" id="hourlyScroll"><div class="hourly-track" id="hourlyTrack"></div></div>'
     +'<div id="aqiSlot"></div>'
     +'<div id="uvSlot"></div>'
-    +'<div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">Weekly Forecast</div>'
+    +sectionTtl('Weekly Forecast', 'margin-top:18px')
     +buildOutlookBlurb(dayPairs)
     +'<div class="fc-days">'+rows+'</div>';
   // Repaint cached AQI + UV immediately so slots never appear blank on re-render
@@ -1344,7 +1366,7 @@ function openDayModal(dayIdx) {
     const advice  = uv < 3 ? 'No protection needed' : uv < 6 ? 'Wear sunscreen SPF 30+' : uv < 8 ? 'Seek shade midday' : uv < 11 ? 'Minimize sun 10am–4pm' : 'Avoid sun exposure';
     const burnMins = uv <= 0 ? '∞' : uv < 3 ? '60+ min' : uv < 6 ? '30–45 min' : uv < 8 ? '15–25 min' : uv < 11 ? '10–15 min' : '<10 min';
     return `<div>
-    <div class="section-ttl" style="margin-bottom:8px;padding-left:2px">UV Index</div>
+    ${sectionTtl('UV Index')}
     <div class="uv-card">
       <div class="uv-header">
         <div class="uv-icon-wrap" style="background:${uvBg};border:1.5px solid ${uvBorder}">
@@ -1412,7 +1434,7 @@ function openDayModal(dayIdx) {
   // Build a version of compassSVG sized for the day modal wind card
   const windCardHTML = maxWind != null ? `
     <div>
-      <div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Wind</div>
+      ${sectionTtl('Wind')}
       <div class="aqi-card" style="overflow:hidden">
         <div style="display:grid;grid-template-columns:1fr 1fr;min-height:180px">
           <div style="display:flex;flex-direction:column;justify-content:space-between;padding:18px 16px;border-right:1px solid var(--border)">
@@ -1475,7 +1497,7 @@ function openDayModal(dayIdx) {
   })() : '';
 
   const gridTiles = [humidTileHTML, visTileHTML, pressTileHTML].filter(Boolean).join('');
-  const tilesHTML = gridTiles ? `<div><div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Conditions</div><div class="dm-grid">${gridTiles}</div></div>` : '';
+  const tilesHTML = gridTiles ? `<div>${sectionTtl('Conditions')}<div class="dm-grid">${gridTiles}</div></div>` : '';
 
   // ── Sunrise / Sunset arc card ──
   const od = window._omDaily;
@@ -1592,7 +1614,7 @@ function openDayModal(dayIdx) {
   </div>` : '';
 
   const allGridTiles = [humidTileHTML, visTileHTML, pressTileHTML, rainTileHTML].filter(Boolean).join('');
-  const allTilesHTML = allGridTiles ? `<div><div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Conditions</div><div class="dm-grid">${allGridTiles}</div></div>` : '';
+  const allTilesHTML = allGridTiles ? `<div>${sectionTtl('Conditions')}<div class="dm-grid">${allGridTiles}</div></div>` : '';
 
   const metricCards = [aqiCardHTML, uvCardHTML].filter(Boolean).join('');
 
@@ -1718,7 +1740,7 @@ function aqiHTML(aq) {
     ? Array(3 - aq.pollutants.length).fill('<div class="aqi-cell"></div>').join('') : '';
   return `
     <div>
-    <div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Air Quality</div>
+    ${sectionTtl('Air Quality')}
     <div class="aqi-card">
       <div class="aqi-header">
         <div class="aqi-icon-wrap" style="background:${aqiBg};border-color:${aqiBorder}">
@@ -1777,7 +1799,7 @@ function renderUVSlot() {
   const burnMins = uv <= 0 ? '∞' : uv < 3 ? '60+ min' : uv < 6 ? '30–45 min' : uv < 8 ? '15–25 min' : uv < 11 ? '10–15 min' : '<10 min';
 
   slot.innerHTML = `
-    <div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">UV Index</div>
+    ${sectionTtl('UV Index', 'margin-top:18px')}
     <div class="uv-card">
       <div class="uv-header">
         <div class="uv-icon-wrap" style="background:${uvBg};border:1.5px solid ${uvBorder}">
@@ -2059,7 +2081,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
         const miles = Math.round(Math.sqrt(Math.pow((nearest.lat-lat)*69,2) + Math.pow((nearest.lon-lon)*54,2)));
         const sid = `nwr-${nearest.call}`;
         sections.push(`
-          <div class="section-ttl">NOAA Weather Radio</div>
+          ${sectionTtl('NOAA Weather Radio')}
           <div class="nwr-card" id="nwrCard-${nearest.call}">
             <audio id="nwr-audio-${nearest.call}" preload="none" style="display:none"></audio>
             <div class="nwr-top">
@@ -2128,7 +2150,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
             </div>
           </div>`;
         }).join('');
-        sections.push(`<div class="section-ttl">River Gauges</div>${cards}`);
+        sections.push(`${sectionTtl('River Gauges')}${cards}`);
       }
     }
   } catch(e) { console.warn('River gauges error:', e); }
@@ -2153,7 +2175,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const elevation = sp.elevation?.value != null ? Math.round(sp.elevation.value * 3.281) + ' ft' : '—';
       const radarUrl = `https://radar.weather.gov/station/${sid}/standard`;
       sections.push(`
-        <div class="section-ttl">Nearest Radar Station</div>
+        ${sectionTtl('Nearest Radar Station')}
         <div class="radar-card">
           <div class="radar-header">
             <div class="radar-pulse">
@@ -2224,7 +2246,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
             ${inCone ? '<div class="hurr-threat"><svg width="12" height="12" viewBox="0 0 16 16" fill="var(--orange)"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-3.5a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5m0 6a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5"/></svg> Your location is within the forecast cone</div>' : ''}
           </div>`;
         }).join('');
-        sections.push(`<div class="section-ttl">Active Tropical Storms</div>${cards}`);
+        sections.push(`${sectionTtl('Active Tropical Storms')}${cards}`);
       }
     }
   } catch(e) { console.warn('Hurricane fetch error:', e); }
@@ -2242,7 +2264,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const countColor = sa.length >= 10 ? 'var(--red)' : sa.length >= 5 ? 'var(--orange)' : sa.length > 0 ? 'var(--yellow)' : 'var(--green)';
       const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
       sections.push(`
-        <div class="section-ttl" style="margin-top:4px">State Alerts — ${curState}</div>
+        ${sectionTtl('State Alerts', 'margin-top:4px')} — ${curState}
         <div class="state-alert-card">
           <div class="state-alert-header">
             <div class="state-flag">${geoIcon}</div>
