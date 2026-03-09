@@ -3150,20 +3150,39 @@ async function sendTestNotification() {
     alert('Notifications are not enabled. Open the Alerts tab to turn them on.');
     return;
   }
-  const reg = await navigator.serviceWorker.ready;
-  await reg.showNotification('⛈️ Severe Thunderstorm Warning', {
-    body: 'Johnson County · 70 mph winds and golf ball hail · until 6:15 PM',
-    icon: '/icon.png',
-    badge: '/icon.png',
-    tag: 'stormwatch-test',
-    vibrate: [200, 100, 200],
-  });
+  try {
+    // Use cached SW registration — don't wait on .ready which can hang
+    const reg = _swReg || await navigator.serviceWorker.getRegistration();
+    if (reg) {
+      await reg.showNotification('⛈️ Severe Thunderstorm Warning', {
+        body: 'Johnson County · 70 mph winds and golf ball hail · until 6:15 PM',
+        icon: '/icon.png',
+        badge: '/icon.png',
+        tag: 'stormwatch-test',
+        vibrate: [200, 100, 200],
+      });
+    } else {
+      // Fallback: fire directly via Notification API (no SW needed)
+      new Notification('⛈️ Severe Thunderstorm Warning', {
+        body: 'Johnson County · 70 mph winds and golf ball hail · until 6:15 PM',
+        icon: '/icon.png',
+      });
+    }
+  } catch(e) {
+    alert('Could not send test notification: ' + e.message);
+  }
 }
 
 // Update the notification status text in the info modal whenever it opens
 function updateNotifStatus() {
   const el = document.getElementById('notifStatusText');
   if (!el) return;
+  // Wire test button here so it's always attached fresh when modal opens
+  const btn = document.getElementById('testNotifBtn');
+  if (btn) {
+    btn.replaceWith(btn.cloneNode(true)); // strip any old listeners
+    document.getElementById('testNotifBtn').addEventListener('click', sendTestNotification);
+  }
   if (!('Notification' in window)) {
     el.textContent = 'Not supported on this device.';
   } else if (Notification.permission === 'granted') {
