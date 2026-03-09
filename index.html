@@ -512,11 +512,12 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .day-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; display:none; }
 .day-modal-overlay.open { display:block; }
 .day-modal { position:fixed; inset:0; background-color:#000000; background-image:none; z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .25s ease; overflow:hidden; }
+#dmWxOverlay { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: cover; background-position: center top; background-repeat: no-repeat; opacity: 0; transition: opacity 1.2s ease; will-change: opacity; transform: translateZ(0); }
 .day-modal.open { transform:translateX(0); }
-.day-modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; padding-top:calc(env(safe-area-inset-top, 0px) + 16px); border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; background: var(--card); }
+.day-modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; padding-top:calc(env(safe-area-inset-top, 0px) + 16px); border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; background: var(--card); position: relative; z-index: 1; }
 .day-modal-back { display:flex; align-items:center; gap:4px; background:none; border:none; color:var(--blue); font-size:14px; font-weight:500; cursor:pointer; padding:4px 0; }
 .day-modal-title { font-size:16px; font-weight:600; color:var(--text); }
-.day-modal-body-wrap { position: relative; flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.day-modal-body-wrap { position: relative; flex: 1; overflow: hidden; display: flex; flex-direction: column; z-index: 1; }
 .day-modal-body-wrap::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: calc(100px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, transparent 0%, #000000 90%); pointer-events: none; z-index: 0; }
 .day-modal-body { flex:1; overflow-y:auto; padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 32px); display:flex; flex-direction:column; gap:16px; position: relative; z-index: 1; }
 
@@ -791,7 +792,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.4.9</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.5.1</div>
   </div>
 
 </div>
@@ -901,12 +902,12 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
       <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
       <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:1.8;color:rgba(255,255,255,0.6)">
-        <b>v2.4.9</b> — Wind arrows on hourly forecast · Sunrise/sunset in day modal · Rain amount tile · Severe weather outlook blurb · Search overlay with recents · Modal gradient safe area fix<br>
+        <b>v2.5.1</b> — Wind arrows on hourly forecast · Sunrise/sunset in day modal · Rain amount tile · Severe weather outlook blurb · Search overlay with recents · Modal gradient safe area fix<br>
         <b>v2.1.0</b> — Auto-loads last used location on startup · Silent GPS refresh · First launch defaults to GPS then IP<br>
         <b>v2.0.0</b> — Tomorrow.io weatherCode integration · PNG icon set across hero, hourly, and day modal · Redesigned hero card · Improved border radius and spacing
       </div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.4.9</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.5.1</div>
     </div>
   </div>
 </div>
@@ -925,11 +926,12 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.4.9"></script>
+<script src="app.js?v=2.5.1"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>
   <div class="day-modal" id="dayModal">
+    <div id="dmWxOverlay"></div>
     <div class="day-modal-header">
       <span class="day-modal-title" id="dayModalTitle"></span>
       <button class="wind-modal-close" onclick="closeDayModal()" aria-label="Close">

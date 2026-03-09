@@ -342,19 +342,21 @@ const _OVERLAY_BASE = 'https://raw.githubusercontent.com/NobleSlevin/stormtracke
 // Maps current conditions → overlay filename (null = no overlay)
 function wxOverlayFile(shortForecast) {
   const fc = (shortForecast || '').toLowerCase();
-  if (/thunder|tstm/.test(fc))                                    return 'tstorm.png';  // future
   if (/snow|blizzard|flurr/.test(fc))                             return 'snow.png';    // future
-  if (/rain|shower|drizzle|sleet/.test(fc))                       return 'rain.png';    // ✓ live
   if (/fog|mist/.test(fc))                                        return 'fog.png';     // future
+  if (/rain|shower|drizzle|sleet|thunder|tstm/.test(fc))          return 'rain.png';    // ✓ live (covers storms too until tstorm.png added)
   if (/cloud|overcast|partly|mostly|hazy/.test(fc))               return 'clouds.png';  // ✓ live
   return null;
 }
 
-function updateWxOverlay(shortForecast) {
-  const el = document.getElementById('wxOverlay');
+// Live overlay files — update as images are added to /overlays/
+const _OVERLAY_LIVE = new Set(['clouds.png', 'rain.png']);
+
+function updateWxOverlay(shortForecast, elId = 'wxOverlay') {
+  const el = document.getElementById(elId);
   if (!el) return;
   const file = wxOverlayFile(shortForecast);
-  if (!file) {
+  if (!file || !_OVERLAY_LIVE.has(file)) {
     el.style.opacity = '0';
     setTimeout(() => { if (el.style.opacity === '0') el.style.backgroundImage = ''; }, 1300);
     return;
@@ -1228,6 +1230,7 @@ function openDayModal(dayIdx) {
   // Fire gradient early so accent color is available for hero HTML
   const _gradTemp = (dayIdx === 0 && window._omCurrentTemp != null) ? window._omCurrentTemp : highTemp;
   const _dmAccent = weatherGradient(_gradTemp, d.shortForecast, document.querySelector('.day-modal'));
+  updateWxOverlay(d.shortForecast, 'dmWxOverlay');
   // Hero text is always white — gradient provides the color
   const _ac      = 'rgba(255,255,255,1.0)';
   const _acFaint = 'rgba(255,255,255,0.90)';
@@ -1607,6 +1610,8 @@ function openDayModal(dayIdx) {
 function closeDayModal() {
   document.getElementById('dayModalOverlay').classList.remove('open');
   document.getElementById('dayModal').classList.remove('open');
+  const _dmOv = document.getElementById('dmWxOverlay');
+  if (_dmOv) { _dmOv.style.opacity = '0'; setTimeout(() => { _dmOv.style.backgroundImage = ''; }, 1300); }
   // Restore today's gradient when returning to forecast tab
   const hp = window._forecastPeriods?.[0];
   if (hp) weatherGradient(hp.temperature, hp.shortForecast, document.getElementById('app'));
