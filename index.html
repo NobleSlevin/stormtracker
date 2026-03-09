@@ -466,7 +466,8 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 /* Info Modal */
 .info-modal { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; }
 .info-modal.open { display: flex; }
-.info-sheet { background: var(--card); border-radius: 20px 20px 0 0; width: 100%; height: 100vh; display: flex; flex-direction: column; border-top: 1px solid var(--border2); }
+.info-sheet { background: var(--card); border-radius: 20px 20px 0 0; width: 100%; height: 100vh; display: flex; flex-direction: column; border-top: 1px solid var(--border2); position: relative; overflow: hidden; }
+.info-sheet::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 100px; background: linear-gradient(to bottom, transparent 0%, var(--card) 90%); pointer-events: none; z-index: 2; }
 .info-header { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top, 0px) + 64px) 18px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .info-title { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: .2px; }
 .info-close { width: 32px; height: 32px; border-radius: 50%; background: var(--card2); border: 1px solid var(--border); color: var(--dim); display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-appearance: none; }
@@ -773,7 +774,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.0.0</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.0.1</div>
   </div>
 
 </div>
@@ -821,7 +822,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-row">
         <div class="info-row-name">Open-Meteo</div>
         <div class="info-row-url">api.open-meteo.com</div>
-        <div class="info-row-desc">Real-time temperature, humidity, dewpoint, wind, gusts, UV index, cloud cover · CAPE &amp; CIN for tornado risk scoring · Hourly gap-filling when NWS data is unavailable · No API key required</div>
+        <div class="info-row-desc">Real-time temperature, humidity, dewpoint, wind, gusts, UV index, cloud cover · CAPE &amp; CIN for tornado risk scoring · Hourly gap-filling when NWS data is unavailable</div>
       </div>
 
       <div class="info-row">
@@ -851,25 +852,19 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <div class="info-row">
         <div class="info-row-name">USGS Water Services</div>
         <div class="info-row-url">waterservices.usgs.gov</div>
-        <div class="info-row-desc">Real-time stream gauge data for rivers and creeks near your location · Gage height readings every 15 min · No API key required</div>
+        <div class="info-row-desc">Real-time stream gauge data for rivers and creeks near your location · Gage height readings every 15 min</div>
       </div>
 
       <div class="info-row">
         <div class="info-row-name">NOAA National Hurricane Center</div>
         <div class="info-row-url">mapservices.weather.noaa.gov</div>
-        <div class="info-row-desc">Active tropical storm and hurricane tracks, forecast cone, wind radii, and movement data · Updated every 6 hours · No API key required</div>
+        <div class="info-row-desc">Active tropical storm and hurricane tracks, forecast cone, wind radii, and movement data · Updated every 6 hours</div>
       </div>
 
       <div class="info-row">
         <div class="info-row-name">Open-Meteo Air Quality</div>
         <div class="info-row-url">air-quality-api.open-meteo.com</div>
-        <div class="info-row-desc">US AQI with per-pollutant breakdown (PM2.5, PM10, Ozone, NO₂, CO) · Free, no key required · Updated hourly</div>
-      </div>
-
-      <div class="info-row">
-        <div class="info-row-name">Open-Meteo Air Quality</div>
-        <div class="info-row-url">air-quality-api.open-meteo.com</div>
-        <div class="info-row-desc">US AQI with per-pollutant breakdown (PM2.5, PM10, Ozone, NO₂, CO) · Free, no key required · Updated hourly</div>
+        <div class="info-row-desc">US AQI with per-pollutant breakdown (PM2.5, PM10, Ozone, NO₂, CO) · Updated hourly</div>
       </div>
 
       <div class="info-row">
@@ -889,10 +884,11 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
       <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
       <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:1.8">
-        <b>v2.0.0</b> — Tomorrow.io weatherCode integration for accurate condition icons · Tomorrow.io PNG icon set across hero, hourly, and day modal · Redesigned hero card with large weather icon · Swipe-free navigation · Improved border radius and spacing throughout
+        <b>v2.0.1</b> — Info modal: removed duplicate AQI source, cleaned up descriptions, added bottom gradient<br>
+        <b>v2.0.0</b> — Tomorrow.io weatherCode integration · PNG icon set across hero, hourly, and day modal · Redesigned hero card · Improved border radius and spacing
       </div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.0.0</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.0.1</div>
     </div>
   </div>
 </div>
@@ -911,7 +907,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.0.0"></script>
+<script src="app.js?v=2.0.1"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>
