@@ -122,6 +122,19 @@ const TAB_ORDER = ['alerts','forecast','nearby','radar','tornado'];
 const TAB_MAP   = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby', radar:'tabRadar', tornado:'tabTornado'};
 
 // ── SECTION TITLE HELPER ──────────────────────────────────────────────────
+// Inline SVG paths — avoids <use href> clipping/rendering issues at small sizes
+const _SECTION_ICON_SVG = {
+  'bi-clouds':               `<path d="M16 7.5a2.5 2.5 0 0 1-1.456 2.272 3.5 3.5 0 0 0-.65-1.629A1.5 1.5 0 0 0 15 7.5a1.5 1.5 0 0 0-1.5-1.5h-.6A4.5 4.5 0 0 0 8 2a4 4 0 0 0-.867.09 2.5 2.5 0 1 1 .51 4.91H2.5a1.5 1.5 0 0 0 0 3h.405A4.5 4.5 0 0 0 2 11.5a4.5 4.5 0 0 0 4.5 4.5h6a2.5 2.5 0 0 0 0-5H9.5a1.5 1.5 0 0 0-1.5 1.5.5.5 0 0 1-1 0 2.5 2.5 0 0 1 2.5-2.5H13a3.5 3.5 0 0 0 3-5z"/>`,
+  'bi-wind':                 `<path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2H.5a.5.5 0 0 1 0-1H6.5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>`,
+  'bi-sun':                  `<path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>`,
+  'bi-fog':                  `<path d="M4 12.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m2 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1"/>`,
+  'bi-broadcast':            `<path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708m2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/>`,
+  'bi-droplet-fill':         `<path d="M8 16a6 6 0 0 0 6-6c0-1.655-1.122-2.904-2.432-4.362C10.254 4.176 8.75 2.503 8 0c0 0-6 5.686-6 10a6 6 0 0 0 6 6"/>`,
+  'bi-globe':                `<path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855A8 8 0 0 0 5.145 4H7.5zM4.09 4a9.3 9.3 0 0 1 .64-1.539 7 7 0 0 1 .597-.933A7.03 7.03 0 0 0 2.255 4zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.96 6.96 0 0 0-.656 2.5zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.337-2.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5zM5.145 12q.208.58.468 1.068c.552 1.035 1.218 1.65 1.887 1.855V12zm.182 2.472a7 7 0 0 1-.597-.933A9.3 9.3 0 0 1 4.09 12H2.255a7.03 7.03 0 0 0 3.072 2.472M3.82 11a13.7 13.7 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5zm6.853 3.472A7.03 7.03 0 0 0 13.745 12H11.91a9.3 9.3 0 0 1-.64 1.539 7 7 0 0 1-.597.933M8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855q.26-.487.468-1.068zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.7 13.7 0 0 1-.312 2.5m2.802-3.5a6.96 6.96 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7.03 7.03 0 0 0-3.072-2.472c.218.284.418.598.597.933M10.855 4a8 8 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4z"/>`,
+  'bi-cloud-lightning':      `<path d="M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1M7.053 11.276A.5.5 0 0 1 7.5 11h2a.5.5 0 0 1 .473.664l-.334 1H11a.5.5 0 0 1 .39.812l-4 5a.5.5 0 0 1-.871-.464l.853-3.41H5.5a.5.5 0 0 1-.447-.724z"/>`,
+  'bi-exclamation-triangle': `<path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/><path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>`,
+  'bi-thermometer-half':     `<path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/>`,
+};
 const _SECTION_ICONS = {
   'Weekly Forecast':         'bi-clouds',
   'Air Quality':             'bi-wind',
@@ -137,8 +150,10 @@ const _SECTION_ICONS = {
   'Beaufort Scale':          'bi-broadcast',
 };
 function sectionTtl(label, extraStyle = '') {
-  const icon = _SECTION_ICONS[label] ?? 'bi-sun';
-  return `<div class="section-ttl" style="padding-left:2px${extraStyle ? ';' + extraStyle : ''}"><svg width="13" height="13" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#${icon}"/></svg>${label}</div>`;
+  const iconKey = _SECTION_ICONS[label] ?? 'bi-sun';
+  const iconPath = _SECTION_ICON_SVG[iconKey] ?? _SECTION_ICON_SVG['bi-sun'];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0">${iconPath}</svg>`;
+  return `<div class="section-ttl" style="padding-left:2px${extraStyle ? ';' + extraStyle : ''}">${svg}${label}</div>`;
 }
 
 function switchTab(t) {
@@ -861,7 +876,7 @@ function renderWindModal() {
   // ── Beaufort bar ──
   const beaufortHTML = bf ? `
     <div class="wind-beaufort">
-      <div class="wind-section-ttl"><svg width="13" height="13" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#bi-broadcast"/></svg>Beaufort Scale</div>
+      <div class="wind-section-ttl"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708m2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></svg>Beaufort Scale</div>
       <div class="beaufort-bar-wrap">
         <div class="beaufort-bar-track">
           <div class="beaufort-bar-dot" style="left:${(bf.pct*100).toFixed(1)}%"></div>
@@ -923,7 +938,7 @@ function renderWindModal() {
     }).filter(Boolean);
     if (cards.length) {
       hourlyHTML = `<div class="wind-hourly">
-        <div class="wind-section-ttl"><svg width="13" height="13" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><use href="#bi-thermometer-half"/></svg>Hourly Forecast</div>
+        <div class="wind-section-ttl"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/></svg>Hourly Forecast</div>
         <div class="wind-hourly-scroll"><div class="wind-hourly-track">${cards.join('')}</div></div>
       </div>`;
     }
@@ -2078,7 +2093,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
       if (nearest) {
         const miles = Math.round(Math.sqrt(Math.pow((nearest.lat-lat)*69,2) + Math.pow((nearest.lon-lon)*54,2)));
         const sid = `nwr-${nearest.call}`;
-        sections.push(`
+        sections.push(`<div>
           ${sectionTtl('NOAA Weather Radio')}
           <div class="nwr-card" id="nwrCard-${nearest.call}">
             <audio id="nwr-audio-${nearest.call}" preload="none" style="display:none"></audio>
@@ -2101,7 +2116,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
             </div>
             <div class="nwr-status" id="nwr-status-${nearest.call}">Tap to listen live</div>
             <div class="nwr-disclaimer">⚠ Do not rely on internet streams for life-safety alerts. Use a dedicated NOAA weather radio receiver.</div>
-          </div>`);
+          </div></div>`);
       }
     }
   } catch(e) { console.warn('NWR error:', e); }
@@ -2148,7 +2163,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
             </div>
           </div>`;
         }).join('');
-        sections.push(`${sectionTtl('River Gauges')}${cards}`);
+        sections.push(`<div>${sectionTtl('River Gauges')}${cards}</div>`);
       }
     }
   } catch(e) { console.warn('River gauges error:', e); }
@@ -2172,7 +2187,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const stationType = sp.stationType || 'NEXRAD';
       const elevation = sp.elevation?.value != null ? Math.round(sp.elevation.value * 3.281) + ' ft' : '—';
       const radarUrl = `https://radar.weather.gov/station/${sid}/standard`;
-      sections.push(`
+      sections.push(`<div>
         ${sectionTtl('Nearest Radar Station')}
         <div class="radar-card">
           <div class="radar-header">
@@ -2196,7 +2211,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
             <svg width="12" height="12" fill="currentColor"><use href="#bi-broadcast"/></svg>
             View Live Radar →
           </a>
-        </div>`);
+        </div></div>`);
     }
   } catch(e) { console.warn('Radar stations error:', e); }
 
@@ -2244,7 +2259,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
             ${inCone ? '<div class="hurr-threat"><svg width="12" height="12" viewBox="0 0 16 16" fill="var(--orange)"><path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-3.5a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5m0 6a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5"/></svg> Your location is within the forecast cone</div>' : ''}
           </div>`;
         }).join('');
-        sections.push(`${sectionTtl('Active Tropical Storms')}${cards}`);
+        sections.push(`<div>${sectionTtl('Active Tropical Storms')}${cards}</div>`);
       }
     }
   } catch(e) { console.warn('Hurricane fetch error:', e); }
@@ -2261,7 +2276,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const adv = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('advisory')).length;
       const countColor = sa.length >= 10 ? 'var(--red)' : sa.length >= 5 ? 'var(--orange)' : sa.length > 0 ? 'var(--yellow)' : 'var(--green)';
       const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
-      sections.push(`
+      sections.push(`<div>
         ${sectionTtl('State Alerts', 'margin-top:4px')}
         <div class="state-alert-card">
           <div class="state-alert-header">
@@ -2277,7 +2292,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
             <div class="sbd-item"><span class="sbd-label">Watches</span><span class="sbd-val sv-orange">${watches}</span></div>
             <div class="sbd-item"><span class="sbd-label">Advisories</span><span class="sbd-val sv-blue">${adv}</span></div>
           </div>
-        </div>`);
+        </div></div>`);
     }
   } catch(e) { console.warn('State alerts error:', e); }
 
