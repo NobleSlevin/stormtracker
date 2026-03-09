@@ -32,7 +32,7 @@ body { min-height: 100%; }
 
 #app { display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-repeat: no-repeat; animation: bgbreathe 20s ease-in-out infinite; }
 #app::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 45vh; background: linear-gradient(to bottom, transparent 0%, #000000 80%); pointer-events: none; z-index: 0; }
-#wxOverlay { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: cover; background-position: center top; background-repeat: no-repeat; opacity: 0; transition: opacity 1.2s ease; will-change: opacity; transform: translateZ(0); }
+#wxOverlay { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: cover; background-position: center top; background-repeat: no-repeat; opacity: 0; transition: opacity 1.2s ease; will-change: opacity; transform: translateZ(0); border-radius: var(--r); }
 .sa-top { flex-shrink: 0; height: env(safe-area-inset-top, 0px); background: var(--bg); }
 
 /* ── HEADER ── */
@@ -157,11 +157,11 @@ header { display: none; }
 }
 
 /* ── FORECAST ── */
-#panelForecast { padding: 14px 14px; }
+#panelForecast { padding: 14px 14px; position: relative; }
 .fc-hero { 
-  background: rgba(255,255,255,0.18);
-  backdrop-filter: blur(32px) saturate(1.4);
-  -webkit-backdrop-filter: blur(32px) saturate(1.4);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px) saturate(2.0);
+  -webkit-backdrop-filter: blur(10px) saturate(2.0);
   border-radius: var(--r); 
   padding: 24px; 
   position: relative; 
@@ -631,7 +631,6 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   </div>
 
 <div id="app">
-  <div id="wxOverlay"></div>
   <div id="installBanner">
     <div class="install-text">Tap <b>Share →</b> then <b>"Add to Home Screen"</b> for the full app experience</div>
     <button class="install-close" id="installClose">×</button>
@@ -718,6 +717,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
     <div class="tab-panel on" id="tabForecast">
       <div id="panelForecast">
+        <div id="wxOverlay"></div>
         <div class="state-center">
           <div class="state-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="var(--dim)" viewBox="0 0 16 16"><path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.476A5.5 5.5 0 0 1 4.406 3.342"/></svg></div>
           <div class="state-ttl">No Forecast</div>
@@ -790,7 +790,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.4.1</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.4.3</div>
   </div>
 
 </div>
@@ -900,12 +900,12 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
       <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
       <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:1.8;color:rgba(255,255,255,0.6)">
-        <b>v2.4.1</b> — Wind arrows on hourly forecast · Sunrise/sunset in day modal · Rain amount tile · Severe weather outlook blurb · Search overlay with recents · Modal gradient safe area fix<br>
+        <b>v2.4.3</b> — Wind arrows on hourly forecast · Sunrise/sunset in day modal · Rain amount tile · Severe weather outlook blurb · Search overlay with recents · Modal gradient safe area fix<br>
         <b>v2.1.0</b> — Auto-loads last used location on startup · Silent GPS refresh · First launch defaults to GPS then IP<br>
         <b>v2.0.0</b> — Tomorrow.io weatherCode integration · PNG icon set across hero, hourly, and day modal · Redesigned hero card · Improved border radius and spacing
       </div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.4.1</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.4.3</div>
     </div>
   </div>
 </div>
@@ -924,7 +924,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.4.1"></script>
+<script src="app.js?v=2.4.3"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>

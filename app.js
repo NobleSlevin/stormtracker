@@ -141,12 +141,7 @@ function switchTab(t) {
         document.documentElement.style.setProperty('--hero-accent-dim',   `rgba(${_acc},0.55)`);
       }
     }
-    // Restore overlay for forecast tab
     updateWxOverlay(window._lastGradFc ?? window._forecastPeriods?.[0]?.shortForecast);
-  } else {
-    // Hide overlay on all other tabs
-    const ov = document.getElementById('wxOverlay');
-    if (ov) { ov.style.opacity = '0'; }
   }
   if (t === 'radar') {
     if (!rvInited && curLat) {
@@ -336,10 +331,7 @@ function weatherGradient(tempF, shortForecast, targetEl) {
     el.style.backgroundImage = bgImage;
     window._lastGradTemp = tempF;
     window._lastGradFc   = shortForecast;
-    // Only show overlay when forecast tab is active
-    const _forecastActive = document.querySelector('.tab[data-tab="forecast"]')?.classList.contains('on');
-    if (_forecastActive) updateWxOverlay(shortForecast);
-    else { const _ov = document.getElementById('wxOverlay'); if (_ov) _ov.style.opacity = '0'; }
+    updateWxOverlay(shortForecast);
   }
   window._weatherAccent = null;
   return null;
