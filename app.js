@@ -556,7 +556,7 @@ function heroWxIcon(forecast, isDay = true, code = null) {
     file = `11020_mostly_cloudy_large@2x.png`;
   }
   } // end else (text-parsing fallback)
-  return `<img src="${_ICON_BASE}${file}" style="width:130px;height:130px;object-fit:contain;display:block" alt="${forecast}" onerror="this.style.display='none'">`;
+  return `<img src="${_ICON_BASE}${file}" style="width:87px;height:87px;object-fit:contain;display:block" alt="${forecast}" onerror="this.style.display='none'">`;
 }
 
 function rowWxIcon(forecast, isDay = true, size = 36) {
@@ -927,20 +927,12 @@ function stopCompass() {
 
 
 function gotoAlertsFiltered(keyword) {
-  // Switch to Alerts tab and filter by keyword ('warning', 'watch', 'advisory')
   const tabBtn = document.querySelector('.tab[data-tab="alerts"]');
   if (tabBtn) tabBtn.click();
-  // Map keyword to existing filter buttons
-  const filterMap = { warning: 'sev', watch: 'sev', advisory: 'min' };
-  const f = filterMap[keyword] || 'all';
-  setFilter(f);
-  // Further filter displayed alerts by keyword within the chosen severity
-  setTimeout(() => {
-    const box = document.getElementById('panelAlerts');
-    if (!box) return;
-    const filtered = allAlerts.filter(a => (a.properties.event || '').toLowerCase().includes(keyword));
-    if (filtered.length) renderAlerts(filtered);
-  }, 50);
+  if (keyword === 'all')          setFilter('all');
+  else if (keyword === 'warning') setFilter('Extreme');
+  else if (keyword === 'watch')   setFilter('Severe');
+  else                            setFilter('all');
 }
 
 function setFilter(f){
@@ -2691,6 +2683,9 @@ async function geoMe() {
   try {
     const pos = await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:6000}));
     curLat=pos.coords.latitude; curLon=pos.coords.longitude; curMode='geo';
+    const locName = document.getElementById('locName').textContent;
+    const locSub = document.getElementById('locSub').textContent;
+    saveLocation(curLat, curLon, locName, locSub, curState, 'geo');
     await fetchForPoint(curLat,curLon);
   } catch {
     try {
@@ -2701,6 +2696,7 @@ async function geoMe() {
       document.getElementById('locName').textContent=d.city||'My Location';
       document.getElementById('locSub').textContent=d.regionName||'';
       curState=d.regionName||null;
+      saveLocation(curLat, curLon, d.city||'My Location', d.regionName||'', curState, 'geo');
       await fetchForPoint(curLat,curLon);
     } catch(e){ setLive('err','GPS ERROR'); }
   }
@@ -2731,6 +2727,7 @@ async function doSearch() {
     document.getElementById('searchInput').value='';
     const ov = document.getElementById('searchOverlay');
     if (ov) ov.style.display = 'none';
+    saveLocation(curLat, curLon, name, '', curState, 'search');
     await fetchForPoint(curLat,curLon);
   }catch(e){
     setLive('err','NOT FOUND');
@@ -2827,9 +2824,27 @@ async function selectSuggestion(lat, lon, label, state) {
   document.getElementById('locName').textContent = label;
   document.getElementById('locSub').textContent = '';
   setActiveLocBtn(null);
+  saveLocation(curLat, curLon, label, '', curState, 'search');
   inp.addEventListener('input', _inputHandler);
   _selecting = false;
   await fetchForPoint(curLat, curLon);
+}
+
+// ── LOCATION CACHE ───────────────────────────────────────────────────────────
+function saveLocation(lat, lon, name, sub, state, mode) {
+  try {
+    localStorage.setItem('sw_loc', JSON.stringify({ lat, lon, name, sub, state, mode, ts: Date.now() }));
+  } catch(e) {}
+}
+
+function loadCachedLocation() {
+  try {
+    const raw = localStorage.getItem('sw_loc');
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (d.lat && d.lon) return d;
+  } catch(e) {}
+  return null;
 }
 
 // ── INIT ─────────────────────────────────────────
@@ -2840,7 +2855,7 @@ function _inputHandler(e) {
   _acTimer = setTimeout(() => fetchSuggestions(q), 300);
 }
 
-window.addEventListener('load',()=>{
+window.addEventListener('load', async () => {
   document.getElementById('searchInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') { closeDropdown(); doSearch(); }
     if (e.key === 'Escape') closeDropdown();
@@ -2855,7 +2870,32 @@ window.addEventListener('load',()=>{
   document.getElementById('btnNational').addEventListener('click',doNational);
   document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.f)));
   document.querySelectorAll('.cmb').forEach(b=>b.addEventListener('click',()=>applySpiderMode(b.dataset.cm)));
-  doNational();
+  // Auto-load last location on startup
+  const cached = loadCachedLocation();
+  if (cached) {
+    curLat = cached.lat; curLon = cached.lon; curMode = cached.mode || 'search';
+    curState = cached.state || null;
+    document.getElementById('locName').textContent = cached.name || 'My Location';
+    document.getElementById('locSub').textContent = cached.sub || '';
+    if (cached.mode === 'geo') setActiveLocBtn('btnGeo');
+    else setActiveLocBtn(null);
+    setRiskLoading(true);
+    await fetchForPoint(curLat, curLon);
+    // Silently refresh GPS in background if last session used GPS
+    if (cached.mode === 'geo' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude: lat, longitude: lon } = pos.coords;
+        if (Math.abs(lat - curLat) > 0.01 || Math.abs(lon - curLon) > 0.01) {
+          curLat = lat; curLon = lon;
+          saveLocation(lat, lon, cached.name, cached.sub, cached.state, 'geo');
+          fetchForPoint(lat, lon);
+        }
+      }, () => {}, { timeout: 8000 });
+    }
+  } else {
+    // First launch — try GPS, fall back to IP, then national
+    await geoMe();
+  }
 });
 
 // ── NOAA Weather Radio player ──────────────────────────────────────────────
