@@ -2611,11 +2611,19 @@ function buildFactorList(factors) {
 // ── LOCATION & ORCHESTRATION ─────────────────────
 // ── RADAR (RainViewer) ────────────────────────────
 let rvMap = null, rvFrames = [], rvLayers = [], rvPos = 0, rvTimer = null, rvPlaying = false, rvInited = false;
+let rvActiveLayer = 'precipitation_new'; // OWM layer key
+
+const OWM_KEY = 'ed93a21d0dde1dc2d65d27099d174fd8';
+const OWM_LAYERS = [
+  { key: 'precipitation_new', label: 'Rain',  color: '#60a5fa' },
+  { key: 'wind_new',          label: 'Wind',  color: '#34d399' },
+  { key: 'clouds_new',        label: 'Cloud', color: '#94a3b8' },
+  { key: 'temp_new',          label: 'Temp',  color: '#fb923c' },
+];
 
 function initRadar(lat, lon) {
   const panel = document.getElementById('panelRadar');
 
-  // Build map container if not yet created
   if (!rvInited) {
     panel.style.cssText = 'flex:1;min-height:0;display:flex;flex-direction:column;';
     document.getElementById('tabRadar').classList.add('map-ready');
@@ -2631,11 +2639,29 @@ function initRadar(lat, lon) {
           <div class="radar-timeline-fill" id="rvFill" style="width:0%"></div>
         </div>
         <span class="radar-timestamp" id="rvTimestamp">Loading…</span>
-      </div>`;
+      </div>
+      <div class="radar-layer-bar" id="rvLayerBar"></div>`;
+
+    // Build layer switcher buttons
+    const bar = document.getElementById('rvLayerBar');
+    OWM_LAYERS.forEach(lyr => {
+      const btn = document.createElement('button');
+      btn.className = 'rvlyr-btn' + (lyr.key === rvActiveLayer ? ' active' : '');
+      btn.dataset.key = lyr.key;
+      btn.dataset.color = lyr.color;
+      btn.textContent = lyr.label;
+      btn.style.setProperty('--lyr-color', lyr.color);
+      btn.addEventListener('click', () => {
+        rvStop();
+        rvActiveLayer = lyr.key;
+        bar.querySelectorAll('.rvlyr-btn').forEach(b => b.classList.toggle('active', b.dataset.key === lyr.key));
+        rvLoadFrames();
+      });
+      bar.appendChild(btn);
+    });
 
     window.addEventListener('resize', () => { if (rvMap) rvMap.invalidateSize(); });
 
-    // Init Leaflet map
     rvMap = L.map('radarMap', {
       center: [lat, lon],
       zoom: 8,
@@ -2644,23 +2670,15 @@ function initRadar(lat, lon) {
       attributionControl: false
     });
 
-    // Dark base map tiles
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxNativeZoom: 19,
-      maxZoom: 19,
-      subdomains: 'abcd'
+      maxNativeZoom: 19, maxZoom: 19, subdomains: 'abcd'
     }).addTo(rvMap);
 
-    // Location marker
     L.circleMarker([lat, lon], {
-      radius: 6, color: '#fbbf24', fillColor: '#fbbf24',
-      fillOpacity: 1, weight: 2
+      radius: 6, color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 1, weight: 2
     }).addTo(rvMap);
 
-    // Play/pause button
     document.getElementById('rvPlayBtn').addEventListener('click', rvTogglePlay);
-
-    // Timeline scrub
     document.getElementById('rvTimeline').addEventListener('click', (e) => {
       const rect = e.currentTarget.getBoundingClientRect();
       const pct = (e.clientX - rect.left) / rect.width;
@@ -2670,12 +2688,10 @@ function initRadar(lat, lon) {
 
     rvInited = true;
   } else {
-    // Already inited — just re-center
     rvMap.setView([lat, lon], 8);
-    document.querySelector('.leaflet-marker-pane')?.querySelectorAll('*').forEach(e => e.remove());
+    rvMap.eachLayer(l => { if (l._url && l._url.includes('openweathermap')) rvMap.removeLayer(l); });
     L.circleMarker([lat, lon], {
-      radius: 6, color: '#fbbf24', fillColor: '#fbbf24',
-      fillOpacity: 1, weight: 2
+      radius: 6, color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 1, weight: 2
     }).addTo(rvMap);
   }
 
@@ -2685,45 +2701,44 @@ function initRadar(lat, lon) {
 async function rvLoadFrames() {
   try {
     document.getElementById('rvTimestamp').textContent = 'Loading…';
+    rvStop();
 
-    // IEM provides 11 frames: t-50min to now, in 5-min steps
-    const offsets = ['m50m','m45m','m40m','m35m','m30m','m25m','m20m','m15m','m10m','m05m','0'];
-    const IEM = 'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913';
+    // OWM Weather Maps 2.0 uses Unix timestamps in the tile URL
+    // 5 frames at 1-hour steps covering the past ~4 hours + now
+    const now = Math.floor(Date.now() / 1000);
+    const step = 3600; // 1 hour steps
+    const frameCount = 5;
+    const timestamps = Array.from({length: frameCount}, (_, i) =>
+      now - (frameCount - 1 - i) * step
+    );
 
-    // Build frame objects with approximate wall-clock labels
-    const now = new Date();
-    rvFrames = offsets.map((token, i) => {
-      const minsAgo = (offsets.length - 1 - i) * 5;
-      const t = new Date(now.getTime() - minsAgo * 60000);
-      const h = t.getHours(), m = t.getMinutes();
-      const label = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
-      return { token, label };
-    });
-
-    // Clear old layers
+    // Clear old OWM layers
     rvLayers.forEach(l => { if (rvMap.hasLayer(l)) rvMap.removeLayer(l); });
     rvLayers = [];
 
-    // Pre-create tile layers (hidden) — IEM has no zoom cap
-    rvFrames.forEach((frame, i) => {
-      // Latest frame uses no offset suffix
-      const suffix = frame.token === '0' ? '' : `-${frame.token}`;
-      const url = `${IEM}${suffix}/{z}/{x}/{y}.png`;
-      const layer = L.tileLayer(url, { opacity: 0, tileSize: 256 });
+    rvFrames = timestamps.map(ts => {
+      const d = new Date(ts * 1000);
+      const h = d.getHours(), m = d.getMinutes();
+      const label = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+      return { ts, label };
+    });
+
+    // Pre-create OWM tile layers
+    rvFrames.forEach((frame) => {
+      const url = `https://tile.openweathermap.org/map/${rvActiveLayer}/{z}/{x}/{y}.png?appid=${OWM_KEY}&date=${frame.ts}`;
+      const layer = L.tileLayer(url, { opacity: 0, tileSize: 256, zIndex: 2 });
       rvLayers.push(layer);
       layer.addTo(rvMap);
     });
 
     rvPos = rvFrames.length - 1;
     rvShowFrame(rvPos);
-
-
     rvPlay();
 
-    // Refresh every 5 min to pull newest frame
-    setTimeout(rvLoadFrames, 5 * 60 * 1000);
+    // Refresh every 10 min
+    setTimeout(rvLoadFrames, 10 * 60 * 1000);
   } catch(e) {
-    console.warn('IEM radar error:', e);
+    console.warn('OWM radar error:', e);
     if (document.getElementById('rvTimestamp')) document.getElementById('rvTimestamp').textContent = 'Error';
   }
 }
@@ -2922,11 +2937,13 @@ async function fetchOpenMeteo(lat, lon) {
 }
 
 async function fetchForPoint(lat, lon) {
+  // Fire Tomorrow.io non-blocking — it only updates the hero icon, not critical data
+  fetchTomorrowRealtime(lat, lon);
+
   const [fc] = await Promise.all([
     fetchForecast(lat, lon),
     fetchAlerts(`${NWS}/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`),
     fetchOpenMeteo(lat, lon),
-    fetchTomorrowRealtime(lat, lon),
   ]);
   const { periods, stationUrl } = fc;
   await Promise.all([
