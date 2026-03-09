@@ -336,7 +336,10 @@ function weatherGradient(tempF, shortForecast, targetEl) {
     el.style.backgroundImage = bgImage;
     window._lastGradTemp = tempF;
     window._lastGradFc   = shortForecast;
-    updateWxOverlay(shortForecast);
+    // Only show overlay when forecast tab is active
+    const _forecastActive = document.querySelector('.tab[data-tab="forecast"]')?.classList.contains('on');
+    if (_forecastActive) updateWxOverlay(shortForecast);
+    else { const _ov = document.getElementById('wxOverlay'); if (_ov) _ov.style.opacity = '0'; }
   }
   window._weatherAccent = null;
   return null;
