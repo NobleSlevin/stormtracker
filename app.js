@@ -355,6 +355,8 @@ const _OVERLAY_LIVE = new Set(['clouds.png', 'rain.png']);
 function updateWxOverlay(shortForecast, elId = 'wxOverlay') {
   const el = document.getElementById(elId);
   if (!el) return;
+  // Don't touch dmWxOverlay unless explicitly targeting it
+  if (elId === 'wxOverlay' && window._dayModalOpen) return;
   const file = wxOverlayFile(shortForecast);
   if (!file || !_OVERLAY_LIVE.has(file)) {
     el.style.opacity = '0';
@@ -1211,6 +1213,7 @@ function renderHeroExtras() {
 
 // ── DAY DETAIL MODAL ──────────────────────────────
 function openDayModal(dayIdx) {
+  window._dayModalOpen = true;
   const oh = window._omHourly;
   const pairs = window._dayPairsCache;
   if (!pairs || !pairs[dayIdx]) return;
@@ -1230,7 +1233,7 @@ function openDayModal(dayIdx) {
   // Fire gradient early so accent color is available for hero HTML
   const _gradTemp = (dayIdx === 0 && window._omCurrentTemp != null) ? window._omCurrentTemp : highTemp;
   const _dmAccent = weatherGradient(_gradTemp, d.shortForecast, document.querySelector('.day-modal'));
-  updateWxOverlay(d.shortForecast, 'dmWxOverlay');
+  setTimeout(() => updateWxOverlay(d.shortForecast, 'dmWxOverlay'), 300);
   // Hero text is always white — gradient provides the color
   const _ac      = 'rgba(255,255,255,1.0)';
   const _acFaint = 'rgba(255,255,255,0.90)';
@@ -1608,6 +1611,7 @@ function openDayModal(dayIdx) {
 
 
 function closeDayModal() {
+  window._dayModalOpen = false;
   document.getElementById('dayModalOverlay').classList.remove('open');
   document.getElementById('dayModal').classList.remove('open');
   const _dmOv = document.getElementById('dmWxOverlay');
