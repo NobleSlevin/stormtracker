@@ -141,6 +141,12 @@ function switchTab(t) {
         document.documentElement.style.setProperty('--hero-accent-dim',   `rgba(${_acc},0.55)`);
       }
     }
+    // Restore overlay for forecast tab
+    updateWxOverlay(window._lastGradFc ?? window._forecastPeriods?.[0]?.shortForecast);
+  } else {
+    // Hide overlay on all other tabs
+    const ov = document.getElementById('wxOverlay');
+    if (ov) { ov.style.opacity = '0'; }
   }
   if (t === 'radar') {
     if (!rvInited && curLat) {
