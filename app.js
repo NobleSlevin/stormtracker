@@ -1005,6 +1005,47 @@ async function fetchForecast(lat, lon, attempt = 1) {
   }
 }
 
+function buildOutlookBlurb(dayPairs) {
+  const dn = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const severeDays = [], hotDays = [], coldDays = [];
+
+  dayPairs.forEach(pair => {
+    const p = pair.day || pair.night;
+    if (!p) return;
+    const dt = new Date(p.startTime);
+    const dayName = dn[dt.getDay()];
+    const fc = (p.shortForecast || '').toLowerCase();
+    const detail = (p.detailedForecast || '').toLowerCase();
+    const combined = fc + ' ' + detail;
+    const hi = Math.max(p.temperature ?? 0, pair.night?.temperature ?? 0);
+    const lo = Math.min(p.temperature ?? 999, pair.night?.temperature ?? 999);
+
+    if (combined.includes('tornado') || combined.includes('severe') ||
+        combined.includes('thunder') || combined.includes('hail') ||
+        combined.includes('damaging') || combined.includes('hurricane')) {
+      severeDays.push(dayName);
+    } else if (hi >= 100) {
+      hotDays.push({ day: dayName, hi });
+    } else if (lo <= 25) {
+      coldDays.push({ day: dayName, lo });
+    }
+  });
+
+  let blurb = '';
+  if (severeDays.length) {
+    blurb = `<b>Outlook:</b> Potential for severe weather ${severeDays.join(' and ')}.`;
+  } else if (hotDays.length) {
+    const peak = hotDays.reduce((a, b) => a.hi > b.hi ? a : b);
+    blurb = `<b>Outlook:</b> Dangerously hot conditions possible ${hotDays.map(d=>d.day).join(' and ')}. High near ${peak.hi}°F.`;
+  } else if (coldDays.length) {
+    const peak = coldDays.reduce((a, b) => a.lo < b.lo ? a : b);
+    blurb = `<b>Outlook:</b> Very cold temperatures expected ${coldDays.map(d=>d.day).join(' and ')}. Low near ${peak.lo}°F.`;
+  }
+
+  if (!blurb) return '';
+  return `<div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rsm);padding:12px 14px;margin-bottom:8px;font-size:14px;color:rgba(255,255,255,0.8);line-height:1.55">${blurb}</div>`;
+}
+
 function renderForecast(periods){
   const box=document.getElementById('panelForecast');
   if(!periods.length){box.innerHTML='<div class="state-center"><div class="state-icon">🌤️</div><div class="state-ttl">No data</div></div>';return;}
@@ -1091,7 +1132,8 @@ function renderForecast(periods){
     +'<div class="hourly-scroll" id="hourlyScroll"><div class="hourly-track" id="hourlyTrack"></div></div>'
     +'<div id="aqiSlot"></div>'
     +'<div id="uvSlot"></div>'
-    +'<div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">Outlook</div>'
+    +'<div class="section-ttl" style="margin-top:18px;margin-bottom:8px;padding-left:2px">Weekly Forecast</div>'
+    +buildOutlookBlurb(dayPairs)
     +'<div class="fc-days">'+rows+'</div>';
   // Repaint cached AQI + UV immediately so slots never appear blank on re-render
   if (_aqiCache) { const s=document.getElementById('aqiSlot'); if(s) s.innerHTML=aqiHTML(_aqiCache); }
@@ -1381,6 +1423,123 @@ function openDayModal(dayIdx) {
   const gridTiles = [humidTileHTML, visTileHTML, pressTileHTML].filter(Boolean).join('');
   const tilesHTML = gridTiles ? `<div><div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Conditions</div><div class="dm-grid">${gridTiles}</div></div>` : '';
 
+  // ── Sunrise / Sunset arc card ──
+  const od = window._omDaily;
+  const dayDateStr = dt.toISOString().slice(0, 10);
+  const dayIdx2 = od?.time?.findIndex(t => t === dayDateStr) ?? -1;
+  const sunriseRaw = dayIdx2 >= 0 ? od?.sunrise?.[dayIdx2] : null;
+  const sunsetRaw  = dayIdx2 >= 0 ? od?.sunset?.[dayIdx2]  : null;
+  const fmtTime = iso => iso ? new Date(iso).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}).toLowerCase() : null;
+  const sunriseStr = fmtTime(sunriseRaw);
+  const sunsetStr  = fmtTime(sunsetRaw);
+  const sunHTML = (sunriseStr || sunsetStr) ? (() => {
+    const now = new Date();
+    const srMs = sunriseRaw ? new Date(sunriseRaw).getTime() : null;
+    const ssMs = sunsetRaw  ? new Date(sunsetRaw).getTime()  : null;
+    const isDaytime = srMs && ssMs && now.getTime() >= srMs && now.getTime() <= ssMs;
+
+    // progress along the arc: 0=sunrise, 1=sunset
+    // only meaningful for today; future days show sun at end of arc
+    let progress = 0.5;
+    if (dayIdx === 0 && srMs && ssMs) {
+      progress = Math.max(0, Math.min(1, (now.getTime() - srMs) / (ssMs - srMs)));
+    } else if (dayIdx > 0) {
+      progress = 0; // future day — sun at left (sunrise) position
+    }
+
+    // Daylight duration
+    const totalMins = srMs && ssMs ? Math.round((ssMs - srMs) / 60000) : null;
+    const daylightStr = totalMins ? `${Math.floor(totalMins/60)}h ${totalMins%60}m daylight` : '';
+
+    // SVG: viewBox 320 wide. Circle center=(160, 116), r=148 → spans 12 to 308 (full width minus small pad)
+    // Horizon at y=116. Top half = daytime arc. Bottom half = nighttime arc (clipped shorter for aesthetics).
+    const vW = 320, cx = 160, cy = 116, r = 148;
+    const leftX = cx - r, rightX = cx + r, horizY = cy;
+    // Show only top arc + a shallow dip of bottom arc (clip bottom at cy+32)
+    const botClipH = 32;
+
+    // Sun position on top arc: angle goes from π (left) → 0 (right)
+    const sunAngle = Math.PI - progress * Math.PI;
+    const sunX = cx + r * Math.cos(sunAngle);
+    const sunY = cy - r * Math.sin(sunAngle); // sin is positive for top arc
+
+    const uid = `sun_${dayIdx}`;
+
+    return `<div class="dm-tile" style="grid-column:1/-1;padding:16px 16px 14px">
+      <div class="dm-tile-ttl" style="margin-bottom:2px">Sun</div>
+      <svg viewBox="0 0 ${vW} ${horizY + botClipH + 22}" width="100%" height="auto" style="display:block">
+        <defs>
+          <filter id="glow_${uid}" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="6" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="topClip_${uid}">
+            <rect x="0" y="0" width="${vW}" height="${horizY + 1}"/>
+          </clipPath>
+          <clipPath id="botClip_${uid}">
+            <rect x="0" y="${horizY}" width="${vW}" height="${botClipH}"/>
+          </clipPath>
+        </defs>
+
+        <!-- bottom arc shallow dip (nighttime hint) -->
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+          stroke="rgba(128,151,167,0.18)" stroke-width="2"
+          clip-path="url(#botClip_${uid})"/>
+
+        <!-- top arc background (full dim arc) -->
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+          stroke="rgba(255,255,255,0.1)" stroke-width="2.5"
+          clip-path="url(#topClip_${uid})"/>
+
+        <!-- elapsed golden arc from left to sun -->
+        ${progress > 0.01 ? (() => {
+          const ex = cx + r * Math.cos(sunAngle);
+          const ey = cy - r * Math.sin(sunAngle);
+          const largeArc = progress > 0.5 ? 1 : 0;
+          return `<path d="M ${leftX} ${horizY} A ${r} ${r} 0 ${largeArc} 1 ${ex.toFixed(2)} ${ey.toFixed(2)}"
+            fill="none" stroke="rgba(250,182,12,0.8)" stroke-width="2.5" stroke-linecap="round"
+            clip-path="url(#topClip_${uid})"/>`;
+        })() : ''}
+
+        <!-- horizon line -->
+        <line x1="${leftX}" y1="${horizY}" x2="${rightX}" y2="${horizY}"
+          stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+
+        <!-- sun glow -->
+        <circle cx="${sunX.toFixed(2)}" cy="${sunY.toFixed(2)}" r="16"
+          fill="${isDaytime ? 'rgba(250,182,12,0.18)' : 'rgba(255,255,255,0.06)'}"
+          filter="url(#glow_${uid})"/>
+        <!-- sun dot -->
+        <circle cx="${sunX.toFixed(2)}" cy="${sunY.toFixed(2)}" r="6"
+          fill="${isDaytime ? '#FAB60C' : 'rgba(255,255,255,0.45)'}"/>
+
+        <!-- sunrise label -->
+        <text x="${leftX + 2}" y="${horizY + 18}" text-anchor="start"
+          fill="rgba(255,255,255,0.38)" font-size="11" font-family="system-ui,sans-serif">${sunriseStr||''}</text>
+        <!-- sunset label -->
+        <text x="${rightX - 2}" y="${horizY + 18}" text-anchor="end"
+          fill="rgba(255,255,255,0.38)" font-size="11" font-family="system-ui,sans-serif">${sunsetStr||''}</text>
+        <!-- daylight duration centered -->
+        ${daylightStr ? `<text x="${cx}" y="${horizY + botClipH + 18}" text-anchor="middle"
+          fill="rgba(255,255,255,0.28)" font-size="11" font-family="system-ui,sans-serif">${daylightStr}</text>` : ''}
+      </svg>
+    </div>`;
+  })() : '';
+
+  // ── Rain amount tile ──
+  const rainSum = dayIdx2 >= 0 ? od?.precipitation_sum?.[dayIdx2] : null;
+  const rainInches = rainSum != null ? (rainSum / 25.4).toFixed(2) : null;
+  const rainLabel = !rainInches || rainInches === '0.00' ? 'None' : parseFloat(rainInches) < 0.1 ? 'Trace' : parseFloat(rainInches) < 0.5 ? 'Light' : parseFloat(rainInches) < 1.5 ? 'Moderate' : 'Heavy';
+  const rainTileHTML = rainInches != null ? `<div class="dm-tile">
+    <div class="dm-tile-ttl">Est. Rain</div>
+    <div class="dm-tile-big" style="color:var(--blue)">${rainInches}<span class="dm-tile-unit">in</span></div>
+    <div class="dm-tile-badge" style="color:var(--blue);border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.1)">${rainLabel}</div>
+    <div class="dm-tile-sub">${rainLabel === 'None' ? 'No precipitation expected' : `${rainSum?.toFixed(1)} mm total`}</div>
+  </div>` : '';
+
+  const allGridTiles = [humidTileHTML, visTileHTML, pressTileHTML, rainTileHTML].filter(Boolean).join('');
+  const allTilesHTML = allGridTiles ? `<div><div class="section-ttl" style="margin-bottom:8px;padding-left:2px">Conditions</div><div class="dm-grid">${allGridTiles}</div></div>` : '';
+
   const metricCards = [aqiCardHTML, uvCardHTML].filter(Boolean).join('');
 
   document.getElementById('dayModalBody').innerHTML =
@@ -1388,7 +1547,7 @@ function openDayModal(dayIdx) {
     hourlyHTML +
     metricCards +
     (windCardHTML || '') +
-    tilesHTML;
+    allTilesHTML;
 
   // Paint gradient for this specific day
   const _gp = d;
@@ -1412,26 +1571,34 @@ function closeDayModal() {
 function patchHourlyTemps(omHourly) {
   const times = omHourly?.time || [];
   const temps = omHourly?.temperature_2m || [];
+  const wdirs = omHourly?.wind_direction_10m || [];
   if (!times.length || !temps.length) return;
 
-  // Build a map of ISO hour string -> OM temp
-  const omTempByHour = {};
+  const omByHour = {};
   times.forEach((t, i) => {
-    // OM times are like "2026-03-07T14:00" — use as key
-    omTempByHour[t] = temps[i];
+    omByHour[t] = { temp: temps[i], wdir: wdirs[i] };
   });
 
   const cards = document.querySelectorAll('#hourlyTrack .hour-card');
   cards.forEach(card => {
-    // Each card's data-time attribute holds the NWS startTime ISO string
     const iso = card.dataset.time;
     if (!iso) return;
-    // Truncate to hour to match OM key: "2026-03-07T14:00"
     const hourKey = iso.slice(0, 16);
-    const omTemp = omTempByHour[hourKey];
-    if (omTemp == null) return;
-    const tempEl = card.querySelector('.hc-temp');
-    if (tempEl) tempEl.textContent = Math.round(omTemp) + '°';
+    const om = omByHour[hourKey];
+    if (!om) return;
+    if (om.temp != null) {
+      const tempEl = card.querySelector('.hc-temp');
+      if (tempEl) tempEl.textContent = Math.round(om.temp) + '°';
+    }
+    if (om.wdir != null) {
+      const arrowEl = card.querySelector('.hc-wind-arrow');
+      if (arrowEl) {
+        // Arrow SVG points down (↓) at 0°. Wind direction is FROM bearing.
+        // Rotating by wdir makes the arrow point in the downwind (travel) direction.
+        const rotate = Math.round(om.wdir) % 360;
+        arrowEl.style.transform = `rotate(${rotate}deg)`;
+      }
+    }
   });
 }
 
@@ -1607,6 +1774,7 @@ function renderHourly(periods) {
       <span class="hc-temp ${tempClass(p.temperature)}">${p.temperature}°</span>
       ${precip != null ? `<span class="hc-precip">${precip}%</span>` : ''}
       <span class="hc-wind">${windMax}mph</span>
+      <span class="hc-wind-arrow" style="display:flex;align-items:center;justify-content:center;opacity:.5"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/></svg></span>
     </div>`;
   }).join('');
   // If OM hourly data already arrived, patch temps immediately
@@ -2521,8 +2689,10 @@ async function fetchOpenMeteo(lat, lon) {
         'temperature_2m','apparent_temperature','cape','lifted_index','convective_inhibition',
         'freezing_level_height','precipitation_probability','precipitation',
         'wind_speed_10m','wind_gusts_10m','wind_direction_10m',
-        'relative_humidity_2m','surface_pressure','visibility','uv_index'
+        'relative_humidity_2m','surface_pressure','visibility','uv_index',
+        'weather_code'
       ].join(','),
+      daily: ['sunrise','sunset','precipitation_sum'].join(','),
       wind_speed_unit: 'mph',
       temperature_unit: 'fahrenheit',
       forecast_days: 7,
@@ -2541,6 +2711,7 @@ async function fetchOpenMeteo(lat, lon) {
     if (data.hourly) {
       patchHourlyTemps(data.hourly);
       window._omHourly = data.hourly; // cache for wind modal sparkline
+      window._omDaily  = data.daily;  // sunrise, sunset, precipitation_sum
     }
 
     // Enrich obs strip with Open-Meteo data (fills gaps NWS doesn't cover)
@@ -2726,9 +2897,9 @@ async function doSearch() {
     document.getElementById('locName').textContent=name;
     document.getElementById('locSub').textContent='';
     document.getElementById('searchInput').value='';
-    const ov = document.getElementById('searchOverlay');
-    if (ov) ov.style.display = 'none';
     saveLocation(curLat, curLon, name, '', curState, 'search');
+    saveRecent(curLat, curLon, name, curState||'');
+    closeSearchOverlay();
     await fetchForPoint(curLat,curLon);
   }catch(e){
     setLive('err','NOT FOUND');
@@ -2826,8 +2997,66 @@ async function selectSuggestion(lat, lon, label, state) {
   document.getElementById('locSub').textContent = '';
   setActiveLocBtn(null);
   saveLocation(curLat, curLon, label, '', curState, 'search');
+  saveRecent(curLat, curLon, label, state);
+  closeSearchOverlay();
   inp.addEventListener('input', _inputHandler);
   _selecting = false;
+  await fetchForPoint(curLat, curLon);
+}
+
+// ── SEARCH RECENTS ───────────────────────────────────────────────────────────
+function getRecents() {
+  try { return JSON.parse(localStorage.getItem('sw_recents') || '[]'); } catch { return []; }
+}
+function saveRecent(lat, lon, name, state) {
+  try {
+    let recents = getRecents().filter(r => r.name !== name);
+    recents.unshift({ lat, lon, name, state });
+    recents = recents.slice(0, 8);
+    localStorage.setItem('sw_recents', JSON.stringify(recents));
+  } catch {}
+}
+function renderRecents() {
+  const el = document.getElementById('searchRecents');
+  if (!el) return;
+  const recents = getRecents();
+  if (!recents.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="search-recents">
+    <div class="search-recents-hdr">
+      <span class="search-recents-ttl">Recents</span>
+      <button class="search-recents-clear" onclick="clearRecents()">Clear</button>
+    </div>
+    ${recents.map(r => `
+      <div class="search-recent-item" onclick="selectRecent(${r.lat},${r.lon},${JSON.stringify(r.name)},${JSON.stringify(r.state||'')})">
+        <svg class="search-recent-icon" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>
+        <div>
+          <div class="search-recent-name">${r.name}</div>
+          ${r.state ? `<div class="search-recent-sub">${r.state}</div>` : ''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+function clearRecents() {
+  localStorage.removeItem('sw_recents');
+  renderRecents();
+}
+function openSearchOverlay() {
+  const ov = document.getElementById('searchOverlay');
+  ov.style.display = 'flex';
+  renderRecents();
+  setTimeout(() => document.getElementById('searchInput')?.focus(), 50);
+}
+function closeSearchOverlay() {
+  document.getElementById('searchOverlay').style.display = 'none';
+  closeDropdown();
+}
+async function selectRecent(lat, lon, name, state) {
+  closeSearchOverlay();
+  curLat = lat; curLon = lon; curMode = 'search'; curState = state || null;
+  document.getElementById('locName').textContent = name;
+  document.getElementById('locSub').textContent = state || '';
+  setActiveLocBtn(null);
+  saveLocation(curLat, curLon, name, state, curState, 'search');
   await fetchForPoint(curLat, curLon);
 }
 
