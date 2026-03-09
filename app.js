@@ -344,13 +344,14 @@ function wxOverlayFile(shortForecast) {
   const fc = (shortForecast || '').toLowerCase();
   if (/snow|blizzard|flurr/.test(fc))                             return 'snow.png';    // future
   if (/fog|mist/.test(fc))                                        return 'fog.png';     // future
-  if (/rain|shower|drizzle|sleet|thunder|tstm/.test(fc))          return 'rain.png';    // ✓ live (covers storms too until tstorm.png added)
+  if (/thunder|tstm/.test(fc))                                    return 'tstorm.png';  // ✓ live
+  if (/rain|shower|drizzle|sleet/.test(fc))                       return 'rain.png';    // ✓ live
   if (/cloud|overcast|partly|mostly|hazy/.test(fc))               return 'clouds.png';  // ✓ live
   return null;
 }
 
 // Live overlay files — update as images are added to /overlays/
-const _OVERLAY_LIVE = new Set(['clouds.png', 'rain.png']);
+const _OVERLAY_LIVE = new Set(['clouds.png', 'rain.png', 'tstorm.png']);
 
 function updateWxOverlay(shortForecast, elId = 'wxOverlay') {
   const el = document.getElementById(elId);
