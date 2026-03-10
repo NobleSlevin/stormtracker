@@ -3578,9 +3578,11 @@ function computeTornadoRisk(periods, lat, lon, alerts) {
   wrap.style.background = colorBg; wrap.style.borderColor = colorBdr;
   wrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${colorHex}" viewBox="0 0 16 16"><path d="M6.999 2.6A5.5 5.5 0 0 1 15 7.5a.5.5 0 0 0 1 0 6.5 6.5 0 1 0-13 0 5 5 0 0 0 6.001 4.9A5.5 5.5 0 0 1 1 7.5a.5.5 0 0 0-1 0 6.5 6.5 0 1 0 13 0 5 5 0 0 0-6.001-4.9M10 7.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></svg>`;
 
-  // Sub label
+  // Level label + sub
+  document.getElementById('riskLevelLabel').textContent = level;
+  document.getElementById('riskLevelLabel').className = riskClass;
   const critCount = factors.filter(f=>f.tier==='tier-crit').length;
-  document.getElementById('riskSub').textContent = `NWS · ${critCount} critical factor${critCount!==1?'s':''} active`;
+  document.getElementById('riskSub').textContent = `${critCount} Active`;
 
   // Badge
   const badge = document.getElementById('riskBadge');
@@ -3593,21 +3595,37 @@ function computeTornadoRisk(periods, lat, lon, alerts) {
   // Range bar (0–100)
   document.getElementById('riskRangeBar').innerHTML = rangeBar(pct, 100, 'linear-gradient(to right, #4ade80 0%, #93c5fd 25%, #fbbf24 40%, #fb923c 55%, #f87171 70%)');
 
-  // SPC cells
+  // Cells: SPC Tornado | Wind Shear | Atmospheric Instability
   const spc = window._spcThreats?.day1;
-  const spcCell = (val, label) => {
-    const m = SPC_LEVEL_META[val ?? 0];
-    const noData = val == null;
-    return `<div class="aqi-cell">
-      <span class="aqi-cell-lbl">${label}</span>
-      <span class="aqi-cell-val" style="color:${noData?'var(--dim)':m.color}">${noData?'—':val}</span>
-      <span class="aqi-cell-sub">${noData?'SPC':m.label}</span>
-    </div>`;
+  const tornVal = spc?.tornado ?? null;
+  const tornMeta = SPC_LEVEL_META[tornVal ?? 0];
+
+  const shearF = factors.find(f=>f.name==='Wind Shear');
+  const capeF  = factors.find(f=>f.name==='Atmospheric Instability');
+
+  const factorPct = f => f ? Math.round(f.live * 100) : null;
+  const factorColor = f => {
+    if (!f) return 'var(--dim)';
+    const p = f.live;
+    return p>=0.7?'var(--red)':p>=0.55?'var(--orange)':p>=0.4?'var(--yellow)':p>=0.25?'var(--blue)':'var(--green)';
   };
-  document.getElementById('riskCells').innerHTML =
-    spcCell(spc?.tornado ?? null, 'Tornado') +
-    spcCell(spc?.wind    ?? null, 'Wind') +
-    spcCell(spc?.hail    ?? null, 'Hail');
+
+  document.getElementById('riskCells').innerHTML = `
+    <div class="aqi-cell">
+      <span class="aqi-cell-lbl">Tornado</span>
+      <span class="aqi-cell-val" style="color:${tornVal==null?'var(--dim)':tornMeta.color}">${tornVal==null?'—':tornVal}</span>
+      <span class="aqi-cell-sub">${tornVal==null?'SPC Day 1':tornMeta.label}</span>
+    </div>
+    <div class="aqi-cell">
+      <span class="aqi-cell-lbl">Wind Shear</span>
+      <span class="aqi-cell-val" style="color:${factorColor(shearF)}">${shearF?factorPct(shearF)+'%':'—'}</span>
+      <span class="aqi-cell-sub">${shearF?'NWS':'NWS'}</span>
+    </div>
+    <div class="aqi-cell">
+      <span class="aqi-cell-lbl">Instability</span>
+      <span class="aqi-cell-val" style="color:${factorColor(capeF)}">${capeF?factorPct(capeF)+'%':'—'}</span>
+      <span class="aqi-cell-sub">${capeF?'CAPE · LI':'CAPE'}</span>
+    </div>`;
   buildSpider(factors);
   buildFactorList(factors);
 }
