@@ -1176,7 +1176,10 @@ function buildDayAnnotations(dayPairs) {
     if (!p) return;
     const dt = new Date(p.startTime);
     const dateKey = dt.toDateString();
-    const dayName = dn[dt.getDay()];
+    const now = new Date();
+    const todayKey = now.toDateString();
+    const tomorrowKey = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toDateString();
+    const dayName = dateKey === todayKey ? 'today' : dateKey === tomorrowKey ? 'tomorrow' : dn[dt.getDay()];
     const combined = ((p.shortForecast || '') + ' ' + (p.detailedForecast || '')).toLowerCase();
     const hi = pair.day?.temperature ?? pair.night?.temperature ?? 0;
     const lo = pair.night?.temperature ?? pair.day?.temperature ?? 999;
