@@ -3703,8 +3703,10 @@ async function fetchOpenMeteo(lat, lon) {
 
     // Precip last 24h from hourly sum
     if (data.hourly?.precipitation) {
-      const sum = data.hourly.precipitation.slice(0, 24).reduce((a, v) => a + (v || 0), 0);
-      window._precip24h = sum.toFixed(2);
+      const sumMm = data.hourly.precipitation.slice(0, 24).reduce((a, v) => a + (v || 0), 0);
+      const sumIn = sumMm / 25.4;
+      // Only show if meaningful (> 0.01")
+      window._precip24h = sumIn > 0.01 ? sumIn.toFixed(2) : null;
     }
 
     // Update hero extra stats if rendered
