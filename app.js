@@ -2772,14 +2772,14 @@ function buildFactorList(factors) {
 // ── LOCATION & ORCHESTRATION ─────────────────────
 // ── RADAR (RainViewer) ────────────────────────────
 let rvMap = null, rvFrames = [], rvLayers = [], rvPos = 0, rvTimer = null, rvPlaying = false, rvInited = false;
-let rvActiveLayer = 'precipitation_new'; // OWM layer key
+let rvActiveLayer = 'rain'; // 'rain' = RainViewer, others = OWM
 
 const OWM_KEY = 'ed93a21d0dde1dc2d65d27099d174fd8';
 const OWM_LAYERS = [
-  { key: 'precipitation_new', label: 'Rain',  color: '#60a5fa' },
-  { key: 'wind_new',          label: 'Wind',  color: '#34d399' },
-  { key: 'clouds_new',        label: 'Cloud', color: '#94a3b8' },
-  { key: 'temp_new',          label: 'Temp',  color: '#fb923c' },
+  { key: 'rain',          label: 'Rain',  color: '#60a5fa', rainviewer: true },
+  { key: 'wind_new',      label: 'Wind',  color: '#34d399', rainviewer: false },
+  { key: 'clouds_new',    label: 'Cloud', color: '#94a3b8', rainviewer: false },
+  { key: 'temp_new',      label: 'Temp',  color: '#fb923c', rainviewer: false },
 ];
 
 function initRadar(lat, lon) {
@@ -2850,7 +2850,7 @@ function initRadar(lat, lon) {
     rvInited = true;
   } else {
     rvMap.setView([lat, lon], 8);
-    rvMap.eachLayer(l => { if (l._url && l._url.includes('openweathermap')) rvMap.removeLayer(l); });
+    rvMap.eachLayer(l => { if (l._url && (l._url.includes('openweathermap') || l._url.includes('rainviewer') || l._url.includes('tilecache'))) rvMap.removeLayer(l); });
     L.circleMarker([lat, lon], {
       radius: 6, color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 1, weight: 2
     }).addTo(rvMap);
@@ -2864,33 +2864,57 @@ async function rvLoadFrames() {
     document.getElementById('rvTimestamp').textContent = 'Loading…';
     rvStop();
 
-    // OWM Weather Maps 2.0 uses Unix timestamps in the tile URL
-    // 5 frames at 1-hour steps covering the past ~4 hours + now
-    const now = Math.floor(Date.now() / 1000);
-    const step = 3600; // 1 hour steps
-    const frameCount = 5;
-    const timestamps = Array.from({length: frameCount}, (_, i) =>
-      now - (frameCount - 1 - i) * step
-    );
-
-    // Clear old OWM layers
+    // Clear old layers
     rvLayers.forEach(l => { if (rvMap.hasLayer(l)) rvMap.removeLayer(l); });
     rvLayers = [];
 
-    rvFrames = timestamps.map(ts => {
-      const d = new Date(ts * 1000);
-      const h = d.getHours(), m = d.getMinutes();
-      const label = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
-      return { ts, label };
-    });
+    const lyrDef = OWM_LAYERS.find(l => l.key === rvActiveLayer);
 
-    // Pre-create OWM tile layers
-    rvFrames.forEach((frame) => {
-      const url = `https://tile.openweathermap.org/map/${rvActiveLayer}/{z}/{x}/{y}.png?appid=${OWM_KEY}&date=${frame.ts}`;
-      const layer = L.tileLayer(url, { opacity: 0, tileSize: 256, zIndex: 2 });
-      rvLayers.push(layer);
-      layer.addTo(rvMap);
-    });
+    if (lyrDef?.rainviewer) {
+      // ── RainViewer: real radar at ~10-min intervals ──
+      const rvApi = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+      const rvData = await rvApi.json();
+      const past = rvData.radar?.past ?? [];
+      // Take up to 12 most recent past frames
+      const frames = past.slice(-12);
+
+      rvFrames = frames.map(f => {
+        const d = new Date(f.time * 1000);
+        const h = d.getHours(), m = d.getMinutes();
+        const label = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+        return { ts: f.time, path: f.path, label };
+      });
+
+      rvFrames.forEach(frame => {
+        // RainViewer tile URL: /v2/radar/{path}/256/{z}/{x}/{y}/6/1_1.png
+        const url = `https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/6/1_1.png`;
+        const layer = L.tileLayer(url, { opacity: 0, tileSize: 256, zIndex: 2 });
+        rvLayers.push(layer);
+        layer.addTo(rvMap);
+      });
+    } else {
+      // ── OWM Weather Maps 2.0: hourly model layers ──
+      const now = Math.floor(Date.now() / 1000);
+      const step = 3600;
+      const frameCount = 5;
+      const timestamps = Array.from({length: frameCount}, (_, i) =>
+        now - (frameCount - 1 - i) * step
+      );
+
+      rvFrames = timestamps.map(ts => {
+        const d = new Date(ts * 1000);
+        const h = d.getHours(), m = d.getMinutes();
+        const label = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+        return { ts, label };
+      });
+
+      rvFrames.forEach(frame => {
+        const url = `https://tile.openweathermap.org/map/${rvActiveLayer}/{z}/{x}/{y}.png?appid=${OWM_KEY}&date=${frame.ts}`;
+        const layer = L.tileLayer(url, { opacity: 0, tileSize: 256, zIndex: 2 });
+        rvLayers.push(layer);
+        layer.addTo(rvMap);
+      });
+    }
 
     rvPos = rvFrames.length - 1;
     rvShowFrame(rvPos);
@@ -3068,24 +3092,31 @@ async function fetchOpenMeteo(lat, lon) {
 
     // Open-Meteo owns the hero temp — it is spatially accurate and up-to-the-hour.
     // NWS obs stations can be miles away and report stale readings; they do not set the hero.
-    const tempEl = document.querySelector('.fch-temp');
-    if (tempEl) {
+    const _applyHeroTemp = () => {
+      const tempEl = document.querySelector('.fch-temp');
+      if (!tempEl) return false;
       if (c?.temperature_2m != null) {
         tempEl.innerHTML = `${Math.round(c.temperature_2m)}<sup>°F</sup>`;
         set('obsTemp', Math.round(c.temperature_2m));
       } else if (window._nwsHeroTemp) {
         tempEl.innerHTML = `${window._nwsHeroTemp}<sup>°F</sup>`;
       }
-    }
-    // Insert feels-like line if not already present
-    if (c?.apparent_temperature != null) {
-      let feelsEl = document.querySelector('.fch-feels');
-      if (!feelsEl) {
-        feelsEl = document.createElement('div');
-        feelsEl.className = 'fch-feels';
-        tempEl?.insertAdjacentElement('afterend', feelsEl);
+      // Feels-like
+      if (c?.apparent_temperature != null) {
+        let feelsEl = document.querySelector('.fch-feels');
+        if (!feelsEl) {
+          feelsEl = document.createElement('div');
+          feelsEl.className = 'fch-feels';
+          tempEl.insertAdjacentElement('afterend', feelsEl);
+        }
+        feelsEl.textContent = `Feels like ${Math.round(c.apparent_temperature)}°`;
       }
-      feelsEl.textContent = `Feels like ${Math.round(c.apparent_temperature)}°`;
+      return true;
+    };
+    // Apply now if hero already rendered, otherwise retry once renderForecast completes
+    if (!_applyHeroTemp()) {
+      const _retryTimer = setInterval(() => { if (_applyHeroTemp()) clearInterval(_retryTimer); }, 200);
+      setTimeout(() => clearInterval(_retryTimer), 10000); // give up after 10s
     }
   } catch(e) {
     console.warn('Open-Meteo error:', e);
@@ -3112,6 +3143,11 @@ async function fetchForPoint(lat, lon) {
     fetchOpenMeteo(lat, lon),
   ]);
   const { periods, stationUrl } = fc;
+  // If OM already resolved before renderForecast ran, patch hero temp now
+  if (window._omCurrentTemp != null) {
+    const tempEl = document.querySelector('.fch-temp');
+    if (tempEl) tempEl.innerHTML = `${Math.round(window._omCurrentTemp)}<sup>°F</sup>`;
+  }
   await Promise.all([
     fetchObservations(stationUrl),
     fetchNearby(lat, lon, stationUrl),
