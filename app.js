@@ -1807,6 +1807,340 @@ function openDayModal(dayIdx) {
 }
 
 
+// ── Radar Overlay Layers ─────────────────────────────────────────────────────
+// Overlay definitions: id, label, color, fetch function
+const RV_OVERLAYS = [
+  { id: 'warnings',   label: 'Warnings',   color: '#f87171' },
+  { id: 'watches',    label: 'Watches',    color: '#fb923c' },
+  { id: 'outlook',    label: 'Outlook',    color: '#a78bfa' },
+  { id: 'stormtracks',label: 'Tracks',     color: '#fbbf24' },
+];
+
+// Active overlays set and their Leaflet layer groups
+const rvActiveOverlays = new Set();
+const rvOverlayGroups = {};
+
+// Warning event → color map
+const WARN_COLORS = {
+  'Tornado Warning':            '#ef4444',
+  'Tornado Emergency':          '#ff0000',
+  'Severe Thunderstorm Warning':'#facc15',
+  'Flash Flood Warning':        '#22c55e',
+  'Flash Flood Emergency':      '#15803d',
+  'Special Marine Warning':     '#fb923c',
+  'Snow Squall Warning':        '#93c5fd',
+  'Extreme Wind Warning':       '#f97316',
+};
+function warnColor(event) {
+  for (const [k, v] of Object.entries(WARN_COLORS)) {
+    if (event.includes(k.split(' ')[0]) && event.includes(k.split(' ').slice(-1)[0])) return v;
+  }
+  if (event.toLowerCase().includes('tornado')) return '#ef4444';
+  if (event.toLowerCase().includes('thunder')) return '#facc15';
+  if (event.toLowerCase().includes('flood'))   return '#22c55e';
+  if (event.toLowerCase().includes('wind'))    return '#f97316';
+  return '#f87171';
+}
+
+// SPC risk levels
+const SPC_RISKS = {
+  'TSTM': { label: 'General Thunder',  color: '#c8c8c8' },
+  'MRGL': { label: 'Marginal',         color: '#66c57e' },
+  'SLGT': { label: 'Slight',           color: '#f5f580' },
+  'ENH':  { label: 'Enhanced',         color: '#e8a838' },
+  'MDT':  { label: 'Moderate',         color: '#e84040' },
+  'HIGH': { label: 'High',             color: '#f060f0' },
+};
+
+function rvInitOverlayBar() {
+  const bar = document.getElementById('rvOvrBar');
+  if (!bar || bar.dataset.inited) return;
+  bar.dataset.inited = '1';
+
+  RV_OVERLAYS.forEach(ovr => {
+    const btn = document.createElement('button');
+    btn.className = 'rvovr-btn';
+    btn.dataset.id = ovr.id;
+    btn.style.setProperty('--ovr-color', ovr.color);
+    btn.innerHTML = `<span class="ovr-dot" style="background:${ovr.color}"></span>${ovr.label}`;
+    btn.addEventListener('click', () => rvToggleOverlay(ovr.id, btn));
+    bar.appendChild(btn);
+  });
+}
+
+async function rvToggleOverlay(id, btn) {
+  if (rvActiveOverlays.has(id)) {
+    // Turn off
+    rvActiveOverlays.delete(id);
+    if (rvOverlayGroups[id]) { rvMap.removeLayer(rvOverlayGroups[id]); delete rvOverlayGroups[id]; }
+    btn.classList.remove('active', 'loading');
+  } else {
+    // Turn on
+    rvActiveOverlays.add(id);
+    btn.classList.add('active', 'loading');
+    try {
+      await rvLoadOverlay(id);
+    } catch(e) {
+      console.warn('Overlay load error:', id, e);
+      rvActiveOverlays.delete(id);
+      btn.classList.remove('active');
+    }
+    btn.classList.remove('loading');
+  }
+}
+
+async function rvLoadOverlay(id) {
+  if (rvOverlayGroups[id]) { rvMap.removeLayer(rvOverlayGroups[id]); delete rvOverlayGroups[id]; }
+  const group = L.layerGroup().addTo(rvMap);
+  rvOverlayGroups[id] = group;
+
+  if (id === 'warnings' || id === 'watches') {
+    // NWS active alerts GeoJSON
+    const type = id === 'warnings' ? 'warning' : 'watch';
+    const url = `https://api.weather.gov/alerts/active?status=actual&message_type=${type}&limit=500`;
+    const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
+    const data = await resp.json();
+    (data.features || []).forEach(f => {
+      if (!f.geometry) return;
+      const props = f.properties;
+      const color = warnColor(props.event || '');
+      const layer = L.geoJSON(f.geometry, {
+        style: { color, weight: 1.5, opacity: 0.9, fillColor: color, fillOpacity: 0.12 }
+      });
+      layer.on('click', (e) => {
+        const expires = props.expires ? new Date(props.expires) : null;
+        const expStr = expires ? expires.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '—';
+        const area = (props.areaDesc || '').split(';')[0].trim();
+        L.popup({ className: 'rv-alert-popup', maxWidth: 280 })
+          .setLatLng(e.latlng)
+          .setContent(`<div class="rap-inner">
+            <div class="rap-event" style="color:${color}">${props.event || 'Alert'}</div>
+            <div class="rap-area">${area}</div>
+            <div class="rap-expire">Expires ${expStr}</div>
+          </div>`)
+          .openOn(rvMap);
+      });
+      layer.addTo(group);
+    });
+
+  } else if (id === 'outlook') {
+    // SPC Day 1 Convective Outlook
+    const url = 'https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson';
+    const resp = await fetch(url);
+    const data = await resp.json();
+    // Render from lowest risk to highest so higher risk sits on top
+    const riskOrder = ['TSTM','MRGL','SLGT','ENH','MDT','HIGH'];
+    const byRisk = {};
+    (data.features || []).forEach(f => {
+      const label = f.properties?.LABEL2 || f.properties?.LABEL || '';
+      const key = Object.keys(SPC_RISKS).find(k => label.toUpperCase().includes(k)) || 'TSTM';
+      if (!byRisk[key]) byRisk[key] = [];
+      byRisk[key].push(f);
+    });
+    riskOrder.forEach(risk => {
+      const feats = byRisk[risk];
+      if (!feats) return;
+      const { color, label } = SPC_RISKS[risk];
+      feats.forEach(f => {
+        if (!f.geometry) return;
+        const layer = L.geoJSON(f.geometry, {
+          style: { color, weight: 1.5, opacity: 0.8, fillColor: color, fillOpacity: risk === 'TSTM' ? 0.06 : 0.14, dashArray: risk === 'TSTM' ? '4 4' : null }
+        });
+        layer.on('click', (e) => {
+          L.popup({ className: 'rv-map-popup', maxWidth: 240 })
+            .setLatLng(e.latlng)
+            .setContent(`<div class="rmp-inner">
+              <div class="rmp-title" style="color:${color}">SPC ${label} Risk</div>
+              <div class="rmp-body">Day 1 Convective Outlook<br>Severe thunderstorm potential area</div>
+            </div>`)
+            .openOn(rvMap);
+        });
+        layer.addTo(group);
+      });
+    });
+
+  } else if (id === 'stormtracks') {
+    // NWS SCIT Storm Tracks via WMS/GeoJSON
+    // Use nowCOAST storm tracks WMS layer
+    const WMS_BASE = 'https://nowcoast.noaa.gov/geoserver/warnings/storm_based_warnings_watches_advisories/ows';
+    // Fallback: use NWS storms API parsed from hazards
+    // Primary: SPC storm reports as a reasonable proxy since SCIT needs special endpoint
+    // Use NWS active mesoscale discussions area for storm context
+    // Best free option: NWS storm attributes from active tornado/severe warnings
+    const url = 'https://api.weather.gov/alerts/active?status=actual&message_type=alert&event=Tornado%20Warning,Severe%20Thunderstorm%20Warning&limit=200';
+    const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
+    const data = await resp.json();
+
+    // Extract storm motion from warning text and draw motion vectors
+    (data.features || []).forEach(f => {
+      if (!f.geometry) return;
+      const props = f.properties;
+      const desc = (props.description || '') + (props.headline || '');
+
+      // Parse storm motion: "moving NE at 45 mph" or "moving toward the northeast at 35 mph"
+      const motionMatch = desc.match(/moving\s+(?:toward\s+(?:the\s+)?)?([NSEW]{1,3}(?:east|west|north|south)?)\s+at\s+(\d+)\s*mph/i);
+
+      // Find centroid of polygon for track origin
+      let center = null;
+      try {
+        center = L.geoJSON(f.geometry).getBounds().getCenter();
+      } catch(e) { return; }
+
+      const color = warnColor(props.event || '');
+
+      // Draw warning polygon outline (lighter, since warnings overlay already shows filled)
+      L.geoJSON(f.geometry, {
+        style: { color, weight: 2, opacity: 0.7, fill: false, dashArray: '6 3' }
+      }).addTo(group);
+
+      if (motionMatch && center) {
+        const dir = motionMatch[1].toUpperCase();
+        const spd = parseInt(motionMatch[2]);
+        // Convert direction to bearing
+        const DIRS = { N:0,NNE:22.5,NE:45,ENE:67.5,E:90,ESE:112.5,SE:135,SSE:157.5,
+                       S:180,SSW:202.5,SW:225,WSW:247.5,W:270,WNW:292.5,NW:315,NNW:337.5 };
+        const bearing = DIRS[dir] ?? 0;
+        const rad = (bearing - 90) * Math.PI / 180;
+
+        // Draw tick marks at 15-min intervals (speed in mph, 1 deg lat ≈ 69 miles)
+        const tickCount = 4;
+        const distPerTick = (spd / 60 * 15) / 69; // degrees lat per 15 min
+        const cosLat = Math.cos(center.lat * Math.PI / 180);
+
+        for (let t = 1; t <= tickCount; t++) {
+          const dlat = Math.sin((bearing) * Math.PI / 180) * distPerTick * t;
+          const dlon = Math.cos((bearing) * Math.PI / 180) * distPerTick * t / cosLat;
+          const pt = [center.lat + dlat, center.lng + dlon];
+
+          // Tick cross
+          const tickSize = 0.03;
+          const perpRad = rad + Math.PI / 2;
+          const tick = L.polyline([
+            [pt[0] - Math.sin(perpRad) * tickSize, pt[1] - Math.cos(perpRad) * tickSize / cosLat],
+            [pt[0] + Math.sin(perpRad) * tickSize, pt[1] + Math.cos(perpRad) * tickSize / cosLat]
+          ], { color, weight: 2, opacity: 0.8 }).addTo(group);
+        }
+
+        // Motion line
+        const endLat = center.lat + Math.sin(bearing * Math.PI / 180) * distPerTick * tickCount;
+        const endLon = center.lng + Math.cos(bearing * Math.PI / 180) * distPerTick * tickCount / cosLat;
+        L.polyline([[center.lat, center.lng], [endLat, endLon]], {
+          color, weight: 2, opacity: 0.8, dashArray: '4 3'
+        }).addTo(group);
+
+        // Arrow head circle at end
+        L.circleMarker([endLat, endLon], {
+          radius: 4, color, fillColor: color, fillOpacity: 1, weight: 1.5
+        }).bindPopup(`<div class="rmp-inner">
+          <div class="rmp-title" style="color:${color}">${props.event}</div>
+          <div class="rmp-body">Moving ${dir} at ${spd} mph<br>Tick marks = 15 min intervals</div>
+        </div>`, { className: 'rv-map-popup' }).addTo(group);
+      }
+    });
+  }
+}
+
+// Reload active overlays (called after location change)
+async function rvReloadOverlays() {
+  for (const id of rvActiveOverlays) {
+    const btn = document.querySelector(`[data-id="${id}"]`);
+    if (btn) btn.classList.add('loading');
+    try { await rvLoadOverlay(id); } catch(e) { console.warn(e); }
+    if (btn) btn.classList.remove('loading');
+  }
+}
+
+// ── Segmented Loop Scrubber ─────────────────────────────────────────────────
+function rvInitScrubber() {
+  const playBtn = document.getElementById('rvPlayBtn');
+  if (!playBtn || playBtn.dataset.scrubInited) return;
+  playBtn.dataset.scrubInited = '1';
+
+  let longPressTimer = null;
+
+  const showScrubber = () => {
+    rvStop();
+    const scrubber = document.getElementById('rvScrubber');
+    if (!scrubber) return;
+    rvBuildScrubber();
+    scrubber.classList.add('visible');
+  };
+
+  const hideScrubber = () => {
+    const scrubber = document.getElementById('rvScrubber');
+    if (scrubber) scrubber.classList.remove('visible');
+  };
+
+  // Long press: 400ms hold
+  playBtn.addEventListener('touchstart', (e) => {
+    longPressTimer = setTimeout(() => {
+      e.preventDefault();
+      showScrubber();
+    }, 400);
+  }, { passive: true });
+
+  playBtn.addEventListener('touchend', () => clearTimeout(longPressTimer));
+  playBtn.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
+  // Desktop: right-click or long mousedown
+  playBtn.addEventListener('mousedown', () => {
+    longPressTimer = setTimeout(showScrubber, 400);
+  });
+  playBtn.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+  playBtn.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+  playBtn.addEventListener('contextmenu', (e) => { e.preventDefault(); showScrubber(); });
+
+  // Tap anywhere on map to dismiss scrubber
+  document.getElementById('radarMap')?.addEventListener('click', hideScrubber);
+}
+
+function rvBuildScrubber() {
+  const scrubber = document.getElementById('rvScrubber');
+  if (!scrubber || !rvFrames.length) return;
+  scrubber.innerHTML = '';
+
+  rvFrames.forEach((frame, i) => {
+    const seg = document.createElement('div');
+    seg.className = 'rv-seg' + (i === rvPos ? ' active' : i < rvPos ? ' past' : '');
+    // Show time label only on first, middle, last
+    const showLabel = i === 0 || i === Math.floor(rvFrames.length / 2) || i === rvFrames.length - 1;
+    if (showLabel) {
+      seg.innerHTML = `<span class="rv-seg-label">${frame.label}</span>`;
+    }
+    seg.addEventListener('click', () => {
+      rvShowFrame(i);
+      rvBuildScrubber(); // refresh active state
+    });
+
+    // Touch scrub
+    seg.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      rvShowFrame(i);
+      rvBuildScrubber();
+    }, { passive: true });
+
+    scrubber.appendChild(seg);
+  });
+}
+
+// Update scrubber highlight when frame advances
+const _origRvShowFrame = rvShowFrame;
+function rvShowFrame(idx) {
+  _origRvShowFrame(idx);
+  // Sync scrubber if visible
+  const scrubber = document.getElementById('rvScrubber');
+  if (scrubber?.classList.contains('visible')) {
+    scrubber.querySelectorAll('.rv-seg').forEach((seg, i) => {
+      seg.className = 'rv-seg' + (i === rvPos ? ' active' : i < rvPos ? ' past' : '');
+      // Re-add label spans
+      const showLabel = i === 0 || i === Math.floor(rvFrames.length / 2) || i === rvFrames.length - 1;
+      if (showLabel && !seg.querySelector('.rv-seg-label')) {
+        seg.innerHTML = `<span class="rv-seg-label">${rvFrames[i].label}</span>`;
+      }
+    });
+  }
+}
+
 // ── dBZ Spectrum Bar ─────────────────────────────────────────────────────
 // Standard NEXRAD reflectivity color scale (dBZ: -30 to 80)
 const DBZ_STOPS = [
@@ -1876,17 +2210,28 @@ function rvInitDbzBar() {
 
   const scrub = (e) => {
     const rect = bar.getBoundingClientRect();
+    const wrapRect = wrap.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const dbz = Math.round(DBZ_MIN + pct * (DBZ_MAX - DBZ_MIN));
     const color = dbzToColor(dbz);
-    // Position tooltip
     const tipPct = pct * 100;
-    tip.style.display = 'block';
-    tip.style.left = `clamp(24px, calc(${tipPct}% - 24px), calc(100% - 54px))`;
+
+    // Render content first so offsetWidth is accurate
+    tip.innerHTML = `<span class="dbz-tip-val">${dbz}<span class="dbz-tip-unit"> dBZ</span></span><span class="dbz-tip-lbl">${dbzLabel(dbz)}</span>`;
     tip.style.borderColor = color;
     tip.style.color = color;
-    tip.innerHTML = `<span class="dbz-tip-val">${dbz} dBZ</span><span class="dbz-tip-lbl">${dbzLabel(dbz)}</span>`;
+    tip.style.display = 'block';
+
+    // Center tooltip on cursor, clamp within bar bounds
+    const tipW = tip.offsetWidth || 80;
+    const barOffsetLeft = rect.left - wrapRect.left;
+    const cursorInWrap = clientX - wrapRect.left;
+    const ideal = cursorInWrap - tipW / 2;
+    const minLeft = barOffsetLeft;
+    const maxLeft = barOffsetLeft + rect.width - tipW;
+    tip.style.left = Math.max(minLeft, Math.min(maxLeft, ideal)) + 'px';
+
     // Scrub indicator line
     bar.style.setProperty('--scrub-pct', `${tipPct}%`);
     bar.classList.add('scrubbing');
@@ -2913,7 +3258,9 @@ function initRadar(lat, lon) {
         <div class="radar-dbz-labels">
           <span>-30</span><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span>
         </div>
-      </div>\``;
+      </div>
+      <div class="radar-overlay-bar" id="rvOvrBar"></div>
+      <div class="radar-scrubber" id="rvScrubber"></div>\``;
 
     // Build layer switcher buttons
     const bar = document.getElementById('rvLayerBar');
@@ -2962,6 +3309,8 @@ function initRadar(lat, lon) {
 
     rvInited = true;
     rvToggleDbzBar();
+    rvInitOverlayBar();
+    rvInitScrubber();
   } else {
     rvMap.setView([lat, lon], 8);
     rvMap.eachLayer(l => { if (l._url && l._url.includes('openweathermap')) rvMap.removeLayer(l); else if (l._wmsParams) rvMap.removeLayer(l); });
@@ -2971,6 +3320,7 @@ function initRadar(lat, lon) {
   }
 
   rvLoadFrames();
+  rvReloadOverlays();
 }
 
 async function rvLoadFrames() {
