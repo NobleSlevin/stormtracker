@@ -3076,8 +3076,9 @@ async function fetchNearby(lat, lon, stationsUrl) {
       if (gauges && gauges.length) {
         const cards = gauges.map(g => {
           const floodColor = g.gage > 20 ? 'var(--red)' : g.gage > 12 ? 'var(--orange)' : g.gage > 8 ? 'var(--yellow)' : 'var(--blue)';
-          const floodLabel = g.gage > 20 ? 'FLOOD' : g.gage > 12 ? 'WATCH' : g.gage > 8 ? 'ELEVATED' : 'NORMAL';
-          const badgeBg = g.gage > 20 ? 'rgba(248,113,113,.15)' : g.gage > 12 ? 'rgba(251,146,60,.15)' : g.gage > 8 ? 'rgba(251,191,36,.12)' : 'rgba(147,197,253,.1)';
+          const floodLabel = g.gage > 20 ? 'Flood' : g.gage > 12 ? 'Watch' : g.gage > 8 ? 'Elevated' : 'Normal';
+          const badgeBg    = g.gage > 20 ? 'rgba(248,113,113,.15)' : g.gage > 12 ? 'rgba(251,146,60,.15)' : g.gage > 8 ? 'rgba(251,191,36,.12)' : 'rgba(147,197,253,.1)';
+          const floodBorder = g.gage > 20 ? 'rgba(248,113,113,.4)' : g.gage > 12 ? 'rgba(251,146,60,.4)' : g.gage > 8 ? 'rgba(251,191,36,.4)' : 'rgba(147,197,253,.4)';
           return `
           <div class="gauge-card">
             <div class="gauge-header">
@@ -3090,7 +3091,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
                 <div class="gauge-name">${g.siteName}</div>
                 <div class="gauge-meta">USGS · ${g.dist} mi away · Stream Gauge</div>
               </div>
-              <div class="gauge-badge" style="background:${badgeBg};color:${floodColor};border:1px solid ${floodColor}44">${floodLabel}</div>
+              <div class="gauge-badge" style="background:${badgeBg};color:${floodColor};border-color:${floodBorder}">${floodLabel}</div>
             </div>
             <div class="gauge-readings">
               <div class="gauge-cell">
@@ -3188,7 +3189,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
                 <div class="hurr-name">${s.name}</div>
                 <div class="hurr-type">${stormLabel} · NHC Active Advisory</div>
               </div>
-              ${inCone ? '<div class="hurr-badge">IN CONE</div>' : ''}
+              ${inCone ? '<div class="hurr-badge">In Cone</div>' : ''}
             </div>
             <div class="hurr-details">
               <div class="hurr-cell">
@@ -3222,7 +3223,8 @@ async function fetchNearby(lat, lon, stationsUrl) {
       const warns = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('warning')).length;
       const watches = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('watch')).length;
       const adv = sa.filter(a=>(a.properties.event||'').toLowerCase().includes('advisory')).length;
-      const countColor = sa.length >= 10 ? 'var(--red)' : sa.length >= 5 ? 'var(--orange)' : sa.length > 0 ? 'var(--yellow)' : 'var(--green)';
+      const countColor  = sa.length >= 10 ? 'var(--red)' : sa.length >= 5 ? 'var(--orange)' : sa.length > 0 ? 'var(--yellow)' : 'var(--green)';
+      const countBorder = sa.length >= 10 ? 'rgba(248,113,113,.4)' : sa.length >= 5 ? 'rgba(251,146,60,.4)' : sa.length > 0 ? 'rgba(251,191,36,.4)' : 'rgba(74,222,128,.4)';
       const geoIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="${countColor}" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>`;
       sections.push(`<div>
         ${sectionTtl('State Alerts', 'margin-top:4px')}
@@ -3233,7 +3235,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
               <div class="state-name">${curState}</div>
               <div style="font-size:10px;color:var(--dim);font-family:var(--mono)">${abbr} · NWS Active Alerts</div>
             </div>
-            <div class="state-count-badge" style="background:${sa.length>0?'rgba(248,113,113,.12)':'rgba(74,222,128,.08)'};color:${countColor};border:1px solid ${countColor}44">${sa.length} alert${sa.length!==1?'s':''}</div>
+            <div class="state-count-badge" style="background:${sa.length>0?'rgba(248,113,113,.12)':'rgba(74,222,128,.08)'};color:${countColor};border-color:${countBorder}">${sa.length} alert${sa.length!==1?'s':''}</div>
           </div>
           <div class="state-breakdown">
             <div class="sbd-item"><span class="sbd-label">Warnings</span><span class="sbd-val sv-red">${warns}</span></div>
