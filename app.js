@@ -1391,6 +1391,7 @@ function openDayModal(dayIdx) {
           vis: oh.visibility?.[i] != null ? (oh.visibility[i] / 1609.34).toFixed(1) : null,
           uv: oh.uv_index?.[i] != null ? oh.uv_index[i] : null,
           wcode: oh.weather_code?.[i] ?? null,
+          dew: oh.dew_point_2m?.[i] != null ? Math.round(oh.dew_point_2m[i]) : null,
         });
       }
     });
@@ -1418,6 +1419,10 @@ function openDayModal(dayIdx) {
 
   // ── Aggregates ──
   const avgHumid = hours.filter(h=>h.humid!=null).length ? Math.round(hours.filter(h=>h.humid!=null).reduce((a,h)=>a+h.humid,0)/hours.filter(h=>h.humid!=null).length) : null;
+  const dewVals = hours.filter(h=>h.dew!=null).map(h=>h.dew);
+  const avgDew = dewVals.length ? Math.round(dewVals.reduce((a,v)=>a+v,0)/dewVals.length) : null;
+  const minDew = dewVals.length ? Math.min(...dewVals) : null;
+  const maxDew = dewVals.length ? Math.max(...dewVals) : null;
   const minHumid = hours.filter(h=>h.humid!=null).length ? Math.min(...hours.filter(h=>h.humid!=null).map(h=>h.humid)) : null;
   const maxHumid = hours.filter(h=>h.humid!=null).length ? Math.max(...hours.filter(h=>h.humid!=null).map(h=>h.humid)) : null;
   const maxWind = hours.filter(h=>h.wind!=null).length ? Math.max(...hours.filter(h=>h.wind!=null).map(h=>h.wind)) : null;
@@ -1694,18 +1699,19 @@ function openDayModal(dayIdx) {
     </div>`;
   })() : '';
 
-  // ── Rain amount tile ──
-  const rainSum = dayIdx2 >= 0 ? od?.precipitation_sum?.[dayIdx2] : null;
-  const rainInches = rainSum != null ? (rainSum / 25.4).toFixed(2) : null;
-  const rainLabel = !rainInches || rainInches === '0.00' ? 'None' : parseFloat(rainInches) < 0.1 ? 'Trace' : parseFloat(rainInches) < 0.5 ? 'Light' : parseFloat(rainInches) < 1.5 ? 'Moderate' : 'Heavy';
-  const rainTileHTML = rainInches != null ? `<div class="dm-tile">
-    <div class="dm-tile-ttl">Est. Rain</div>
-    <div class="dm-tile-big" style="color:var(--blue)">${rainInches}<span class="dm-tile-unit">in</span></div>
-    <div class="dm-tile-badge" style="color:var(--blue);border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.1)">${rainLabel}</div>
-    <div class="dm-tile-sub">${rainLabel === 'None' ? 'No precipitation expected' : `${rainInches} in total`}</div>
-  </div>` : '';
+  // ── Dew point tile ──
+  const dewTileHTML = avgDew != null ? (() => {
+    const dewLabel = avgDew < 35 ? 'Dry' : avgDew < 50 ? 'Comfortable' : avgDew < 60 ? 'Sticky' : avgDew < 65 ? 'Humid' : avgDew < 70 ? 'Oppressive' : 'Miserable';
+    const dewColor = avgDew < 35 ? '#93c5fd' : avgDew < 50 ? '#4ade80' : avgDew < 60 ? '#fbbf24' : avgDew < 65 ? '#fb923c' : '#f87171';
+    return `<div class="dm-tile">
+      <div class="dm-tile-ttl">Dew Point</div>
+      <div class="dm-tile-big" style="color:${dewColor}">${avgDew}<span class="dm-tile-unit">°F</span></div>
+      <div class="dm-tile-badge" style="color:${dewColor};border-color:${dewColor}44;background:${dewColor}18">${dewLabel}</div>
+      <div class="dm-tile-sub">Low ${minDew}° · High ${maxDew}°</div>
+    </div>`;
+  })() : '';
 
-  const allGridTiles = [humidTileHTML, visTileHTML, pressTileHTML, rainTileHTML].filter(Boolean).join('');
+  const allGridTiles = [humidTileHTML, visTileHTML, pressTileHTML, dewTileHTML].filter(Boolean).join('');
   const allTilesHTML = allGridTiles ? `<div>${sectionTtl('Conditions')}<div class="dm-grid">${allGridTiles}</div></div>` : '';
 
   const metricCards = [aqiCardHTML, uvCardHTML].filter(Boolean).join('');
@@ -2963,7 +2969,7 @@ async function fetchOpenMeteo(lat, lon) {
         'temperature_2m','apparent_temperature','cape','lifted_index','convective_inhibition',
         'freezing_level_height','precipitation_probability','precipitation',
         'wind_speed_10m','wind_gusts_10m','wind_direction_10m',
-        'relative_humidity_2m','surface_pressure','visibility','uv_index',
+        'relative_humidity_2m','dew_point_2m','surface_pressure','visibility','uv_index',
         'weather_code'
       ].join(','),
       daily: ['sunrise','sunset','precipitation_sum'].join(','),
