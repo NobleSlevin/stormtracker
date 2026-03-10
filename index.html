@@ -206,6 +206,22 @@ header { display: none; }
 .fch-meta { font-size: 13px; color: rgba(255,255,255,0.90); display: flex; flex-direction: column; gap: 2px; }
 .fch-extras { font-size: 13px; color: rgba(255,255,255,0.70); margin-top: 2px; }
 .fch-threats { display: flex; justify-content: space-around; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.12); padding-right: 5px; }
+.fch-info-row { display: flex; justify-content: flex-end; margin-top: 4px; }
+.fch-info-btn { background: none; border: none; padding: 4px; color: rgba(255,255,255,0.28); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; margin-right: -8px; margin-bottom: -8px; }
+.fch-info-btn:active { color: rgba(255,255,255,0.7); }
+.gloss-modal { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: var(--bg); transform: translateY(100%); transition: transform .35s cubic-bezier(.32,.72,0,1); }
+.gloss-modal.open { transform: translateY(0); }
+.gloss-modal-header { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; padding-top: calc(env(safe-area-inset-top, 0px) + 16px); background: var(--card); }
+.gloss-modal-title { font-size: 17px; font-weight: 700; flex: 1; }
+.gloss-modal-close { width: 32px; height: 32px; border-radius: 50%; background: var(--card2); border: 1px solid var(--border); color: var(--dim); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.gloss-modal-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 18px 18px calc(env(safe-area-inset-bottom,0px) + 32px); display: flex; flex-direction: column; gap: 20px; }
+.gloss-section-ttl { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.gloss-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.gloss-row:last-child { border-bottom: none; }
+.gloss-badge { font-size: 11px; font-weight: 700; font-family: var(--mono); min-width: 36px; text-align: center; padding: 3px 7px; border-radius: 6px; flex-shrink: 0; margin-top: 1px; }
+.gloss-def { display: flex; flex-direction: column; gap: 2px; }
+.gloss-term { font-size: 13px; font-weight: 600; color: var(--text); }
+.gloss-desc { font-size: 12px; color: var(--dim); line-height: 1.5; }
 .fcht { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; }
 .fcht-label-row { display: flex; align-items: center; gap: 4px; }
 .fcht-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.5); letter-spacing: 0.06em; text-transform: uppercase; }
@@ -930,7 +946,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.474l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.3.30</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.3.36</div>
   </div>
 
 </div>
@@ -954,6 +970,17 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <!-- populated by renderWindModal() -->
     </div>
   </div>
+</div>
+
+<!-- Glossary Modal -->
+<div id="glossaryModal" class="gloss-modal">
+  <div class="gloss-modal-header">
+    <div class="gloss-modal-title">Weather Glossary</div>
+    <button class="gloss-modal-close" onclick="closeGlossaryModal()" aria-label="Close">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></svg>
+    </button>
+  </div>
+  <div class="gloss-modal-body" id="glossaryBody"></div>
 </div>
 
 <!-- Info Modal -->
@@ -1054,7 +1081,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         <button onclick="document.getElementById('settingsModal').classList.remove('open'); document.getElementById('infoModal').classList.add('open');" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">View Data Sources →</button>
       </div>
 
-      <div class="info-footer">StormWatch PWA · v2.3.30</div>
+      <div class="info-footer">StormWatch PWA · v2.3.36</div>
     </div>
   </div>
 </div>
@@ -1148,7 +1175,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
       <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
       <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:2;color:rgba(255,255,255,0.6)">
-        <b>v2.3.30</b><br>
+        <b>v2.3.36</b><br>
         · SPC Day 2 &amp; Day 3 threat gauges now appear in day modal hero<br>
         <br>
         <b>v2.3.17</b><br>
@@ -1187,7 +1214,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         · dBZ spectrum bar with touch/mouse scrub and intensity label
       </div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.30</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.36</div>
     </div>
   </div>
 </div>
@@ -1206,7 +1233,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.3.30"></script>
+<script src="app.js?v=2.3.36"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>

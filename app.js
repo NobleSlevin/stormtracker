@@ -1037,6 +1037,91 @@ function closeWindModal() {
   // Do NOT stop compass — keep it running so button stays hidden on re-open
 }
 
+function openGlossaryModal() {
+  const torIcon  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="5" x2="20" y2="5"/><line x1="6" y1="10" x2="18" y2="10"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="11" y1="20" x2="13" y2="20"/></svg>`;
+  const windIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>`;
+  const hailIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="8" y1="20" x2="8.01" y2="20"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="16" x2="16.01" y2="16"/><line x1="16" y1="20" x2="16.01" y2="20"/></svg>`;
+
+  // SPC threat scale rows: one gauge per level for each hazard type
+  const spcDescs = [
+    'No organized severe weather threat.',
+    'Isolated severe storms possible. Impacts likely brief or limited.',
+    'Scattered severe storms expected. Well-organized cells with hail, wind, or brief tornadoes.',
+    'Numerous severe storms with greater intensity. Significant tornado, large hail, or destructive wind possible.',
+    'Widespread severe weather likely. Strong long-track tornadoes, very large hail, or destructive winds expected.',
+    'Rare, extreme outbreak. Violent tornadoes (EF3+), catastrophic wind, or extremely large hail highly likely.',
+  ];
+  const spcRowsHTML = SPC_LEVEL_META.map((m, lvl) => {
+    const gaugeHTML = buildThreatGauge(lvl, torIcon, 'Severity');
+    return `<div class="gloss-row" style="align-items:flex-start;gap:14px">
+      <div style="flex-shrink:0">${gaugeHTML}</div>
+      <div class="gloss-def" style="padding-top:14px"><span class="gloss-term" style="color:${lvl===0?'rgba(255,255,255,0.5)':m.color}">${m.label}</span><div class="gloss-desc" style="margin-top:2px">${spcDescs[lvl]}</div></div>
+    </div>`;
+  }).join('');
+
+  // Beaufort scale rows using the same gradient as the wind modal bar
+  const bftScale = [
+    [0,  0,    '<1',    'Calm',            'Smoke rises vertically.'],
+    [1,  0.05, '1–3',   'Light Air',       'Ripples on water. Wind barely perceptible.'],
+    [2,  0.10, '4–7',   'Light Breeze',    'Leaves rustle. Wind felt on face.'],
+    [3,  0.20, '8–12',  'Gentle Breeze',   'Leaves and small twigs in constant motion.'],
+    [4,  0.30, '13–18', 'Moderate Breeze', 'Small branches move. Raises dust and paper.'],
+    [5,  0.42, '19–24', 'Fresh Breeze',    'Small leafy trees sway.'],
+    [6,  0.54, '25–31', 'Strong Breeze',   'Large branches in motion. Umbrellas difficult.'],
+    [7,  0.62, '32–38', 'Near Gale',       'Whole trees in motion. Resistance walking into wind.'],
+    [8,  0.70, '39–46', 'Gale',            'Twigs break off trees. Minor structural damage.'],
+    [9,  0.78, '47–54', 'Severe Gale',     'Slight structural damage. Chimney pots removed.'],
+    [10, 0.86, '55–63', 'Storm',           'Trees uprooted. Considerable structural damage.'],
+    [11, 0.93, '64–72', 'Violent Storm',   'Widespread damage. Rarely experienced inland.'],
+    [12, 1.0,  '73+',   'Hurricane Force', 'Devastating damage. Air filled with foam and spray.'],
+  ];
+  const bftRowsHTML = bftScale.map(([num, pct, mph, label, desc]) => {
+    const c = gradientColor(pct);
+    const dotLeft = (pct * 100).toFixed(1);
+    return `<div class="gloss-row" style="align-items:center;gap:14px">
+      <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:${c.hex};min-width:28px;text-align:center;flex-shrink:0">${num}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+          <span class="gloss-term">${label}</span>
+          <span style="font-size:11px;font-family:var(--mono);color:var(--muted)">${mph} mph</span>
+        </div>
+        <div class="beaufort-bar-track" style="margin-bottom:6px"><div class="beaufort-bar-dot" style="left:${dotLeft}%"></div></div>
+        <div class="gloss-desc">${desc}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // General terms
+  const termsHTML = [
+    ['CAPE', 'Convective Available Potential Energy. Measures atmospheric instability — higher values (1000+ J/kg) indicate greater potential for strong thunderstorm updrafts.'],
+    ['CIN', 'Convective Inhibition. A "cap" suppressing storm development. Low CIN paired with high CAPE can lead to explosive storm initiation once the cap breaks.'],
+    ['Dew Point', 'Temperature at which air becomes saturated. 60°F+ feels muggy; 70°F+ is oppressive. A better comfort indicator than relative humidity alone.'],
+    ['AQI', 'Air Quality Index. 0–50 Good · 51–100 Moderate · 101–150 Unhealthy for sensitive groups · 151–200 Unhealthy · 201–300 Very Unhealthy · 301+ Hazardous.'],
+    ['UV Index', '0–2 Low · 3–5 Moderate · 6–7 High · 8–10 Very High · 11+ Extreme. Sun protection needed at 3+; limit outdoor exposure above 8.'],
+    ['Freezing Level', 'Altitude where temperature drops to 32°F. Precipitation falling through warmer air below this level may arrive as rain, sleet, or freezing rain.'],
+    ['Watch vs. Warning', 'A Watch means conditions are favorable for a hazard — stay alert and prepare. A Warning means the hazard is imminent or occurring — take action immediately.'],
+  ].map(([term, desc]) => `<div class="gloss-row"><div class="gloss-def"><span class="gloss-term">${term}</span><span class="gloss-desc">${desc}</span></div></div>`).join('');
+
+  document.getElementById('glossaryBody').innerHTML = `
+    <div>
+      <div class="gloss-section-ttl">SPC Threat Scale (0–5)</div>
+      ${spcRowsHTML}
+    </div>
+    <div>
+      <div class="gloss-section-ttl">Beaufort Wind Scale</div>
+      ${bftRowsHTML}
+    </div>
+    <div>
+      <div class="gloss-section-ttl">General Terms</div>
+      ${termsHTML}
+    </div>`;
+
+  document.getElementById('glossaryModal').classList.add('open');
+}
+function closeGlossaryModal() {
+  document.getElementById('glossaryModal').classList.remove('open');
+}
+
 function requestCompass() {
   // If already active, nothing to do
   if (_compassActive) return;
@@ -1321,6 +1406,7 @@ function renderForecast(periods){
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
     <div class="fch-extras" id="fchExtras"></div>
     <div id="fchThreats"></div>
+    <div class="fch-info-row"><button class="fch-info-btn" onclick="openGlossaryModal()" aria-label="Weather glossary"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></button></div>
   </div>`:'';
   const rows = dayPairs.map((pair, pairIdx) => {
     const d = pair.day || pair.night;
