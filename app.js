@@ -3563,20 +3563,51 @@ function computeTornadoRisk(periods, lat, lon, alerts) {
   const weights = [0.20, 0.18, 0.16, 0.12, 0.12, 0.10, 0.07, 0.05];
   const composite = factors.reduce((sum, f, i) => sum + f.live * weights[i], 0);
   const pct = Math.round(composite * 100);
-  let level, riskClass, iconColor;
-  if (pct >= 70)      { level='EXTREME';  riskClass='risk-extreme'; iconColor='var(--red)'; }
-  else if (pct >= 55) { level='HIGH';     riskClass='risk-high';    iconColor='var(--orange)'; }
-  else if (pct >= 40) { level='ELEVATED'; riskClass='risk-elevated';iconColor='var(--yellow)'; }
-  else if (pct >= 25) { level='GUARDED';  riskClass='risk-guarded'; iconColor='var(--blue)'; }
-  else                { level='LOW';      riskClass='risk-low';     iconColor='var(--green)'; }
-  document.getElementById('riskBanner').style.borderColor = pct>=70?'rgba(248,113,113,.3)':pct>=55?'rgba(251,146,60,.25)':pct>=40?'rgba(251,191,36,.2)':'var(--border)';
-  document.querySelector('.risk-icon').innerHTML = `<div class="gauge-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${iconColor}" viewBox="0 0 16 16"><path d="M6.999 2.6A5.5 5.5 0 0 1 15 7.5a.5.5 0 0 0 1 0 6.5 6.5 0 1 0-13 0 5 5 0 0 0 6.001 4.9A5.5 5.5 0 0 1 1 7.5a.5.5 0 0 0-1 0 6.5 6.5 0 1 0 13 0 5 5 0 0 0-6.001-4.9M10 7.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></svg></div>`;
-  const rl = document.getElementById('riskLevel');
-  rl.textContent = level; rl.className = 'risk-level ' + riskClass;
-  const rs = document.getElementById('riskScore');
-  rs.textContent = pct + '%'; rs.className = 'risk-score ' + riskClass;
+  let level, riskClass;
+  if (pct >= 70)      { level='Extreme';  riskClass='risk-extreme'; }
+  else if (pct >= 55) { level='High';     riskClass='risk-high';    }
+  else if (pct >= 40) { level='Elevated'; riskClass='risk-elevated';}
+  else if (pct >= 25) { level='Guarded';  riskClass='risk-guarded'; }
+  else                { level='Low';      riskClass='risk-low';     }
+  const colorHex = pct>=70?'var(--red)':pct>=55?'var(--orange)':pct>=40?'var(--yellow)':pct>=25?'var(--blue)':'var(--green)';
+  const colorBg  = pct>=70?'rgba(248,113,113,.12)':pct>=55?'rgba(251,146,60,.12)':pct>=40?'rgba(251,191,36,.12)':pct>=25?'rgba(147,197,253,.12)':'rgba(74,222,128,.12)';
+  const colorBdr = pct>=70?'rgba(248,113,113,.3)':pct>=55?'rgba(251,146,60,.25)':pct>=40?'rgba(251,191,36,.2)':pct>=25?'rgba(147,197,253,.25)':'rgba(74,222,128,.2)';
+
+  // Icon wrap
+  const wrap = document.getElementById('riskIconWrap');
+  wrap.style.background = colorBg; wrap.style.borderColor = colorBdr;
+  wrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${colorHex}" viewBox="0 0 16 16"><path d="M6.999 2.6A5.5 5.5 0 0 1 15 7.5a.5.5 0 0 0 1 0 6.5 6.5 0 1 0-13 0 5 5 0 0 0 6.001 4.9A5.5 5.5 0 0 1 1 7.5a.5.5 0 0 0-1 0 6.5 6.5 0 1 0 13 0 5 5 0 0 0-6.001-4.9M10 7.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></svg>`;
+
+  // Sub label
   const critCount = factors.filter(f=>f.tier==='tier-crit').length;
-  document.getElementById('riskSub').textContent = `Composite score ${pct}% · ${critCount} critical factor${critCount!==1?'s':''} active`;
+  document.getElementById('riskSub').textContent = `NWS · ${critCount} critical factor${critCount!==1?'s':''} active`;
+
+  // Badge
+  const badge = document.getElementById('riskBadge');
+  badge.textContent = level; badge.style.background = colorBg; badge.style.color = colorHex; badge.style.borderColor = colorBdr;
+
+  // Score
+  const rs = document.getElementById('riskScore');
+  rs.textContent = pct + '%'; rs.className = 'aqi-score ' + riskClass;
+
+  // Range bar (0–100)
+  document.getElementById('riskRangeBar').innerHTML = rangeBar(pct, 100, 'linear-gradient(to right, #4ade80 0%, #93c5fd 25%, #fbbf24 40%, #fb923c 55%, #f87171 70%)');
+
+  // SPC cells
+  const spc = window._spcThreats?.day1;
+  const spcCell = (val, label) => {
+    const m = SPC_LEVEL_META[val ?? 0];
+    const noData = val == null;
+    return `<div class="aqi-cell">
+      <span class="aqi-cell-lbl">${label}</span>
+      <span class="aqi-cell-val" style="color:${noData?'var(--dim)':m.color}">${noData?'—':val}</span>
+      <span class="aqi-cell-sub">${noData?'SPC':m.label}</span>
+    </div>`;
+  };
+  document.getElementById('riskCells').innerHTML =
+    spcCell(spc?.tornado ?? null, 'Tornado') +
+    spcCell(spc?.wind    ?? null, 'Wind') +
+    spcCell(spc?.hail    ?? null, 'Hail');
   buildSpider(factors);
   buildFactorList(factors);
 }
