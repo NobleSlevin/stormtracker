@@ -899,7 +899,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
     <div class="tab-panel" id="tabTornado">
       <div id="panelTornado">
-        <div id="riskTtlSlot"><div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Tornado Formation Index</div></div>
+        <div id="riskTtlSlot"></div>
         <div class="aqi-card" id="riskBanner">
           <div class="aqi-header" id="riskHeader">
             <div class="aqi-icon-wrap" id="riskIconWrap" style="background:rgba(147,197,253,.1);border-color:rgba(147,197,253,.2)">
@@ -914,7 +914,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
           </div>
           <div id="riskRangeBar"></div>
           <div class="aqi-cells" id="riskCells">
-            <div class="aqi-cell"><span class="aqi-cell-lbl">Tornado</span><span class="aqi-cell-val" style="color:var(--dim)">—</span><span class="aqi-cell-sub">SPC Day 1</span></div>
+            <div class="aqi-cell"><span class="aqi-cell-lbl">Tornado SPC</span><span class="aqi-cell-val" style="color:var(--dim)">—</span><span class="aqi-cell-sub">SPC Day 1</span></div>
             <div class="aqi-cell"><span class="aqi-cell-lbl">Wind Shear</span><span class="aqi-cell-val" style="color:var(--dim)">—</span><span class="aqi-cell-sub">NWS</span></div>
             <div class="aqi-cell"><span class="aqi-cell-lbl">Instability</span><span class="aqi-cell-val" style="color:var(--dim)">—</span><span class="aqi-cell-sub">CAPE</span></div>
           </div>
@@ -951,7 +951,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.474l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.3.40</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.3.42</div>
   </div>
 
 </div>
@@ -1086,7 +1086,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         <button onclick="document.getElementById('settingsModal').classList.remove('open'); document.getElementById('infoModal').classList.add('open');" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">View Data Sources →</button>
       </div>
 
-      <div class="info-footer">StormWatch PWA · v2.3.40</div>
+      <div class="info-footer">StormWatch PWA · v2.3.42</div>
     </div>
   </div>
 </div>
@@ -1180,7 +1180,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
       <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
       <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:2;color:rgba(255,255,255,0.6)">
-        <b>v2.3.40</b><br>
+        <b>v2.3.42</b><br>
         · SPC Day 2 &amp; Day 3 threat gauges now appear in day modal hero<br>
         <br>
         <b>v2.3.17</b><br>
@@ -1219,7 +1219,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         · dBZ spectrum bar with touch/mouse scrub and intensity label
       </div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.40</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.42</div>
     </div>
   </div>
 </div>
@@ -1238,7 +1238,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.3.40"></script>
+<script src="app.js?v=2.3.42"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>

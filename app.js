@@ -191,6 +191,7 @@ const TAB_MAP   = {alerts:'tabAlerts', forecast:'tabForecast', nearby:'tabNearby
 // ── SECTION TITLE HELPER ──────────────────────────────────────────────────
 // Inline SVG paths — avoids <use href> clipping/rendering issues at small sizes
 const _SECTION_ICON_SVG = {
+  'bi-hurricane':            `<path d="M6.999 2.6A5.5 5.5 0 0 1 15 7.5a.5.5 0 0 0 1 0 6.5 6.5 0 1 0-13 0 5 5 0 0 0 6.001 4.9A5.5 5.5 0 0 1 1 7.5a.5.5 0 0 0-1 0 6.5 6.5 0 1 0 13 0 5 5 0 0 0-6.001-4.9M10 7.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/>`,
   'bi-clouds':               `<path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.476A5.5 5.5 0 0 1 4.406 3.342"/>`,
   'bi-wind':                 `<path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2H.5a.5.5 0 0 1 0-1H6.5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/>`,
   'bi-sun':                  `<path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>`,
@@ -206,6 +207,7 @@ const _SECTION_ICON_SVG = {
 };
 const _SECTION_ICONS = {
   'Weekly Forecast':         'bi-clouds',
+  'Tornado Formation Index': 'bi-hurricane',
   'Air Quality':             'bi-wind',
   'UV Index':                'bi-sun',
   'Wind':                    'bi-wind',
@@ -3573,14 +3575,20 @@ function computeTornadoRisk(periods, lat, lon, alerts) {
   const colorBg  = pct>=70?'rgba(248,113,113,.12)':pct>=55?'rgba(251,146,60,.12)':pct>=40?'rgba(251,191,36,.12)':pct>=25?'rgba(147,197,253,.12)':'rgba(74,222,128,.12)';
   const colorBdr = pct>=70?'rgba(248,113,113,.3)':pct>=55?'rgba(251,146,60,.25)':pct>=40?'rgba(251,191,36,.2)':pct>=25?'rgba(147,197,253,.25)':'rgba(74,222,128,.2)';
 
+  // Section title
+  const ttlSlot = document.getElementById('riskTtlSlot');
+  if (ttlSlot) ttlSlot.innerHTML = sectionTtl('Tornado Formation Index');
+
   // Icon wrap
   const wrap = document.getElementById('riskIconWrap');
   wrap.style.background = colorBg; wrap.style.borderColor = colorBdr;
   wrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="${colorHex}" viewBox="0 0 16 16"><path d="M6.999 2.6A5.5 5.5 0 0 1 15 7.5a.5.5 0 0 0 1 0 6.5 6.5 0 1 0-13 0 5 5 0 0 0 6.001 4.9A5.5 5.5 0 0 1 1 7.5a.5.5 0 0 0-1 0 6.5 6.5 0 1 0 13 0 5 5 0 0 0-6.001-4.9M10 7.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></svg>`;
 
   // Level label + sub
-  document.getElementById('riskLevelLabel').textContent = level;
-  document.getElementById('riskLevelLabel').className = riskClass;
+  const riskLabelEl = document.getElementById('riskLevelLabel');
+  riskLabelEl.textContent = 'Risk Factors';
+  riskLabelEl.className = '';
+  riskLabelEl.style.color = 'var(--text)';
   const critCount = factors.filter(f=>f.tier==='tier-crit').length;
   document.getElementById('riskSub').textContent = `${critCount} Active`;
 
@@ -3612,7 +3620,7 @@ function computeTornadoRisk(periods, lat, lon, alerts) {
 
   document.getElementById('riskCells').innerHTML = `
     <div class="aqi-cell">
-      <span class="aqi-cell-lbl">Tornado</span>
+      <span class="aqi-cell-lbl">Tornado SPC</span>
       <span class="aqi-cell-val" style="color:${tornVal==null?'var(--dim)':tornMeta.color}">${tornVal==null?'—':tornVal}</span>
       <span class="aqi-cell-sub">${tornVal==null?'SPC Day 1':tornMeta.label}</span>
     </div>
