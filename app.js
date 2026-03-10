@@ -1448,20 +1448,26 @@ function spcPointLevel(lat, lon, geojson) {
 }
 
 async function fetchSPCHazards(lat, lon) {
-  const base = 'https://www.spc.noaa.gov/products/outlook';
+  const spc  = 'https://www.spc.noaa.gov/products/outlook';
+  const esri = 'https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/SPC_wx_outlks/MapServer';
+  const aq   = (id) => `${esri}/${id}/query?where=1%3D1&outFields=LABEL,LABEL2&f=geojson`;
+
   try {
     const [
       torn1, wind1, hail1,
       torn2, wind2, hail2,
       cat3
     ] = await Promise.all([
-      fetch(`${base}/day1otlk_torn.nolyr.geojson`).then(r => r.json()).catch(() => null),
-      fetch(`${base}/day1otlk_wind.nolyr.geojson`).then(r => r.json()).catch(() => null),
-      fetch(`${base}/day1otlk_hail.nolyr.geojson`).then(r => r.json()).catch(() => null),
-      fetch(`${base}/day2otlk_torn.nolyr.geojson`).then(r => r.json()).catch(() => null),
-      fetch(`${base}/day2otlk_wind.nolyr.geojson`).then(r => r.json()).catch(() => null),
-      fetch(`${base}/day2otlk_hail.nolyr.geojson`).then(r => r.json()).catch(() => null),
-      fetch(`${base}/day3otlk_cat.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      // Day 1 — SPC direct GeoJSON (already working)
+      fetch(`${spc}/day1otlk_torn.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      fetch(`${spc}/day1otlk_wind.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      fetch(`${spc}/day1otlk_hail.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      // Day 2 — ArcGIS MapServer layers 11 (torn), 15 (wind), 13 (hail)
+      fetch(aq(11)).then(r => r.json()).catch(() => null),
+      fetch(aq(15)).then(r => r.json()).catch(() => null),
+      fetch(aq(13)).then(r => r.json()).catch(() => null),
+      // Day 3 — ArcGIS MapServer layer 17 (categorical)
+      fetch(aq(17)).then(r => r.json()).catch(() => null),
     ]);
 
     // Day 3 categorical: map SPC label → 0–5
