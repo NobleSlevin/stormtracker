@@ -1941,6 +1941,46 @@ function rvInitLocateBtn() {
   btn.addTo(rvMap);
 }
 
+// ── Radar Fullscreen Button ───────────────────────────────────────────────────
+function rvInitFullscreenBtn() {
+  if (!rvMap || document.getElementById('rvFullscreenBtn')) return;
+  const ctrl = L.control({ position: 'topright' });
+  ctrl.onAdd = function() {
+    const el = L.DomUtil.create('button', 'rv-fullscreen-btn');
+    el.id = 'rvFullscreenBtn';
+    el.title = 'Fullscreen';
+    el.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M1.5 1h4v1.5h-2.5v2.5h-1.5v-4zm9 0h4v4h-1.5v-2.5h-2.5v-1.5zm-9 9h1.5v2.5h2.5v1.5h-4v-4zm10.5 2.5v-2.5h1.5v4h-4v-1.5h2.5z"/>
+    </svg>`;
+    L.DomEvent.on(el, 'click', L.DomEvent.stopPropagation);
+    L.DomEvent.on(el, 'click', L.DomEvent.preventDefault);
+    L.DomEvent.on(el, 'click', () => {
+      const radarPanel = document.getElementById('panelRadar');
+      if (!document.fullscreenElement) {
+        radarPanel.requestFullscreen?.() || radarPanel.webkitRequestFullscreen?.();
+        el.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M5.5 1h-4v4h1.5v-2.5h2.5v-1.5zm5 0h4v4h-1.5v-2.5h-2.5v-1.5zm-5 10h-1.5v-2.5h-2.5v-1.5h4v4zm6.5-2.5h-2.5v2.5h-1.5v-4h4v1.5z"/>
+        </svg>`;
+      } else {
+        document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+        el.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1.5 1h4v1.5h-2.5v2.5h-1.5v-4zm9 0h4v4h-1.5v-2.5h-2.5v-1.5zm-9 9h1.5v2.5h2.5v1.5h-4v-4zm10.5 2.5v-2.5h1.5v4h-4v-1.5h2.5z"/>
+        </svg>`;
+      }
+      setTimeout(() => rvMap.invalidateSize(), 300);
+    });
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        el.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1.5 1h4v1.5h-2.5v2.5h-1.5v-4zm9 0h4v4h-1.5v-2.5h-2.5v-1.5zm-9 9h1.5v2.5h2.5v1.5h-4v-4zm10.5 2.5v-2.5h1.5v4h-4v-1.5h2.5z"/>
+        </svg>`;
+      }
+    });
+    return el;
+  };
+  ctrl.addTo(rvMap);
+}
+
 // ── Radar Overlay Layers ─────────────────────────────────────────────────────
 // Overlay definitions: id, label, color, fetch function
 const RV_OVERLAYS = [
@@ -2125,25 +2165,31 @@ async function rvLoadOverlay(id) {
       let center = null;
       try { center = L.geoJSON(f.geometry).getBounds().getCenter(); } catch(e) { return; }
 
-      // Extract motion from NWS parameters block (structured data in newer alerts)
-      // Also try description text as fallback
+      // Extract motion — check structured parameters first, then description text
       const params = props.parameters || {};
       let bearing = null, spd = null;
 
-      // Check maxWindGust, thunderstormWindGust (contain direction/speed)
-      // Primary: parse "STORM MOTION...NE AT 45 MPH" from description
-      const desc = (props.description || '') + ' ' + (props.headline || '');
-      const m1 = desc.match(/STORM\s+MOTION[^\d]{0,20}?(\d+)\s*DEGREES?\s+AT\s+(\d+)/i);
-      if (m1) {
-        bearing = parseInt(m1[1]);
-        spd = parseInt(m1[2]);
-      } else {
-        // "moving northeast at 35 mph" or "MOVING NE AT 35 MPH"
-        const m2 = desc.match(/moving\s+(?:toward\s+the\s+)?([NSEW]{1,3}(?:EAST|WEST|NORTH|SOUTH)?)\s+at\s+(\d+)/i);
-        if (m2) {
-          const dirKey = m2[1].toUpperCase().replace(/EAST$/,'E').replace(/WEST$/,'W').replace(/NORTH$/,'N').replace(/SOUTH$/,'S');
-          bearing = DIRS[dirKey] ?? null;
-          spd = parseInt(m2[2]);
+      // NWS structured: eventMotionDescription e.g. "...270DEG...45KT"
+      const emd = [].concat(params.eventMotionDescription || []).join(' ');
+      const mp = emd.match(/(\d{1,3})\s*DEG[^0-9]*(\d+)\s*(KT|MPH)/i);
+      if (mp) {
+        bearing = parseInt(mp[1]);
+        spd = Math.round(parseInt(mp[2]) * (mp[3].toUpperCase() === 'KT' ? 1.15078 : 1));
+      }
+
+      if (bearing === null) {
+        const desc = (props.description || '') + ' ' + (props.headline || '');
+        const m1 = desc.match(/STORM\s+MOTION[^\d]{0,20}?(\d+)\s*DEGREES?\s+AT\s+(\d+)/i);
+        if (m1) {
+          bearing = parseInt(m1[1]);
+          spd = parseInt(m1[2]);
+        } else {
+          const m2 = desc.match(/moving\s+(?:toward\s+the\s+)?([NSEW]{1,3}(?:EAST|WEST|NORTH|SOUTH)?)\s+at\s+(\d+)/i);
+          if (m2) {
+            const dirKey = m2[1].toUpperCase().replace(/EAST$/,'E').replace(/WEST$/,'W').replace(/NORTH$/,'N').replace(/SOUTH$/,'S');
+            bearing = DIRS[dirKey] ?? null;
+            spd = parseInt(m2[2]);
+          }
         }
       }
 
@@ -3468,6 +3514,7 @@ function initRadar(lat, lon) {
     rvInitOverlayBar();
     rvInitScrubber();
     rvInitLocateBtn();
+    rvInitFullscreenBtn();
     // Default outlook layer on
     setTimeout(() => {
       const outlookBtn = document.querySelector('[data-id="outlook"]');
