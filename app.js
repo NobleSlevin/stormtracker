@@ -1450,15 +1450,65 @@ function spcPointLevel(lat, lon, geojson) {
 async function fetchSPCHazards(lat, lon) {
   const base = 'https://www.spc.noaa.gov/products/outlook';
   try {
-    const [tornData, windData, hailData] = await Promise.all([
+    const [
+      torn1, wind1, hail1,
+      torn2, wind2, hail2,
+      cat3
+    ] = await Promise.all([
       fetch(`${base}/day1otlk_torn.nolyr.geojson`).then(r => r.json()).catch(() => null),
       fetch(`${base}/day1otlk_wind.nolyr.geojson`).then(r => r.json()).catch(() => null),
       fetch(`${base}/day1otlk_hail.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      fetch(`${base}/day2otlk_torn.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      fetch(`${base}/day2otlk_wind.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      fetch(`${base}/day2otlk_hail.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      fetch(`${base}/day3otlk_cat.nolyr.geojson`).then(r => r.json()).catch(() => null),
     ]);
+
+    // Day 3 categorical: map SPC label → 0–5
+    const catLabelToLevel = { TSTM: 0, MRGL: 1, SLGT: 2, ENH: 3, MDT: 4, HIGH: 5 };
+    let day3Level = 0;
+    if (cat3?.features) {
+      for (const feat of cat3.features) {
+        const raw = (feat.properties?.LABEL2 || feat.properties?.LABEL || '').toUpperCase();
+        const key = Object.keys(catLabelToLevel).find(k => raw.includes(k));
+        const lvl = key ? catLabelToLevel[key] : 0;
+        if (lvl > day3Level && spcPointLevel(lat, lon, { features: [feat] }) === lvl) {
+          // reuse spcPointLevel but for cat layer we need a different check
+        }
+      }
+      // Simpler: find highest matching feature
+      for (const feat of (cat3.features || [])) {
+        const raw = (feat.properties?.LABEL2 || feat.properties?.LABEL || '').toUpperCase();
+        const key = Object.keys(catLabelToLevel).find(k => raw.includes(k));
+        const lvl = key ? catLabelToLevel[key] : 0;
+        if (lvl <= day3Level || !feat.geometry) continue;
+        const polys = feat.geometry.type === 'Polygon' ? [feat.geometry.coordinates]
+                    : feat.geometry.type === 'MultiPolygon' ? feat.geometry.coordinates : [];
+        for (const poly of polys) {
+          const ring = poly[0]; if (!ring) continue;
+          let inside = false;
+          for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+            const [xi, yi] = ring[i], [xj, yj] = ring[j];
+            if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi))
+              inside = !inside;
+          }
+          if (inside) { day3Level = lvl; break; }
+        }
+      }
+    }
+
     window._spcThreats = {
-      tornado: tornData ? spcPointLevel(lat, lon, tornData) : 0,
-      wind:    windData ? spcPointLevel(lat, lon, windData) : 0,
-      hail:    hailData ? spcPointLevel(lat, lon, hailData) : 0,
+      day1: {
+        tornado: torn1 ? spcPointLevel(lat, lon, torn1) : 0,
+        wind:    wind1 ? spcPointLevel(lat, lon, wind1) : 0,
+        hail:    hail1 ? spcPointLevel(lat, lon, hail1) : 0,
+      },
+      day2: {
+        tornado: torn2 ? spcPointLevel(lat, lon, torn2) : 0,
+        wind:    wind2 ? spcPointLevel(lat, lon, wind2) : 0,
+        hail:    hail2 ? spcPointLevel(lat, lon, hail2) : 0,
+      },
+      day3: { categorical: day3Level },
     };
   } catch(e) {
     console.warn('SPC hazard fetch failed:', e);
@@ -1512,13 +1562,39 @@ function buildThreatGauge(level, icon, labelText) {
 function renderHeroThreats() {
   const el = document.getElementById('fchThreats');
   if (!el) return;
-  const t = window._spcThreats || { tornado: 0, wind: 0, hail: 0 };
+  const t = window._spcThreats?.day1 || { tornado: 0, wind: 0, hail: 0 };
 
-  const torIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="5" x2="20" y2="5"/><line x1="6" y1="10" x2="18" y2="10"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="11" y1="20" x2="13" y2="20"/></svg>`;
+  const torIcon  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="5" x2="20" y2="5"/><line x1="6" y1="10" x2="18" y2="10"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="11" y1="20" x2="13" y2="20"/></svg>`;
   const windIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>`;
   const hailIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="8" y1="20" x2="8.01" y2="20"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="16" x2="16.01" y2="16"/><line x1="16" y1="20" x2="16.01" y2="20"/></svg>`;
 
   el.innerHTML = `<div class="fch-threats">
+    ${buildThreatGauge(t.tornado, torIcon, 'Tornado')}
+    ${buildThreatGauge(t.wind,    windIcon, 'Wind')}
+    ${buildThreatGauge(t.hail,    hailIcon, 'Hail')}
+  </div>`;
+}
+
+// Returns threat gauge HTML for day modal hero (days 0, 1, 2 only)
+function buildModalThreats(dayIdx) {
+  const s = window._spcThreats;
+  if (!s) return '';
+
+  const torIcon  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="5" x2="20" y2="5"/><line x1="6" y1="10" x2="18" y2="10"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="11" y1="20" x2="13" y2="20"/></svg>`;
+  const windIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>`;
+  const hailIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="8" y1="20" x2="8.01" y2="20"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="16" x2="16.01" y2="16"/><line x1="16" y1="20" x2="16.01" y2="20"/></svg>`;
+
+  let t;
+  if (dayIdx === 0)      t = s.day1;
+  else if (dayIdx === 1) t = s.day2;
+  else if (dayIdx === 2) {
+    // Day 3: categorical only — show same level for all three
+    const lvl = s.day3?.categorical ?? 0;
+    t = { tornado: lvl, wind: lvl, hail: lvl };
+  } else return '';
+
+  const border = 'border-top:1px solid rgba(255,255,255,0.15);margin-top:14px;padding-top:14px;';
+  return `<div style="display:flex;justify-content:space-around;align-items:center;${border}padding-right:5px">
     ${buildThreatGauge(t.tornado, torIcon, 'Tornado')}
     ${buildThreatGauge(t.wind,    windIcon, 'Wind')}
     ${buildThreatGauge(t.hail,    hailIcon, 'Hail')}
@@ -1575,6 +1651,7 @@ function openDayModal(dayIdx) {
     <div style="font-size:14px;color:${_acFaint};line-height:1.4">${d.shortForecast}</div>
     <div style="font-size:13px;color:${_acDim}">Wind: <b style="color:${_ac};font-weight:600">${d.windDirection||''} ${d.windSpeed||''}</b></div>
     ${d.detailedForecast && d.detailedForecast !== d.shortForecast ? `<div style="font-size:12px;color:${_acDim};line-height:1.6;border-top:1px solid ${_acBorder};padding-top:10px;margin-top:2px">${d.detailedForecast}</div>` : ''}
+    ${dayIdx <= 2 ? buildModalThreats(dayIdx) : ''}
   </div>`;
 
   // ── Hourly data for this day ──
