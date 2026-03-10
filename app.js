@@ -1427,7 +1427,9 @@ function spcPointLevel(lat, lon, geojson) {
   for (const feat of geojson.features) {
     const geom = feat.geometry;
     if (!geom) continue;
-    const label = feat.properties?.LABEL || feat.properties?.LABEL2 || '0';
+    // SPC direct GeoJSON uses LABEL (e.g. "0.05"), ArcGIS MapServer uses dn (e.g. 5)
+    const label = feat.properties?.LABEL || feat.properties?.LABEL2
+               || feat.properties?.dn || '0';
     const level = spcProbToLevel(label);
     if (level <= maxLevel) continue; // skip if not higher
     const polys = geom.type === 'Polygon' ? [geom.coordinates]
@@ -1450,7 +1452,7 @@ function spcPointLevel(lat, lon, geojson) {
 async function fetchSPCHazards(lat, lon) {
   const spc  = 'https://www.spc.noaa.gov/products/outlook';
   const esri = 'https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/SPC_wx_outlks/MapServer';
-  const aq   = (id) => `${esri}/${id}/query?where=1%3D1&outFields=LABEL,LABEL2&f=geojson`;
+  const aq   = (id) => `${esri}/${id}/query?where=1%3D1&outFields=dn,LABEL,LABEL2&f=geojson`;
 
   try {
     const [
@@ -1470,36 +1472,34 @@ async function fetchSPCHazards(lat, lon) {
       fetch(aq(17)).then(r => r.json()).catch(() => null),
     ]);
 
-    // Day 3 categorical: map SPC label → 0–5
-    const catLabelToLevel = { TSTM: 0, MRGL: 1, SLGT: 2, ENH: 3, MDT: 4, HIGH: 5 };
-    let day3Level = 0;
-    if (cat3?.features) {
-      for (const feat of cat3.features) {
-        const raw = (feat.properties?.LABEL2 || feat.properties?.LABEL || '').toUpperCase();
-        const key = Object.keys(catLabelToLevel).find(k => raw.includes(k));
-        const lvl = key ? catLabelToLevel[key] : 0;
-        if (lvl > day3Level && spcPointLevel(lat, lon, { features: [feat] }) === lvl) {
-          // reuse spcPointLevel but for cat layer we need a different check
-        }
+    // Day 3 categorical: ArcGIS dn integer (2=TSTM,3=MRGL,4=SLGT,5=ENH,6=MDT,8=HIGH)
+    // or SPC text label as fallback
+    function catFeatLevel(feat) {
+      const dn = feat.properties?.dn;
+      if (dn != null) {
+        const m = { 2:0, 3:1, 4:2, 5:3, 6:4, 8:5 };
+        if (m[dn] != null) return m[dn];
       }
-      // Simpler: find highest matching feature
-      for (const feat of (cat3.features || [])) {
-        const raw = (feat.properties?.LABEL2 || feat.properties?.LABEL || '').toUpperCase();
-        const key = Object.keys(catLabelToLevel).find(k => raw.includes(k));
-        const lvl = key ? catLabelToLevel[key] : 0;
-        if (lvl <= day3Level || !feat.geometry) continue;
-        const polys = feat.geometry.type === 'Polygon' ? [feat.geometry.coordinates]
-                    : feat.geometry.type === 'MultiPolygon' ? feat.geometry.coordinates : [];
-        for (const poly of polys) {
-          const ring = poly[0]; if (!ring) continue;
-          let inside = false;
-          for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-            const [xi, yi] = ring[i], [xj, yj] = ring[j];
-            if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi))
-              inside = !inside;
-          }
-          if (inside) { day3Level = lvl; break; }
+      const raw = (feat.properties?.LABEL2 || feat.properties?.LABEL || '').toUpperCase();
+      const tm = { TSTM:0, MRGL:1, SLGT:2, ENH:3, MDT:4, HIGH:5 };
+      const k = Object.keys(tm).find(k => raw.includes(k));
+      return k ? tm[k] : 0;
+    }
+    let day3Level = 0;
+    for (const feat of (cat3?.features || [])) {
+      const lvl = catFeatLevel(feat);
+      if (lvl <= day3Level || !feat.geometry) continue;
+      const polys = feat.geometry.type === 'Polygon' ? [feat.geometry.coordinates]
+                  : feat.geometry.type === 'MultiPolygon' ? feat.geometry.coordinates : [];
+      for (const poly of polys) {
+        const ring = poly[0]; if (!ring) continue;
+        let inside = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+          const [xi, yi] = ring[i], [xj, yj] = ring[j];
+          if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi))
+            inside = !inside;
         }
+        if (inside) { day3Level = lvl; break; }
       }
     }
 
