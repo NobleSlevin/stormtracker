@@ -1807,6 +1807,111 @@ function openDayModal(dayIdx) {
 }
 
 
+// ── dBZ Spectrum Bar ─────────────────────────────────────────────────────
+// Standard NEXRAD reflectivity color scale (dBZ: -30 to 80)
+const DBZ_STOPS = [
+  { dbz: -30, color: '#000000' },
+  { dbz: -20, color: '#646464' },
+  { dbz: -10, color: '#9b9b9b' },
+  { dbz:   0, color: '#c8c8c8' },
+  { dbz:   5, color: '#04e9e7' },
+  { dbz:  10, color: '#019ff4' },
+  { dbz:  15, color: '#0300f4' },
+  { dbz:  20, color: '#02fd02' },
+  { dbz:  25, color: '#01c501' },
+  { dbz:  30, color: '#008e00' },
+  { dbz:  35, color: '#fdf802' },
+  { dbz:  40, color: '#e5bc00' },
+  { dbz:  45, color: '#fd9500' },
+  { dbz:  50, color: '#fd0000' },
+  { dbz:  55, color: '#d40000' },
+  { dbz:  60, color: '#bc0000' },
+  { dbz:  65, color: '#f800fd' },
+  { dbz:  70, color: '#9854c6' },
+  { dbz:  75, color: '#fdfdfd' },
+  { dbz:  80, color: '#ffffff' },
+];
+
+const DBZ_MIN = -30, DBZ_MAX = 80;
+
+function dbzToColor(dbz) {
+  const clamped = Math.max(DBZ_MIN, Math.min(DBZ_MAX, dbz));
+  for (let i = 0; i < DBZ_STOPS.length - 1; i++) {
+    if (clamped >= DBZ_STOPS[i].dbz && clamped <= DBZ_STOPS[i+1].dbz) {
+      const t = (clamped - DBZ_STOPS[i].dbz) / (DBZ_STOPS[i+1].dbz - DBZ_STOPS[i].dbz);
+      const c1 = DBZ_STOPS[i].color, c2 = DBZ_STOPS[i+1].color;
+      const r1 = parseInt(c1.slice(1,3),16), g1 = parseInt(c1.slice(3,5),16), b1 = parseInt(c1.slice(5,7),16);
+      const r2 = parseInt(c2.slice(1,3),16), g2 = parseInt(c2.slice(3,5),16), b2 = parseInt(c2.slice(5,7),16);
+      return `rgb(${Math.round(r1+t*(r2-r1))},${Math.round(g1+t*(g2-g1))},${Math.round(b1+t*(b2-b1))})`;
+    }
+  }
+  return DBZ_STOPS[DBZ_STOPS.length-1].color;
+}
+
+function dbzLabel(dbz) {
+  if (dbz < 0)  return 'Clear';
+  if (dbz < 10) return 'Haze';
+  if (dbz < 20) return 'Light Rain';
+  if (dbz < 30) return 'Moderate Rain';
+  if (dbz < 40) return 'Heavy Rain';
+  if (dbz < 50) return 'Very Heavy / Hail';
+  if (dbz < 60) return 'Extreme / Large Hail';
+  return 'Tornado / Extreme';
+}
+
+function rvInitDbzBar() {
+  const bar = document.getElementById('rvDbzBar');
+  if (!bar || bar.dataset.inited) return;
+  bar.dataset.inited = '1';
+
+  // Build gradient from stops
+  const stops = DBZ_STOPS.map(s => {
+    const pct = ((s.dbz - DBZ_MIN) / (DBZ_MAX - DBZ_MIN) * 100).toFixed(1);
+    return `${s.color} ${pct}%`;
+  }).join(', ');
+  bar.style.background = `linear-gradient(to right, ${stops})`;
+
+  const tip = document.getElementById('rvDbzTip');
+  const wrap = document.getElementById('rvDbzWrap');
+
+  const scrub = (e) => {
+    const rect = bar.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const dbz = Math.round(DBZ_MIN + pct * (DBZ_MAX - DBZ_MIN));
+    const color = dbzToColor(dbz);
+    // Position tooltip
+    const tipPct = pct * 100;
+    tip.style.display = 'block';
+    tip.style.left = `clamp(24px, calc(${tipPct}% - 24px), calc(100% - 54px))`;
+    tip.style.borderColor = color;
+    tip.style.color = color;
+    tip.innerHTML = `<span class="dbz-tip-val">${dbz} dBZ</span><span class="dbz-tip-lbl">${dbzLabel(dbz)}</span>`;
+    // Scrub indicator line
+    bar.style.setProperty('--scrub-pct', `${tipPct}%`);
+    bar.classList.add('scrubbing');
+  };
+
+  const hide = () => {
+    tip.style.display = 'none';
+    bar.classList.remove('scrubbing');
+  };
+
+  bar.addEventListener('mousemove', scrub);
+  bar.addEventListener('mouseleave', hide);
+  bar.addEventListener('touchstart', e => { e.preventDefault(); scrub(e); }, { passive: false });
+  bar.addEventListener('touchmove',  e => { e.preventDefault(); scrub(e); }, { passive: false });
+  bar.addEventListener('touchend', hide);
+}
+
+function rvToggleDbzBar() {
+  const wrap = document.getElementById('rvDbzWrap');
+  if (!wrap) return;
+  const isRain = OWM_LAYERS.find(l => l.key === rvActiveLayer)?.rainviewer;
+  wrap.style.display = isRain ? 'block' : 'none';
+  if (isRain) rvInitDbzBar();
+}
+
 function pchartPage(btn, pageIdx) {
   const wrap = btn.closest('.pchart-wrap');
   wrap.querySelectorAll('.pchart-tab').forEach((t,i) => t.classList.toggle('active', i === pageIdx));
@@ -2801,7 +2906,14 @@ function initRadar(lat, lon) {
         </div>
         <span class="radar-timestamp" id="rvTimestamp">Loading…</span>
       </div>
-      <div class="radar-layer-bar" id="rvLayerBar"></div>`;
+      <div class="radar-layer-bar" id="rvLayerBar"></div>
+      <div class="radar-dbz-wrap" id="rvDbzWrap" style="display:none">
+        <div class="radar-dbz-bar" id="rvDbzBar"></div>
+        <div class="radar-dbz-tooltip" id="rvDbzTip" style="display:none"></div>
+        <div class="radar-dbz-labels">
+          <span>-30</span><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span>
+        </div>
+      </div>\``;
 
     // Build layer switcher buttons
     const bar = document.getElementById('rvLayerBar');
@@ -2816,6 +2928,7 @@ function initRadar(lat, lon) {
         rvStop();
         rvActiveLayer = lyr.key;
         bar.querySelectorAll('.rvlyr-btn').forEach(b => b.classList.toggle('active', b.dataset.key === lyr.key));
+        rvToggleDbzBar();
         rvLoadFrames();
       });
       bar.appendChild(btn);
@@ -2848,6 +2961,7 @@ function initRadar(lat, lon) {
     });
 
     rvInited = true;
+    rvToggleDbzBar();
   } else {
     rvMap.setView([lat, lon], 8);
     rvMap.eachLayer(l => { if (l._url && l._url.includes('openweathermap')) rvMap.removeLayer(l); else if (l._wmsParams) rvMap.removeLayer(l); });
@@ -2872,53 +2986,16 @@ async function rvLoadFrames() {
 
     if (lyrDef?.rainviewer) {
       // ── NOAA nowCOAST NEXRAD MRMS WMS ──
-      // Free, no key, real NEXRAD data at 1km resolution, ~4-min updates, all zoom levels
+      // Real NEXRAD MRMS data, free, no key, all zoom levels, ~2-min updates
       const WMS_BASE = 'https://nowcoast.noaa.gov/geoserver/observations/weather_radar/ows';
-      const LAYER = 'conus_bref_qcd';
+      const LAYER = 'base_reflectivity_mosaic';
 
-      // Fetch available time steps from WMS GetCapabilities
-      let timestamps = [];
-      try {
-        const capUrl = `${WMS_BASE}?service=WMS&version=1.3.0&request=GetCapabilities`;
-        const capXml = await fetch(capUrl).then(r => r.text());
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(capXml, 'text/xml');
-        // Find the time dimension for our layer
-        const layers = doc.querySelectorAll('Layer[queryable]');
-        for (const l of layers) {
-          const nameEl = l.querySelector('Name');
-          if (nameEl?.textContent === LAYER) {
-            const dim = l.querySelector('Dimension[name="time"]');
-            if (dim) {
-              // Format: "2026-03-09T20:00:00Z/2026-03-09T22:00:00Z/PT4M" or comma-separated list
-              const raw = dim.textContent.trim();
-              if (raw.includes(',')) {
-                timestamps = raw.split(',').map(s => s.trim()).filter(Boolean);
-              } else if (raw.includes('/')) {
-                // ISO interval — generate steps
-                const parts = raw.split('/');
-                const start = new Date(parts[0]).getTime();
-                const end = new Date(parts[1]).getTime();
-                const stepMatch = parts[2]?.match(/PT(\d+)M/);
-                const stepMs = stepMatch ? parseInt(stepMatch[1]) * 60000 : 10 * 60000;
-                for (let t = start; t <= end; t += stepMs) timestamps.push(new Date(t).toISOString());
-              }
-              break;
-            }
-          }
-        }
-      } catch(e) {
-        console.warn('WMS GetCapabilities failed, using synthetic timestamps:', e);
-      }
-
-      // Fallback: generate 12 frames at ~4-min intervals ending now
-      if (!timestamps.length) {
-        const now = Date.now();
-        for (let i = 11; i >= 0; i--) timestamps.push(new Date(now - i * 4 * 60000).toISOString());
-      }
-
-      // Keep last 12 frames
-      timestamps = timestamps.slice(-12);
+      // Generate 10 frames at 2-min steps ending at the current minute (rounded down)
+      const now = Date.now();
+      const snapped = now - (now % (2 * 60 * 1000)); // snap to 2-min boundary
+      const timestamps = Array.from({length: 10}, (_, i) =>
+        new Date(snapped - (9 - i) * 2 * 60 * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z')
+      );
 
       rvFrames = timestamps.map(iso => {
         const d = new Date(iso);
@@ -2933,10 +3010,9 @@ async function rvLoadFrames() {
           format: 'image/png',
           transparent: true,
           version: '1.3.0',
-          time: frame.ts,
+          TIME: frame.ts,
           opacity: 0,
           zIndex: 2,
-          tileSize: 256,
         });
         rvLayers.push(layer);
         layer.addTo(rvMap);
