@@ -1960,83 +1960,58 @@ async function rvLoadOverlay(id) {
     });
 
   } else if (id === 'stormtracks') {
-    // NWS SCIT Storm Tracks via WMS/GeoJSON
-    // Use nowCOAST storm tracks WMS layer
-    const WMS_BASE = 'https://nowcoast.noaa.gov/geoserver/warnings/storm_based_warnings_watches_advisories/ows';
-    // Fallback: use NWS storms API parsed from hazards
-    // Primary: SPC storm reports as a reasonable proxy since SCIT needs special endpoint
-    // Use NWS active mesoscale discussions area for storm context
-    // Best free option: NWS storm attributes from active tornado/severe warnings
-    const url = 'https://api.weather.gov/alerts/active?status=actual&message_type=alert&event=Tornado%20Warning,Severe%20Thunderstorm%20Warning&limit=200';
-    const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
-    const data = await resp.json();
+    // NWS SCIT storm tracks — nowCOAST WMS layer (real SCIT algorithm output)
+    // Served as a WMS overlay, no API key needed
+    const wmsLayer = L.tileLayer.wms(
+      'https://nowcoast.noaa.gov/geoserver/warnings/storm_cell_identification_tracking/ows', {
+        layers: 'storm_cell_identification_tracking',
+        format: 'image/png',
+        transparent: true,
+        version: '1.3.0',
+        opacity: 0.9,
+        zIndex: 5,
+      }
+    );
+    wmsLayer.addTo(group);
 
-    // Extract storm motion from warning text and draw motion vectors
-    (data.features || []).forEach(f => {
-      if (!f.geometry) return;
-      const props = f.properties;
-      const desc = (props.description || '') + (props.headline || '');
+    // Also fetch NWS warnings for context polygons with motion text
+    try {
+      const url = 'https://api.weather.gov/alerts/active?status=actual&message_type=alert&limit=200';
+      const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
+      const data = await resp.json();
 
-      // Parse storm motion: "moving NE at 45 mph" or "moving toward the northeast at 35 mph"
-      const motionMatch = desc.match(/moving\s+(?:toward\s+(?:the\s+)?)?([NSEW]{1,3}(?:east|west|north|south)?)\s+at\s+(\d+)\s*mph/i);
+      (data.features || []).forEach(f => {
+        const props = f.properties;
+        const evt = (props.event || '').toLowerCase();
+        if (!evt.includes('tornado') && !evt.includes('thunderstorm')) return;
+        if (!f.geometry) return;
 
-      // Find centroid of polygon for track origin
-      let center = null;
-      try {
-        center = L.geoJSON(f.geometry).getBounds().getCenter();
-      } catch(e) { return; }
+        const desc = (props.description || '') + ' ' + (props.headline || '');
+        const color = warnColor(props.event || '');
 
-      const color = warnColor(props.event || '');
-
-      // Draw warning polygon outline (lighter, since warnings overlay already shows filled)
-      L.geoJSON(f.geometry, {
-        style: { color, weight: 2, opacity: 0.7, fill: false, dashArray: '6 3' }
-      }).addTo(group);
-
-      if (motionMatch && center) {
-        const dir = motionMatch[1].toUpperCase();
-        const spd = parseInt(motionMatch[2]);
-        // Convert direction to bearing
-        const DIRS = { N:0,NNE:22.5,NE:45,ENE:67.5,E:90,ESE:112.5,SE:135,SSE:157.5,
-                       S:180,SSW:202.5,SW:225,WSW:247.5,W:270,WNW:292.5,NW:315,NNW:337.5 };
-        const bearing = DIRS[dir] ?? 0;
-        const rad = (bearing - 90) * Math.PI / 180;
-
-        // Draw tick marks at 15-min intervals (speed in mph, 1 deg lat ≈ 69 miles)
-        const tickCount = 4;
-        const distPerTick = (spd / 60 * 15) / 69; // degrees lat per 15 min
-        const cosLat = Math.cos(center.lat * Math.PI / 180);
-
-        for (let t = 1; t <= tickCount; t++) {
-          const dlat = Math.sin((bearing) * Math.PI / 180) * distPerTick * t;
-          const dlon = Math.cos((bearing) * Math.PI / 180) * distPerTick * t / cosLat;
-          const pt = [center.lat + dlat, center.lng + dlon];
-
-          // Tick cross
-          const tickSize = 0.03;
-          const perpRad = rad + Math.PI / 2;
-          const tick = L.polyline([
-            [pt[0] - Math.sin(perpRad) * tickSize, pt[1] - Math.cos(perpRad) * tickSize / cosLat],
-            [pt[0] + Math.sin(perpRad) * tickSize, pt[1] + Math.cos(perpRad) * tickSize / cosLat]
-          ], { color, weight: 2, opacity: 0.8 }).addTo(group);
-        }
-
-        // Motion line
-        const endLat = center.lat + Math.sin(bearing * Math.PI / 180) * distPerTick * tickCount;
-        const endLon = center.lng + Math.cos(bearing * Math.PI / 180) * distPerTick * tickCount / cosLat;
-        L.polyline([[center.lat, center.lng], [endLat, endLon]], {
-          color, weight: 2, opacity: 0.8, dashArray: '4 3'
+        // Draw dashed outline of warning polygon
+        L.geoJSON(f.geometry, {
+          style: { color, weight: 2, opacity: 0.75, fill: false, dashArray: '5 4' }
         }).addTo(group);
 
-        // Arrow head circle at end
-        L.circleMarker([endLat, endLon], {
-          radius: 4, color, fillColor: color, fillOpacity: 1, weight: 1.5
-        }).bindPopup(`<div class="rmp-inner">
-          <div class="rmp-title" style="color:${color}">${props.event}</div>
-          <div class="rmp-body">Moving ${dir} at ${spd} mph<br>Tick marks = 15 min intervals</div>
-        </div>`, { className: 'rv-map-popup' }).addTo(group);
-      }
-    });
+        // Parse motion for popup info
+        const motionMatch = desc.match(/moving\s+(?:toward\s+(?:the\s+)?)?(\w+(?:\s+\w+)?)\s+at\s+(\d+)\s*mph/i);
+        let motionStr = '';
+        if (motionMatch) motionStr = `<br>Moving ${motionMatch[1]} at ${motionMatch[2]} mph`;
+
+        // Centroid tap popup
+        let center = null;
+        try { center = L.geoJSON(f.geometry).getBounds().getCenter(); } catch(e) {}
+        if (center) {
+          L.circleMarker(center, {
+            radius: 5, color, fillColor: color, fillOpacity: 0.9, weight: 1.5
+          }).bindPopup(`<div class="rmp-inner">
+            <div class="rmp-title" style="color:${color}">${props.event}</div>
+            <div class="rmp-body">${(props.areaDesc||'').split(';')[0]}${motionStr}</div>
+          </div>`, { className: 'rv-map-popup' }).addTo(group);
+        }
+      });
+    } catch(e) { console.warn('Storm tracks warning fetch:', e); }
   }
 }
 
@@ -2218,7 +2193,7 @@ function rvInitDbzBar() {
     const tipPct = pct * 100;
 
     // Render content first so offsetWidth is accurate
-    tip.innerHTML = `<span class="dbz-tip-val">${dbz}<span class="dbz-tip-unit"> dBZ</span></span><span class="dbz-tip-lbl">${dbzLabel(dbz)}</span>`;
+    tip.innerHTML = `<div class="dbz-tip-val">${dbz}<span class="dbz-tip-unit"> dBZ</span></div><div class="dbz-tip-lbl">${dbzLabel(dbz)}</div>`;
     tip.style.borderColor = color;
     tip.style.color = color;
     tip.style.display = 'block';
@@ -3260,7 +3235,7 @@ function initRadar(lat, lon) {
         </div>
       </div>
       <div class="radar-overlay-bar" id="rvOvrBar"></div>
-      <div class="radar-scrubber" id="rvScrubber"></div>\``;
+      <div class="radar-scrubber" id="rvScrubber"></div>`;
 
     // Build layer switcher buttons
     const bar = document.getElementById('rvLayerBar');
