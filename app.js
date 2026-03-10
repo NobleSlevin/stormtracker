@@ -1164,45 +1164,117 @@ async function fetchForecast(lat, lon, attempt = 1) {
   }
 }
 
-function buildOutlookBlurb(dayPairs) {
+// Returns per-day annotation data used both for blurb and inline row chips
+function buildDayAnnotations(dayPairs) {
   const dn = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const annotations = {}; // dateKey → { chip, chipColor, severe, hot, cold }
   const severeDays = [], hotDays = [], coldDays = [];
+  const SWING_THRESHOLD = 10;
 
-  dayPairs.forEach(pair => {
+  dayPairs.forEach((pair, i) => {
     const p = pair.day || pair.night;
     if (!p) return;
     const dt = new Date(p.startTime);
+    const dateKey = dt.toDateString();
     const dayName = dn[dt.getDay()];
-    const fc = (p.shortForecast || '').toLowerCase();
-    const detail = (p.detailedForecast || '').toLowerCase();
-    const combined = fc + ' ' + detail;
-    const hi = Math.max(p.temperature ?? 0, pair.night?.temperature ?? 0);
-    const lo = Math.min(p.temperature ?? 999, pair.night?.temperature ?? 999);
+    const combined = ((p.shortForecast || '') + ' ' + (p.detailedForecast || '')).toLowerCase();
+    const hi = pair.day?.temperature ?? pair.night?.temperature ?? 0;
+    const lo = pair.night?.temperature ?? pair.day?.temperature ?? 999;
+
+    if (!annotations[dateKey]) annotations[dateKey] = {};
 
     if (combined.includes('tornado') || combined.includes('severe') ||
         combined.includes('thunder') || combined.includes('hail') ||
         combined.includes('damaging') || combined.includes('hurricane')) {
       severeDays.push(dayName);
+      annotations[dateKey].severe = true;
     } else if (hi >= 100) {
       hotDays.push({ day: dayName, hi });
+      annotations[dateKey].extreme = 'hot';
     } else if (lo <= 25) {
       coldDays.push({ day: dayName, lo });
+      annotations[dateKey].extreme = 'cold';
+    }
+
+    // Day-over-day swing vs previous day
+    if (i > 0) {
+      const prev = dayPairs[i - 1];
+      const prevHi = prev.day?.temperature ?? prev.night?.temperature;
+      const currHi = pair.day?.temperature ?? pair.night?.temperature;
+      if (prevHi != null && currHi != null) {
+        const diff = currHi - prevHi;
+        const absDiff = Math.abs(diff);
+        if (absDiff >= SWING_THRESHOLD) {
+          const mag = absDiff >= 25 ? 'big' : absDiff >= 18 ? 'big' : '';
+          annotations[dateKey].swing = {
+            diff,
+            absDiff,
+            label: diff > 0
+              ? `+${absDiff}° warmer`
+              : `${diff}° cooler`,
+            color: diff > 0 ? '#fb923c' : '#60a5fa',
+            mag,
+          };
+        }
+      }
     }
   });
 
-  let blurb = '';
-  if (severeDays.length) {
-    blurb = `<b>Outlook:</b> Potential for severe weather ${severeDays.join(' and ')}.`;
-  } else if (hotDays.length) {
+  return { annotations, severeDays, hotDays, coldDays };
+}
+
+function buildOutlookBlurb(dayPairs) {
+  const dn = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const { severeDays, hotDays, coldDays } = buildDayAnnotations(dayPairs);
+  const blurbs = [];
+
+  if (severeDays.length)
+    blurbs.push(`<b>Outlook:</b> Potential for severe weather ${severeDays.join(' & ')}.`);
+  if (hotDays.length) {
     const peak = hotDays.reduce((a, b) => a.hi > b.hi ? a : b);
-    blurb = `<b>Outlook:</b> Dangerously hot conditions possible ${hotDays.map(d=>d.day).join(' and ')}. High near ${peak.hi}°F.`;
-  } else if (coldDays.length) {
+    blurbs.push(`<b>Outlook:</b> Dangerous heat possible ${hotDays.map(d=>d.day).join(' & ')}. High near ${peak.hi}°F.`);
+  }
+  if (coldDays.length) {
     const peak = coldDays.reduce((a, b) => a.lo < b.lo ? a : b);
-    blurb = `<b>Outlook:</b> Very cold temperatures expected ${coldDays.map(d=>d.day).join(' and ')}. Low near ${peak.lo}°F.`;
+    blurbs.push(`<b>Outlook:</b> Very cold temperatures expected ${coldDays.map(d=>d.day).join(' & ')}. Low near ${peak.lo}°F.`);
   }
 
-  if (!blurb) return '';
-  return `<div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rsm);padding:12px 14px;margin-bottom:8px;font-size:14px;color:rgba(255,255,255,0.8);line-height:1.55">${blurb}</div>`;
+  if (!blurbs.length) return '';
+  return `<div class="outlook-blurb-wrap">${blurbs.map(b =>
+    `<div class="outlook-blurb-line">${b}</div>`
+  ).join('')}</div>`;
+}
+
+// Returns { hiChip, loChip } HTML strings for a given dayPair ('' if nothing notable)
+function buildDayChips(pair, prevPair) {
+  let hiChip = '', loChip = '';
+  if (!prevPair) return { hiChip, loChip };
+
+  const prevHi = prevPair.day?.temperature ?? prevPair.night?.temperature;
+  const currHi = pair.day?.temperature ?? pair.night?.temperature;
+  if (prevHi != null && currHi != null) {
+    const diff = currHi - prevHi;
+    const absDiff = Math.abs(diff);
+    if (absDiff >= 10) {
+      const label = diff > 0 ? `▲ ${absDiff}°` : `▼ ${absDiff}°`;
+      const color = diff > 0 ? '#fb923c' : '#60a5fa';
+      hiChip = `<span class="fdr-swing-chip fdr-swing-hi" style="--chip-color:${color}">${label}</span>`;
+    }
+  }
+
+  const prevLo = prevPair.night?.temperature ?? prevPair.day?.temperature;
+  const currLo = pair.night?.temperature ?? pair.day?.temperature;
+  if (prevLo != null && currLo != null) {
+    const diff = currLo - prevLo;
+    const absDiff = Math.abs(diff);
+    if (absDiff >= 10) {
+      const label = diff > 0 ? `▲ ${absDiff}°` : `▼ ${absDiff}°`;
+      const color = diff > 0 ? '#fb923c' : '#60a5fa';
+      loChip = `<span class="fdr-swing-chip fdr-swing-lo" style="--chip-color:${color}">${label}</span>`;
+    }
+  }
+
+  return { hiChip, loChip };
 }
 
 function renderForecast(periods){
@@ -1210,21 +1282,20 @@ function renderForecast(periods){
   if(!periods.length){box.innerHTML='<div class="state-center"><div class="state-icon">🌤️</div><div class="state-ttl">No data</div></div>';return;}
   const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const hero_p = periods[0];
-  // Build day pairs: {day: period, night: period} for each date
+  // Build day pairs from ALL periods so today always gets both day+night halves
   const dayPairMap = new Map();
-  for (let i = 1; i < periods.length; i++) {
+  for (let i = 0; i < periods.length; i++) {
     const p = periods[i];
-    const dt = new Date(p.startTime);
-    const dateKey = dt.toDateString();
+    const dateKey = new Date(p.startTime).toDateString();
     if (!dayPairMap.has(dateKey)) dayPairMap.set(dateKey, {});
     if (p.isDaytime) dayPairMap.get(dateKey).day = p;
     else dayPairMap.get(dateKey).night = p;
   }
-  const dayPairs = [...dayPairMap.values()].slice(0, 6);
+  // dayPairs[0] = today, [1] = tomorrow, etc. Used for both weekly rows and day modal.
+  const dayPairs = [...dayPairMap.values()].slice(0, 7);
   window._dayPairsCache = dayPairs;
   window._forecastPeriods = periods; // cache for gradient restore
-  const days = [hero_p, ...dayPairs.map(pair => pair.day || pair.night)];
-  const now=new Date(), hero=days[0];
+  const now=new Date(), hero=hero_p;
   if (hero?.temperature) {
     window._nwsHeroTemp = hero.temperature;
     // Set temp immediately from NWS — OM will overwrite with more accurate value when it arrives
@@ -1246,11 +1317,13 @@ function renderForecast(periods){
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
     <div class="fch-extras" id="fchExtras"></div>
   </div>`:'';
-  const rows = dayPairs.map(pair => {
+  const rows = dayPairs.map((pair, pairIdx) => {
     const d = pair.day || pair.night;
     const dt = new Date(d.startTime);
-    const hi = d.temperature;
-    const lo = pair.night?.temperature ?? pair.day?.temperature ?? hi;
+    // Always use the daytime period temp as high and nighttime as low
+    // regardless of which half is used for icon/label
+    const hi = pair.day?.temperature ?? pair.night?.temperature;
+    const lo = pair.night?.temperature ?? pair.day?.temperature;
     const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
     // Temp range bar: map across a reasonable daily scale (20–110°F)
     const scaleMin = 20, scaleMax = 110;
@@ -1274,16 +1347,17 @@ function renderForecast(periods){
     const fillGrad = `linear-gradient(to right, ${tempGradientStop(lowTemp)}, ${tempGradientStop(highTemp)})`;
     const rightP = (100 - parseFloat(hiP)).toFixed(1);
     const dayIdx = dayPairs.indexOf(pair);
+    const {hiChip, loChip} = buildDayChips(pair, dayPairs[pairIdx - 1]);
     return `<div class="fc-day-row" onclick="openDayModal(${dayIdx})">
       <span class="fdr-name">${dn[dt.getDay()]}</span>
       <span class="fdr-icon">${wxIcon(d.shortForecast)}</span>
-      <span class="fdr-lo ${loColor}">${lowTemp}°</span>
+      ${loChip}<span class="fdr-lo ${loColor}">${lowTemp}°</span>
       <span class="fdr-range-wrap">
         <span class="fdr-range-track">
           <span class="fdr-range-fill" style="left:${loP}%;right:${rightP}%;background:${fillGrad}"></span>
         </span>
       </span>
-      <span class="fdr-hi ${hiColor}">${highTemp}°</span>
+      <span class="fdr-hi ${hiColor}">${highTemp}°</span>${hiChip}
     </div>`;
   }).join('');
   box.innerHTML=heroHTML
@@ -1334,8 +1408,8 @@ function openDayModal(dayIdx) {
 
   document.getElementById('dayModalTitle').textContent = `${dn[dt.getDay()]}, ${mn[dt.getMonth()]} ${dt.getDate()}`;
 
-  const hi = d.temperature;
-  const lo = pair.night?.temperature ?? pair.day?.temperature ?? hi;
+  const hi = pair.day?.temperature ?? pair.night?.temperature;
+  const lo = pair.night?.temperature ?? pair.day?.temperature;
   const lowTemp = Math.min(hi, lo), highTemp = Math.max(hi, lo);
 
   // Fire gradient early so accent color is available for hero HTML
