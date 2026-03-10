@@ -1752,7 +1752,7 @@ function openDayModal(dayIdx) {
 
     const pagesHTML = pages.map((hrs, pi) =>
       `<div class="pchart-page" data-page="${pi}" style="display:${pi===0?'flex':'none'}">
-        <div class="pchart-yaxis"><span>${yLabel}</span><span>0</span></div>
+        <div class="pchart-yaxis"><span>${yLabel}</span></div>
         <div class="pchart-bars">${renderPage(hrs)}</div>
       </div>`
     ).join('');
