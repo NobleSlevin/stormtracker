@@ -2850,7 +2850,7 @@ function initRadar(lat, lon) {
     rvInited = true;
   } else {
     rvMap.setView([lat, lon], 8);
-    rvMap.eachLayer(l => { if (l._url && (l._url.includes('openweathermap') || l._url.includes('rainviewer') || l._url.includes('tilecache'))) rvMap.removeLayer(l); });
+    rvMap.eachLayer(l => { if (l._url && l._url.includes('openweathermap')) rvMap.removeLayer(l); else if (l._wmsParams) rvMap.removeLayer(l); });
     L.circleMarker([lat, lon], {
       radius: 6, color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 1, weight: 2
     }).addTo(rvMap);
@@ -2871,24 +2871,73 @@ async function rvLoadFrames() {
     const lyrDef = OWM_LAYERS.find(l => l.key === rvActiveLayer);
 
     if (lyrDef?.rainviewer) {
-      // ── RainViewer: real radar at ~10-min intervals ──
-      const rvApi = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-      const rvData = await rvApi.json();
-      const past = rvData.radar?.past ?? [];
-      // Take up to 12 most recent past frames
-      const frames = past.slice(-12);
+      // ── NOAA nowCOAST NEXRAD MRMS WMS ──
+      // Free, no key, real NEXRAD data at 1km resolution, ~4-min updates, all zoom levels
+      const WMS_BASE = 'https://nowcoast.noaa.gov/geoserver/observations/weather_radar/ows';
+      const LAYER = 'conus_bref_qcd';
 
-      rvFrames = frames.map(f => {
-        const d = new Date(f.time * 1000);
+      // Fetch available time steps from WMS GetCapabilities
+      let timestamps = [];
+      try {
+        const capUrl = `${WMS_BASE}?service=WMS&version=1.3.0&request=GetCapabilities`;
+        const capXml = await fetch(capUrl).then(r => r.text());
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(capXml, 'text/xml');
+        // Find the time dimension for our layer
+        const layers = doc.querySelectorAll('Layer[queryable]');
+        for (const l of layers) {
+          const nameEl = l.querySelector('Name');
+          if (nameEl?.textContent === LAYER) {
+            const dim = l.querySelector('Dimension[name="time"]');
+            if (dim) {
+              // Format: "2026-03-09T20:00:00Z/2026-03-09T22:00:00Z/PT4M" or comma-separated list
+              const raw = dim.textContent.trim();
+              if (raw.includes(',')) {
+                timestamps = raw.split(',').map(s => s.trim()).filter(Boolean);
+              } else if (raw.includes('/')) {
+                // ISO interval — generate steps
+                const parts = raw.split('/');
+                const start = new Date(parts[0]).getTime();
+                const end = new Date(parts[1]).getTime();
+                const stepMatch = parts[2]?.match(/PT(\d+)M/);
+                const stepMs = stepMatch ? parseInt(stepMatch[1]) * 60000 : 10 * 60000;
+                for (let t = start; t <= end; t += stepMs) timestamps.push(new Date(t).toISOString());
+              }
+              break;
+            }
+          }
+        }
+      } catch(e) {
+        console.warn('WMS GetCapabilities failed, using synthetic timestamps:', e);
+      }
+
+      // Fallback: generate 12 frames at ~4-min intervals ending now
+      if (!timestamps.length) {
+        const now = Date.now();
+        for (let i = 11; i >= 0; i--) timestamps.push(new Date(now - i * 4 * 60000).toISOString());
+      }
+
+      // Keep last 12 frames
+      timestamps = timestamps.slice(-12);
+
+      rvFrames = timestamps.map(iso => {
+        const d = new Date(iso);
         const h = d.getHours(), m = d.getMinutes();
         const label = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
-        return { ts: f.time, path: f.path, label };
+        return { ts: iso, label };
       });
 
       rvFrames.forEach(frame => {
-        // RainViewer 512px tiles support zoom up to 12; color scheme 6 = original, smooth=1, snow=1
-        const url = `https://tilecache.rainviewer.com${frame.path}/512/{z}/{x}/{y}/6/1_1.png`;
-        const layer = L.tileLayer(url, { opacity: 0, tileSize: 512, zoomOffset: -1, zIndex: 2 });
+        const layer = L.tileLayer.wms(WMS_BASE, {
+          layers: LAYER,
+          format: 'image/png',
+          transparent: true,
+          version: '1.3.0',
+          time: frame.ts,
+          opacity: 0,
+          zIndex: 2,
+          tileSize: 256,
+        });
         rvLayers.push(layer);
         layer.addTo(rvMap);
       });
