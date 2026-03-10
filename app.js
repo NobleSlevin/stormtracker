@@ -1599,6 +1599,7 @@ function openDayModal(dayIdx) {
       <circle cx="${cx}" cy="${cy-lineR}" r="4.5" fill="none" stroke="#93c5fd" stroke-width="2.2"/>
     </g>`;
     return `<svg viewBox="0 0 300 300" width="100%" height="100%" style="display:block;max-width:240px;max-height:240px" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="${cx}" cy="${cy}" r="${r + 10}" fill="none" stroke="#000000" stroke-width="20"/>
       <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>
       ${ticksHTML.join('')}${labelsHTML}${arrow}
     </svg>`;
