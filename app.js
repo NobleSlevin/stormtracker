@@ -1962,7 +1962,7 @@ function rvInitFullscreenBtn() {
     L.DomEvent.on(el, 'click', L.DomEvent.preventDefault);
     L.DomEvent.on(el, 'click', () => {
       const isFullscreen = document.getElementById('app').classList.toggle('radar-fullscreen');
-      rvSetFullscreenIcon(el, isFullscreen);
+      rvSetFullscreenIcon(isFullscreen);
       setTimeout(() => rvMap.invalidateSize(), 80);
     });
     return el;
