@@ -1591,13 +1591,8 @@ function buildModalThreats(dayIdx) {
   const hailIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="8" y1="20" x2="8.01" y2="20"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="16" x2="16.01" y2="16"/><line x1="16" y1="20" x2="16.01" y2="20"/></svg>`;
 
   let t;
-  if (dayIdx === 0)      t = s.day1;
-  else if (dayIdx === 1) t = s.day2;
-  else if (dayIdx === 2) {
-    // Day 3: categorical only — show same level for all three
-    const lvl = s.day3?.categorical ?? 0;
-    t = { tornado: lvl, wind: lvl, hail: lvl };
-  } else return '';
+  if (dayIdx === 0) t = s.day1;
+  else return '';
 
   const border = 'border-top:1px solid rgba(255,255,255,0.15);margin-top:14px;padding-top:14px;';
   return `<div style="display:flex;justify-content:space-around;align-items:center;${border}padding-right:5px">
@@ -1657,7 +1652,7 @@ function openDayModal(dayIdx) {
     <div style="font-size:14px;color:${_acFaint};line-height:1.4">${d.shortForecast}</div>
     <div style="font-size:13px;color:${_acDim}">Wind: <b style="color:${_ac};font-weight:600">${d.windDirection||''} ${d.windSpeed||''}</b></div>
     ${d.detailedForecast && d.detailedForecast !== d.shortForecast ? `<div style="font-size:12px;color:${_acDim};line-height:1.6;border-top:1px solid ${_acBorder};padding-top:10px;margin-top:2px">${d.detailedForecast}</div>` : ''}
-    ${dayIdx <= 2 ? buildModalThreats(dayIdx) : ''}
+    ${buildModalThreats(dayIdx)}
   </div>`;
 
   // ── Hourly data for this day ──
