@@ -76,12 +76,12 @@ header { display: none; }
 /* ── OBS STRIP ── */
 .obs-strip-wrap { overflow: hidden; max-height: 96px; transition: max-height .3s ease; }
 .obs-strip-wrap.collapsed { max-height: 0; }
-.obs-strip { display: grid; grid-template-columns: repeat(8,1fr); border-bottom: 1px solid var(--border); background: var(--card2); }
+.obs-strip { display: grid; grid-template-columns: repeat(8,1fr); border-bottom: 1px solid var(--border); background: #0c0c0c; }
 .obs-strip-wrap.collapsed .obs-strip { border-bottom: none; }
-.obs-item { padding: 12px 6px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; }
+.obs-item { padding: 12px 6px; display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; }
 .obs-item:last-child { border-right: none; }
-.obs-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--dim); }
-.obs-val { font-size: 18px; font-weight: 500; color: var(--text); line-height: 1; }
+.obs-label { font-size: 9px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--dim); }
+.obs-val { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1; }
 .obs-unit { font-size: 10px; color: var(--dim); }
 
 /* ── ALERT STAT STRIP ── */
@@ -160,8 +160,8 @@ header { display: none; }
 /* ── FORECAST ── */
 #panelForecast { padding: 14px 14px; position: relative; z-index: 1; }
 .fc-hero { 
-  backdrop-filter: blur(18px) saturate(1.6) brightness(1.05);
-  -webkit-backdrop-filter: blur(18px) saturate(1.6) brightness(1.05);
+  backdrop-filter: blur(23px) saturate(1.6) brightness(1.05);
+  -webkit-backdrop-filter: blur(23px) saturate(1.6) brightness(1.05);
   border-radius: var(--r); 
   padding: 24px; 
   position: relative; 
@@ -206,7 +206,7 @@ header { display: none; }
 .fch-meta { font-size: 13px; color: rgba(255,255,255,0.90); display: flex; flex-direction: column; gap: 2px; }
 .fch-extras { font-size: 13px; color: rgba(255,255,255,0.70); margin-top: 2px; }
 .fch-meta b { font-weight: 600; color: rgba(255,255,255,1); }
-.fc-days { display: flex; flex-direction: column; gap: 10px; }
+.fc-days { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
 .fc-day-row { display: flex; align-items: center; gap: 10px; background: var(--card2); border-radius: var(--rsm); padding: 15px 18px; }
 .fdr-name { font-size: 14px; font-weight: 500; color: var(--dim); width: 36px; flex-shrink: 0; }
 .fdr-icon { width: 24px; height: 24px; text-align: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--text); opacity: .7; overflow: visible; }
@@ -219,7 +219,7 @@ header { display: none; }
 .fdr-swing-hi { margin-left: 4px; }
 .fdr-swing-lo { margin-right: 4px; }
 .outlook-blurb-wrap { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
-.outlook-blurb-line { font-size: 13px; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: var(--rsm); padding: 9px 13px; line-height: 1.5; }
+.outlook-blurb-line { font-size: 13px; color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: var(--rsm); padding: 5px 0px 6px 18px; line-height: 1.5; }
 .fdr-desc { font-size: 13px; color: var(--dim); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fdr-temp { font-size: 19px; font-weight: 400; flex-shrink: 0; min-width: 38px; text-align: right; }
 
@@ -472,9 +472,9 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .data-note { font-size: 10px; color: var(--muted); font-family: var(--mono); letter-spacing: .5px; text-align: center; padding: 6px 4px; }
 
 /* ── TICKER ── */
-.ticker-wrap { flex-shrink: 0; padding: 6px 16px calc(env(safe-area-inset-bottom,0px) + 2px); display: flex; flex-direction: column; gap: 7px; border-top: 1px solid rgba(255,255,255,0.28); position: relative; z-index: 1; }
-.ticker { background: rgba(255,255,255,0.10); backdrop-filter: blur(24px) saturate(1.4); -webkit-backdrop-filter: blur(24px) saturate(1.4); border-radius: var(--rsm); border: 1px solid rgba(255,255,255,0.28); box-shadow: 0 4px 24px rgba(0,0,0,0.25); height: 38px; display: flex; align-items: center; overflow: hidden; }
-.ticker-lbl { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.6); font-size: 9px; font-weight: 700; letter-spacing: 2px; text-indent: 2px; padding: 0 11px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.10); }
+.ticker-wrap { flex-shrink: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; position: relative; z-index: 1; }
+.ticker { background: #0c0c0c; border-radius: 0; border-top: 1px solid rgba(255,255,255,0.28); border-bottom: 1px solid rgba(255,255,255,0.28); height: 38px; display: flex; align-items: center; overflow: hidden; }
+.ticker-lbl { background: var(--card2); color: rgba(255,255,255,0.6); font-size: 9px; font-weight: 700; letter-spacing: 2px; text-indent: 2px; padding: 0 11px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.10); }
 .ticker-track { overflow: hidden; flex: 1; height: 38px; display: flex; align-items: center; padding: 0 4px; }
 .ticker-inner { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.5); white-space: nowrap; animation: ticker 40s linear infinite; letter-spacing: .5px; }
 @keyframes ticker { 0%{transform:translateX(100%)} 100%{transform:translateX(-100%)} }
@@ -482,7 +482,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .ticker-credit { display: none; }
 .ticker-info-btn { flex-shrink: 0; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; background: none; border: none; border-left: 1px solid rgba(255,255,255,0.10); color: rgba(255,255,255,0.4); cursor: pointer; padding: 0; -webkit-appearance: none; }
 .ticker-info-btn:active { color: rgba(255,255,255,0.8); }
-.ticker-byline { text-align: center; font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: rgba(255,255,255,0.45); }
+.ticker-byline { text-align: center; font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: rgba(255,255,255,0.45); padding-top: 8px; }
 
 /* Info Modal */
 .info-modal { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); align-items: flex-end; }
@@ -718,6 +718,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   <symbol id="bi-cloud-sun" viewBox="0 0 16 16"><path d="M7 8a3.5 3.5 0 0 1 3.5 3.555.5.5 0 0 0 .624.492A1.503 1.503 0 0 1 13 13.5a1.5 1.5 0 0 1-1.5 1.5H3A2.5 2.5 0 0 1 3 9h.5A3.5 3.5 0 0 1 7 8m2 .276a4.5 4.5 0 0 0-4.5 3.5.5.5 0 0 1-.5.5A1.5 1.5 0 0 0 3 14h8.5a.5.5 0 0 0 0-1 .5.5 0 0 1-.5-.5 4.5 4.5 0 0 0-2-.724M10.5 2.5a.5.5 0 0 0-1 0v1a.5.5 0 0 0 1 0zm3 1.5a.5.5 0 0 0-.707-.707l-.707.707A.5.5 0 0 0 12.793 5zM10 5.5A2.5 2.5 0 1 0 15 5.5a2.5 2.5 0 0 0-5 0m2.5-1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3m3.457 2.707a.5.5 0 1 0-.707-.707l-.707.707a.5.5 0 0 0 .707.707zm-5.457 0a.5.5 0 0 0 .707.707l.707-.707A.5.5 0 0 0 10.5 6.5zm5-2.207a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1z"/></symbol>
   <symbol id="bi-cloud-rain" viewBox="0 0 16 16"><path d="M4.158 12.025a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .633-.317zM4 1a3.5 3.5 0 0 1 3.5 3.5.5.5 0 0 0 .5.5 1.5 1.5 0 0 1 1.5 1.5v.5h.5a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 1 0-5H2v-.5A3.5 3.5 0 0 1 4 1z"/></symbol>
   <symbol id="bi-cloud-lightning" viewBox="0 0 16 16"><path d="M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1M7.053 11.276A.5.5 0 0 1 7.5 11h2a.5.5 0 0 1 .473.664l-.334 1H11a.5.5 0 0 1 .39.812l-4 5a.5.5 0 0 1-.871-.464l.853-3.41H5.5a.5.5 0 0 1-.447-.724z"/></symbol>
+  <symbol id="bi-eye" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></symbol>
   <symbol id="bi-snow" viewBox="0 0 16 16"><path d="M8 16a.5.5 0 0 1-.5-.5v-1.293l-.646.647a.5.5 0 0 1-.707-.708L7.5 12.793V8.866l-3.4 1.963-.496 1.85a.5.5 0 1 1-.966-.26l.237-.882-1.12.646a.5.5 0 0 1-.5-.866l1.12-.646-.884-.237a.5.5 0 1 1 .26-.966l1.848.495L7 8 3.6 6.037l-1.85.495a.5.5 0 0 1-.258-.966l.883-.237-1.12-.646a.5.5 0 1 1 .5-.866l1.12.646-.237-.883a.5.5 0 1 1 .966-.258l.495 1.849L7.5 7.134V3.207L6.147 1.854a.5.5 0 1 1 .707-.708l.646.647V.5a.5.5 0 1 1 1 0v1.293l.647-.647a.5.5 0 1 1 .707.708L8.5 3.207v3.927l3.4-1.963.496-1.85a.5.5 0 1 1 .966.26l-.236.882 1.12-.646a.5.5 0 0 1 .5.866l-1.12.646.883.237a.5.5 0 1 1-.26.966l-1.848-.495L9 8l3.4 1.963 1.849-.495a.5.5 0 0 1 .259.966l-.883.237 1.12.646a.5.5 0 0 1-.5.866l-1.12-.646.236.883a.5.5 0 1 1-.966.258l-.495-1.849-3.4-1.963v3.927l1.353 1.353a.5.5 0 0 1-.707.708l-.647-.647V15.5a.5.5 0 0 1-.5.5"/></symbol>
   <symbol id="bi-wind" viewBox="0 0 16 16"><path d="M12.5 2A2.5 2.5 0 0 0 10 4.5a.5.5 0 0 1-1 0A3.5 3.5 0 1 1 12.5 8H.5a.5.5 0 0 1 0-1h12a2.5 2.5 0 0 0 0-5m-7 1a1 1 0 0 0-1 1 .5.5 0 0 1-1 0 2 2 0 1 1 2 2H.5a.5.5 0 0 1 0-1H6.5a1 1 0 0 0 0-2M0 9.5A.5.5 0 0 1 .5 9h10.042a3 3 0 1 1-3 3 .5.5 0 0 1 1 0 2 2 0 1 0 2-2H.5a.5.5 0 0 1-.5-.5"/></symbol>
   <symbol id="bi-clouds" viewBox="0 0 16 16"><path d="M16 7.5a2.5 2.5 0 0 1-1.456 2.272 3.5 3.5 0 0 0-.65-1.629A1.5 1.5 0 0 0 15 7.5a1.5 1.5 0 0 0-1.5-1.5h-.6A4.5 4.5 0 0 0 8 2a4 4 0 0 0-.867.09 2.5 2.5 0 1 1 .51 4.91H2.5a1.5 1.5 0 0 0 0 3h.405A4.5 4.5 0 0 0 2 11.5a4.5 4.5 0 0 0 4.5 4.5h6a2.5 2.5 0 0 0 0-5H9.5a1.5 1.5 0 0 0-1.5 1.5.5.5 0 0 1-1 0 2.5 2.5 0 0 1 2.5-2.5H13a3.5 3.5 0 0 0 3-5z"/></symbol>
@@ -727,7 +728,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   <symbol id="bi-arrow-repeat" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5 5 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z"/></symbol>
   <symbol id="bi-broadcast" viewBox="0 0 16 16"><path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708m2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/></symbol>
   <symbol id="bi-caret-down-fill" viewBox="0 0 16 16"><path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/></symbol>
-  <symbol id="bi-droplet-fill" viewBox="0 0 16 16"><path d="M8 16a6 6 0 0 0 6-6c0-1.655-1.122-2.904-2.432-4.362C10.254 4.176 8.75 2.503 8 0c0 0-6 5.686-6 10a6 6 0 0 0 6 6M6.646 4.646l.708.708c-.29.29-1.128 1.311-1.907 2.87l-.894-.448c.82-1.641 1.717-2.753 2.093-3.13"/></symbol>
+  <symbol id="bi-droplet-fill" viewBox="0 0 16 16"><path d="M8,1 C5.5,4 1.5,7.5 1.5,10.5 a6.5,6.5 0 0,0 13,0 C14.5,7.5 10.5,4 8,1 z"/></symbol>
   <symbol id="bi-caret-right-fill" viewBox="0 0 16 16"><path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/></symbol>
   <symbol id="bi-thermometer-half" viewBox="0 0 16 16"><path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/></symbol>
 </svg>
@@ -779,14 +780,14 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
   <!-- Observation strip — hidden until GPS/ZIP used -->
   <div class="obs-strip-wrap" id="obsStripWrap">
   <div class="obs-strip" id="obsStrip">
-    <div class="obs-item"><span class="obs-label">Temp</span><span class="obs-val" id="obsTemp">—</span><span class="obs-unit">°F</span></div>
-    <div class="obs-item"><span class="obs-label">Feels</span><span class="obs-val" id="obsFeels">—</span><span class="obs-unit">°F</span></div>
-    <div class="obs-item"><span class="obs-label">Humid</span><span class="obs-val" id="obsHumid">—</span><span class="obs-unit">%</span></div>
-    <div class="obs-item"><span class="obs-label">Dewpt</span><span class="obs-val" id="obsDew">—</span><span class="obs-unit">°F</span></div>
-    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Wind</span><span class="obs-val" id="obsWind">—</span><span class="obs-unit">mph</span><svg width="10" height="10" fill="var(--dim)" style="margin-top:2px"><use href="#bi-caret-down-fill"/></svg></div>
-    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><span class="obs-label">Gust</span><span class="obs-val" id="obsGust">—</span><span class="obs-unit">mph</span><svg width="10" height="10" fill="var(--dim)" style="margin-top:2px"><use href="#bi-caret-down-fill"/></svg></div>
-    <div class="obs-item"><span class="obs-label">UV</span><span class="obs-val" id="obsUV">—</span><span class="obs-unit">idx</span></div>
-    <div class="obs-item"><span class="obs-label">Cloud</span><span class="obs-val" id="obsCloud">—</span><span class="obs-unit">%</span></div>
+    <div class="obs-item"><svg width="11" height="11" fill="var(--dim)" style="margin-bottom:2px"><use href="#bi-thermometer-half"/></svg><span class="obs-label">Temp</span><span class="obs-val" id="obsTemp">—</span><span class="obs-unit">°F</span></div>
+    <div class="obs-item"><svg width="11" height="11" fill="var(--dim)" style="margin-bottom:2px"><use href="#bi-eye"/></svg><span class="obs-label">Feels</span><span class="obs-val" id="obsFeels">—</span><span class="obs-unit">°F</span></div>
+    <div class="obs-item"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="var(--dim)" stroke-width="1.5" stroke-linejoin="round" style="margin-bottom:2px"><path d="M8,1 C8,1 3,7 3,10.5 a5,5 0 0,0 10,0 C13,7 8,1 8,1 z"/></svg><span class="obs-label">Humid</span><span class="obs-val" id="obsHumid">—</span><span class="obs-unit">%</span></div>
+    <div class="obs-item"><svg width="11" height="11" fill="var(--dim)" style="margin-bottom:2px"><use href="#bi-fog"/></svg><span class="obs-label">Dewpt</span><span class="obs-val" id="obsDew">—</span><span class="obs-unit">°F</span></div>
+    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><svg id="obsWindArrow" width="11" height="11" viewBox="0 0 16 16" fill="var(--dim)" style="margin-bottom:2px;transition:transform .3s"><path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/></svg><span class="obs-label">Wind</span><span class="obs-val" id="obsWind">—</span><span class="obs-unit">mph</span></div>
+    <div class="obs-item" onclick="openWindModal()" style="cursor:pointer"><svg id="obsGustArrow" width="11" height="11" viewBox="0 0 16 16" fill="var(--dim)" style="margin-bottom:2px;transition:transform .3s"><path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/></svg><span class="obs-label">Gust</span><span class="obs-val" id="obsGust">—</span><span class="obs-unit">mph</span></div>
+    <div class="obs-item"><svg width="11" height="11" fill="var(--dim)" style="margin-bottom:2px"><use href="#bi-sun"/></svg><span class="obs-label">UV</span><span class="obs-val" id="obsUV">—</span><span class="obs-unit">idx</span></div>
+    <div class="obs-item"><svg width="11" height="11" viewBox="0 0 16 16" fill="var(--dim)" style="margin-bottom:2px"><path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.476A5.5 5.5 0 0 1 4.406 3.342"/></svg><span class="obs-label">Cloud</span><span class="obs-val" id="obsCloud">—</span><span class="obs-unit">%</span></div>
   </div>
   </div>
 
@@ -876,7 +877,6 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
           <div class="risk-score" id="riskScore" style="color:var(--dim);font-size:38px;font-weight:600;letter-spacing:-1px">—</div>
         </div>
         <div class="chart-box">
-          <div class="chart-box-ttl">// Radar Chart — 8 Contributing Factors</div>
           <svg id="radar-chart" viewBox="-20 -10 420 390" xmlns="http://www.w3.org/2000/svg"></svg>
           <div class="chart-mode-row">
             <button class="cmb on" data-cm="both">Both</button>
@@ -908,7 +908,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.474l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.2.0</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.2.8</div>
   </div>
 
 </div>
@@ -1032,7 +1032,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         <button onclick="document.getElementById('settingsModal').classList.remove('open'); document.getElementById('infoModal').classList.add('open');" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">View Data Sources →</button>
       </div>
 
-      <div class="info-footer">StormWatch PWA · v2.2.0</div>
+      <div class="info-footer">StormWatch PWA · v2.2.8</div>
     </div>
   </div>
 </div>
@@ -1126,7 +1126,16 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
       <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
       <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:2;color:rgba(255,255,255,0.6)">
-        <b>v2.2.0</b><br>
+        <b>v2.2.8</b><br>
+        · Obs strip: icons above each tile, directional wind arrows for Wind &amp; Gust<br>
+        · Obs strip: updated colors, font sizes, removed item borders<br>
+        · Fixed recent locations not selecting on tap<br>
+        · Ticker redesigned: edge-to-edge, top/bottom border only, #0c0c0c bg<br>
+        · All Clear icon updated to white<br>
+        · Removed radar chart label from risk tab<br>
+        · Various padding and blur polish<br>
+        <br>
+        <b>v2.2.8</b><br>
         · Fixed 24h precip showing mm value with inches label<br>
         · Trace precipitation (&lt;0.01") now hidden instead of showing 0.00"<br>
         <br>
@@ -1166,7 +1175,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         · Fixed NEXRAD radar layer not loading
       </div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.2.0</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.2.8</div>
     </div>
   </div>
 </div>
@@ -1185,7 +1194,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.2.0"></script>
+<script src="app.js?v=2.2.8"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>

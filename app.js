@@ -196,7 +196,8 @@ const _SECTION_ICON_SVG = {
   'bi-sun':                  `<path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>`,
   'bi-fog':                  `<path d="M4 12.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m2 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1"/>`,
   'bi-broadcast':            `<path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708m2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/>`,
-  'bi-droplet-fill':         `<path d="M8 16a6 6 0 0 0 6-6c0-1.655-1.122-2.904-2.432-4.362C10.254 4.176 8.75 2.503 8 0c0 0-6 5.686-6 10a6 6 0 0 0 6 6"/>`,
+  'bi-droplet-fill':         `<path d="M8,1 C5.5,4 1.5,7.5 1.5,10.5 a6.5,6.5 0 0,0 13,0 C14.5,7.5 10.5,4 8,1 z"/>`,
+  'waterdrop':               `<path d="M8,1 C5.5,4 1.5,7.5 1.5,10.5 a6.5,6.5 0 0,0 13,0 C14.5,7.5 10.5,4 8,1 z"/>`,
   'bi-globe':                `<path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855A8 8 0 0 0 5.145 4H7.5zM4.09 4a9.3 9.3 0 0 1 .64-1.539 7 7 0 0 1 .597-.933A7.03 7.03 0 0 0 2.255 4zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.96 6.96 0 0 0-.656 2.5zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.337-2.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5zM5.145 12q.208.58.468 1.068c.552 1.035 1.218 1.65 1.887 1.855V12zm.182 2.472a7 7 0 0 1-.597-.933A9.3 9.3 0 0 1 4.09 12H2.255a7.03 7.03 0 0 0 3.072 2.472M3.82 11a13.7 13.7 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5zm6.853 3.472A7.03 7.03 0 0 0 13.745 12H11.91a9.3 9.3 0 0 1-.64 1.539 7 7 0 0 1-.597.933M8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855q.26-.487.468-1.068zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.7 13.7 0 0 1-.312 2.5m2.802-3.5a6.96 6.96 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7.03 7.03 0 0 0-3.072-2.472c.218.284.418.598.597.933M10.855 4a8 8 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4z"/>`,
   'bi-cloud-lightning':      `<path d="M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1M7.053 11.276A.5.5 0 0 1 7.5 11h2a.5.5 0 0 1 .473.664l-.334 1H11a.5.5 0 0 1 .39.812l-4 5a.5.5 0 0 1-.871-.464l.853-3.41H5.5a.5.5 0 0 1-.447-.724z"/>`,
   'bi-exclamation-triangle': `<path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/><path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>`,
@@ -210,7 +211,7 @@ const _SECTION_ICONS = {
   'Wind':                    'bi-wind',
   'Conditions':              'bi-fog',
   'NOAA Weather Radio':      'bi-broadcast',
-  'River Gauges':            'bi-droplet-fill',
+  'River Gauges':            'waterdrop',
   'Nearest Radar Station':   'bi-globe',
   'Active Tropical Storms':  'bi-cloud-lightning',
   'State Alerts':            'bi-exclamation-triangle',
@@ -755,7 +756,7 @@ function renderAlerts(alerts) {
   const box=document.getElementById('panelAlerts');
   withNotifBanner(() => {
   if(!filtered.length){
-    box.innerHTML=`<div class="state-center"><div class="state-icon">${total>0?'<svg width="28" height="28" fill="currentColor"><use href="#bi-search"/></svg>':'<svg width="28" height="28" fill="var(--green)"><use href="#bi-check-circle"/></svg>'}</div><div class="state-ttl">${total>0?'No Match':'All Clear'}</div><div class="state-sub">${total>0?'Try a different filter':'No active NWS alerts'}</div></div>`;
+    box.innerHTML=`<div class="state-center"><div class="state-icon">${total>0?'<svg width="28" height="28" fill="currentColor"><use href="#bi-search"/></svg>':'<svg width="28" height="28" fill="white"><use href="#bi-check-circle"/></svg>'}</div><div class="state-ttl">${total>0?'No Match':'All Clear'}</div><div class="state-sub">${total>0?'Try a different filter':'No active NWS alerts'}</div></div>`;
     return;
   }
   box.innerHTML=filtered.map(a=>{
@@ -775,7 +776,7 @@ function renderAlerts(alerts) {
 }
 function updateTicker(alerts) {
   const inner=document.getElementById('tickerInner');
-  if(!alerts.length){inner.innerHTML='<svg width="10" height="10" fill="var(--green)" style="margin-right:4px"><use href="#bi-check-circle"/></svg> ALL CLEAR — No active NWS alerts.';return;}
+  if(!alerts.length){inner.innerHTML='<svg width="10" height="10" fill="white" style="margin-right:4px"><use href="#bi-check-circle"/></svg> ALL CLEAR — No active NWS alerts.';return;}
   inner.innerHTML=alerts.slice(0,12).map(a=>{
     const p=a.properties;
     return`<span style="color:${sevColor(p.severity,p.event)}">⚠ ${p.event}</span> — ${(p.areaDesc||'').split(';')[0].trim()}`;
@@ -3667,6 +3668,14 @@ async function fetchOpenMeteo(lat, lon) {
       gust:      c.wind_gusts_10m   != null ? Math.round(c.wind_gusts_10m)   : null,
       direction: c.wind_direction_10m != null ? Math.round(c.wind_direction_10m) : null,
     };
+    // Rotate obs strip wind arrows to show wind direction
+    if (window._windData.direction != null) {
+      const deg = window._windData.direction;
+      ['obsWindArrow','obsGustArrow'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.transform = `rotate(${deg}deg)`;
+      });
+    }
     if (c.temperature_2m != null) {
       window._omCurrentTemp = Math.round(c.temperature_2m);
       // Re-paint gradient now that we have the real observed temp
@@ -3721,8 +3730,9 @@ async function fetchOpenMeteo(lat, lon) {
       set('obsHumid', Math.round(c.relative_humidity_2m));
     if (document.getElementById('obsDew').textContent === '—' && c.dew_point_2m != null)
       set('obsDew', Math.round(c.dew_point_2m));
-    if (document.getElementById('obsWind').textContent === '—' && c.wind_speed_10m != null)
-      set('obsWind', Math.round(c.wind_speed_10m));
+    // OM owns wind — spatially accurate & current hour; always overwrite NWS obs value
+    if (c.wind_speed_10m != null) set('obsWind', Math.round(c.wind_speed_10m));
+    if (c.wind_gusts_10m != null) set('obsGust', Math.round(c.wind_gusts_10m));
 
     const _os=document.getElementById('obsStrip');_os.dataset.active='1';document.getElementById('obsStripWrap')?.classList.remove('collapsed');
 
@@ -4192,14 +4202,18 @@ function renderRecents() {
       <span class="search-recents-ttl">Recents</span>
       <button class="search-recents-clear" onclick="clearRecents()">Clear</button>
     </div>
-    ${recents.map(r => `
-      <div class="search-recent-item" onclick="selectRecent(${r.lat},${r.lon},${JSON.stringify(r.name)},${JSON.stringify(r.state||'')})">
+    ${recents.map(r => {
+      const safeName  = JSON.stringify(r.name).replace(/"/g, '&quot;');
+      const safeState = JSON.stringify(r.state||'').replace(/"/g, '&quot;');
+      return `
+      <div class="search-recent-item" onclick="selectRecent(${r.lat},${r.lon},${safeName},${safeState})">
         <svg class="search-recent-icon" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10m0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6"/></svg>
         <div>
           <div class="search-recent-name">${r.name}</div>
           ${r.state ? `<div class="search-recent-sub">${r.state}</div>` : ''}
         </div>
-      </div>`).join('')}
+      </div>`;
+    }).join('')}
   </div>`;
 }
 function clearRecents() {
