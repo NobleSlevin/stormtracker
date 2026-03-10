@@ -1320,6 +1320,7 @@ function renderForecast(periods){
     <div class="fch-icon">${heroWxIcon(hero.shortForecast, hero.isDaytime !== false)}</div>
     <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
     <div class="fch-extras" id="fchExtras"></div>
+    <div id="fchThreats"></div>
   </div>`:'';
   const rows = dayPairs.map((pair, pairIdx) => {
     const d = pair.day || pair.night;
@@ -1394,6 +1395,135 @@ function renderHeroExtras() {
   if (window._visibilityMi != null) parts.push(`Visibility: ${window._visibilityMi} mi`);
   if (window._precip24h != null) parts.push(`Precip 24h: ${window._precip24h}"`);
   el.textContent = parts.join('  ·  ');
+}
+
+// ── SPC HAZARD THREATS (tornado / wind / hail) ────────────────────────────────
+// Maps SPC probability label → 0–5 threat level
+function spcProbToLevel(pct) {
+  let p = parseFloat(pct);
+  if (isNaN(p)) return 0;
+  if (p <= 1) p = p * 100; // SPC uses 0.02 = 2%, 0.05 = 5% etc.
+  if (p < 2)  return 0;
+  if (p < 5)  return 1;
+  if (p < 15) return 2;
+  if (p < 30) return 3;
+  if (p < 45) return 4;
+  return 5;
+}
+
+const SPC_LEVEL_META = [
+  { label: 'None',     color: 'rgba(255,255,255,0.18)' },
+  { label: 'Marginal', color: '#4ade80' },
+  { label: 'Slight',   color: '#93c5fd' },
+  { label: 'Enhanced', color: '#fbbf24' },
+  { label: 'Moderate', color: '#fb923c' },
+  { label: 'High',     color: '#f87171' },
+];
+
+// Point-in-polygon returning the highest-threat label value at a point
+function spcPointLevel(lat, lon, geojson) {
+  let maxLevel = 0;
+  if (!geojson?.features?.length) return maxLevel;
+  for (const feat of geojson.features) {
+    const geom = feat.geometry;
+    if (!geom) continue;
+    const label = feat.properties?.LABEL || feat.properties?.LABEL2 || '0';
+    const level = spcProbToLevel(label);
+    if (level <= maxLevel) continue; // skip if not higher
+    const polys = geom.type === 'Polygon' ? [geom.coordinates]
+                : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+    for (const poly of polys) {
+      const ring = poly[0];
+      if (!ring) continue;
+      let inside = false;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [xi, yi] = ring[i], [xj, yj] = ring[j];
+        if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi))
+          inside = !inside;
+      }
+      if (inside) { maxLevel = level; break; }
+    }
+  }
+  return maxLevel;
+}
+
+async function fetchSPCHazards(lat, lon) {
+  const base = 'https://www.spc.noaa.gov/products/outlook';
+  try {
+    const [tornData, windData, hailData] = await Promise.all([
+      fetch(`${base}/day1otlk_torn.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      fetch(`${base}/day1otlk_wind.nolyr.geojson`).then(r => r.json()).catch(() => null),
+      fetch(`${base}/day1otlk_hail.nolyr.geojson`).then(r => r.json()).catch(() => null),
+    ]);
+    window._spcThreats = {
+      tornado: tornData ? spcPointLevel(lat, lon, tornData) : 0,
+      wind:    windData ? spcPointLevel(lat, lon, windData) : 0,
+      hail:    hailData ? spcPointLevel(lat, lon, hailData) : 0,
+    };
+    renderHeroThreats();
+  } catch(e) {
+    console.warn('SPC hazard fetch failed:', e);
+  }
+}
+
+function buildThreatGauge(level, icon, labelText) {
+  // Semi-circle gauge: track arc + fill arc
+  // Arc goes from ~215° to ~325° (210° sweep) on a 72px viewbox, r=30, center=36,36
+  const R = 30, cx = 36, cy = 38;
+  const toRad = d => d * Math.PI / 180;
+  // Start at bottom-left, sweep clockwise to bottom-right (~210° arc)
+  const startDeg = 216, totalDeg = 252;
+  const endDeg = startDeg + totalDeg;
+  const arcPoint = (deg) => {
+    const r = toRad(deg);
+    return [cx + R * Math.cos(r), cy + R * Math.sin(r)];
+  };
+  const [sx, sy] = arcPoint(startDeg);
+  const [ex, ey] = arcPoint(endDeg);
+  const trackPath = `M ${sx.toFixed(2)} ${sy.toFixed(2)} A ${R} ${R} 0 1 1 ${ex.toFixed(2)} ${ey.toFixed(2)}`;
+
+  // Fill arc: level/5 of total sweep
+  const fillDeg = startDeg + (level / 5) * totalDeg;
+  const [fx, fy] = arcPoint(fillDeg);
+  const fillSweep = (level / 5) * totalDeg;
+  const largeArc = fillSweep > 180 ? 1 : 0;
+  const fillPath = level === 0 ? '' :
+    `M ${sx.toFixed(2)} ${sy.toFixed(2)} A ${R} ${R} 0 ${largeArc} 1 ${fx.toFixed(2)} ${fy.toFixed(2)}`;
+
+  const meta = SPC_LEVEL_META[level];
+  const glowColor = meta.color;
+  const strokeColor = level === 0 ? 'rgba(255,255,255,0.18)' : glowColor;
+
+  return `<div class="fcht">
+    <div class="fcht-label-row">
+      <span class="fcht-icon">${icon}</span>
+      <span class="fcht-label">${labelText}</span>
+    </div>
+    <div class="fcht-gauge">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <path d="${trackPath}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="5.5" stroke-linecap="round"/>
+        ${level > 0 ? `<path d="${fillPath}" fill="none" stroke="${strokeColor}" stroke-width="5.5" stroke-linecap="round"/>` : ''}
+      </svg>
+      <span class="fcht-num" style="color:${level === 0 ? 'rgba(255,255,255,0.3)' : '#fff'}">${level}</span>
+    </div>
+    <span class="fcht-status" style="color:${level === 0 ? 'rgba(255,255,255,0.3)' : glowColor}">${meta.label}</span>
+  </div>`;
+}
+
+function renderHeroThreats() {
+  const el = document.getElementById('fchThreats');
+  if (!el) return;
+  const t = window._spcThreats || { tornado: 0, wind: 0, hail: 0 };
+
+  const torIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="5" x2="20" y2="5"/><line x1="6" y1="10" x2="18" y2="10"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="11" y1="20" x2="13" y2="20"/></svg>`;
+  const windIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg>`;
+  const hailIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="8" y1="20" x2="8.01" y2="20"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="16" x2="16.01" y2="16"/><line x1="16" y1="20" x2="16.01" y2="20"/></svg>`;
+
+  el.innerHTML = `<div class="fch-threats">
+    ${buildThreatGauge(t.tornado, torIcon, 'Tornado')}
+    ${buildThreatGauge(t.wind,    windIcon, 'Wind')}
+    ${buildThreatGauge(t.hail,    hailIcon, 'Hail')}
+  </div>`;
 }
 
 
@@ -3839,6 +3969,8 @@ async function fetchForPoint(lat, lon) {
     renderAQISlot(lat, lon),
   ]);
   if (periods && periods.length) computeTornadoRisk(periods, lat, lon, allAlerts);
+  // Fire SPC hazard threats after hero is rendered — fchThreats div now exists
+  fetchSPCHazards(lat, lon);
 
   // If radar tab is already visible when location updates, init or re-center
   if (isRadarTabActive()) {
