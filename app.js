@@ -1945,8 +1945,9 @@ function rvInitLocateBtn() {
 const _ICON_EXPAND   = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="display:block"><path d="M1.5 1h4v1.5h-2.5v2.5h-1.5v-4zm9 0h4v4h-1.5v-2.5h-2.5v-1.5zm-9 9h1.5v2.5h2.5v1.5h-4v-4zm10.5 2.5v-2.5h1.5v4h-4v-1.5h2.5z"/></svg>`;
 const _ICON_COLLAPSE = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="display:block"><path d="M5.5 1h-4v4h1.5v-2.5h2.5v-1.5zm5 0h4v4h-1.5v-2.5h-2.5v-1.5zm-5 10h-1.5v-2.5h-2.5v-1.5h4v4zm6.5-2.5h-2.5v2.5h-1.5v-4h4v1.5z"/></svg>`;
 
-function rvSetFullscreenIcon(el, isFullscreen) {
-  el.innerHTML = isFullscreen ? _ICON_COLLAPSE : _ICON_EXPAND;
+function rvSetFullscreenIcon(isFullscreen) {
+  const el = document.getElementById('rvFullscreenBtn');
+  if (el) el.innerHTML = isFullscreen ? _ICON_COLLAPSE : _ICON_EXPAND;
 }
 
 function rvInitFullscreenBtn() {
@@ -1960,10 +1961,9 @@ function rvInitFullscreenBtn() {
     L.DomEvent.on(el, 'click', L.DomEvent.stopPropagation);
     L.DomEvent.on(el, 'click', L.DomEvent.preventDefault);
     L.DomEvent.on(el, 'click', () => {
-      const panel = document.getElementById('panelRadar');
-      const isFullscreen = panel.classList.toggle('rv-fullscreen');
+      const isFullscreen = document.getElementById('app').classList.toggle('radar-fullscreen');
       rvSetFullscreenIcon(el, isFullscreen);
-      setTimeout(() => rvMap.invalidateSize(), 50);
+      setTimeout(() => rvMap.invalidateSize(), 80);
     });
     return el;
   };
