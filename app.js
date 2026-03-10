@@ -1807,6 +1807,61 @@ function openDayModal(dayIdx) {
 }
 
 
+// ── Radar Crosshair Marker ───────────────────────────────────────────────────
+let rvCrosshairMarker = null;
+
+function rvAddCrosshair(lat, lon) {
+  if (rvCrosshairMarker) rvMap.removeLayer(rvCrosshairMarker);
+  const crosshairIcon = L.divIcon({
+    className: '',
+    html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="4" stroke="white" stroke-width="1.5" fill="none"/>
+      <line x1="12" y1="2" x2="12" y2="8" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="12" y1="16" x2="12" y2="22" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="2" y1="12" x2="8" y2="12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="16" y1="12" x2="22" y2="12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+  rvCrosshairMarker = L.marker([lat, lon], { icon: crosshairIcon, zIndexOffset: 1000, interactive: false }).addTo(rvMap);
+}
+
+// ── Radar Locate Button ───────────────────────────────────────────────────────
+function rvInitLocateBtn() {
+  if (!rvMap || document.getElementById('rvLocateBtn')) return;
+  const btn = L.control({ position: 'bottomright' });
+  btn.onAdd = function() {
+    const el = L.DomUtil.create('button', 'rv-locate-btn');
+    el.id = 'rvLocateBtn';
+    el.title = 'Go to my location';
+    el.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2" fill="none"/>
+      <line x1="12" y1="2" x2="12" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="12" y1="17" x2="12" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="2" y1="12" x2="7" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <line x1="17" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+    L.DomEvent.on(el, 'click', L.DomEvent.stopPropagation);
+    L.DomEvent.on(el, 'click', L.DomEvent.preventDefault);
+    L.DomEvent.on(el, 'click', () => {
+      el.classList.add('locating');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          el.classList.remove('locating');
+          const { latitude: lat, longitude: lon } = pos.coords;
+          rvMap.setView([lat, lon], 8, { animate: true });
+          rvAddCrosshair(lat, lon);
+        },
+        () => { el.classList.remove('locating'); },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+    return el;
+  };
+  btn.addTo(rvMap);
+}
+
 // ── Radar Overlay Layers ─────────────────────────────────────────────────────
 // Overlay definitions: id, label, color, fetch function
 const RV_OVERLAYS = [
@@ -1844,12 +1899,12 @@ function warnColor(event) {
 
 // SPC risk levels
 const SPC_RISKS = {
-  'TSTM': { label: 'General Thunder',  color: '#c8c8c8' },
-  'MRGL': { label: 'Marginal',         color: '#66c57e' },
-  'SLGT': { label: 'Slight',           color: '#f5f580' },
-  'ENH':  { label: 'Enhanced',         color: '#e8a838' },
-  'MDT':  { label: 'Moderate',         color: '#e84040' },
-  'HIGH': { label: 'High',             color: '#f060f0' },
+  'TSTM': { label: 'General Thunder',  color: '#c8c8c8', desc: 'Non-severe thunderstorms possible. Lightning and brief heavy rain likely but significant severe weather not expected.' },
+  'MRGL': { label: 'Marginal (1/5)',   color: '#66c57e', desc: 'Isolated severe storms possible. Mainly a threat for large hail or brief damaging wind gusts. Tornado risk is low.' },
+  'SLGT': { label: 'Slight (2/5)',     color: '#f5f580', desc: 'Scattered severe storms likely. Damaging winds, large hail, and isolated tornadoes are all possible across the highlighted area.' },
+  'ENH':  { label: 'Enhanced (3/5)',   color: '#e8a838', desc: 'Numerous severe storms expected. Strong tornadoes, very large hail (2"+), and widespread damaging winds are all real threats.' },
+  'MDT':  { label: 'Moderate (4/5)',   color: '#e84040', desc: 'Widespread severe weather expected. Multiple significant tornadoes (EF2+), very large hail, and destructive winds are likely.' },
+  'HIGH': { label: 'High (5/5)',       color: '#f060f0', desc: 'Particularly dangerous situation. A major tornado outbreak or widespread destructive winds is expected. Take shelter now.' },
 };
 
 function rvInitOverlayBar() {
@@ -1947,11 +2002,12 @@ async function rvLoadOverlay(id) {
           style: { color, weight: 1.5, opacity: 0.8, fillColor: color, fillOpacity: risk === 'TSTM' ? 0.06 : 0.14, dashArray: risk === 'TSTM' ? '4 4' : null }
         });
         layer.on('click', (e) => {
-          L.popup({ className: 'rv-map-popup', maxWidth: 240 })
+          L.popup({ className: 'rv-map-popup', maxWidth: 260 })
             .setLatLng(e.latlng)
             .setContent(`<div class="rmp-inner">
-              <div class="rmp-title" style="color:${color}">SPC ${label} Risk</div>
-              <div class="rmp-body">Day 1 Convective Outlook<br>Severe thunderstorm potential area</div>
+              <div class="rmp-title" style="color:${color}">SPC ${label}</div>
+              <div class="rmp-subtitle">Day 1 Convective Outlook</div>
+              <div class="rmp-body">${SPC_RISKS[risk]?.desc || ''}</div>
             </div>`)
             .openOn(rvMap);
         });
@@ -1960,58 +2016,106 @@ async function rvLoadOverlay(id) {
     });
 
   } else if (id === 'stormtracks') {
-    // NWS SCIT storm tracks — nowCOAST WMS layer (real SCIT algorithm output)
-    // Served as a WMS overlay, no API key needed
-    const wmsLayer = L.tileLayer.wms(
-      'https://nowcoast.noaa.gov/geoserver/warnings/storm_cell_identification_tracking/ows', {
-        layers: 'storm_cell_identification_tracking',
-        format: 'image/png',
-        transparent: true,
-        version: '1.3.0',
-        opacity: 0.9,
-        zIndex: 5,
+    // NWS Storm Tracks via api.weather.gov alerts
+    // Tornado and Severe Thunderstorm Warnings include storm motion in their parameters
+    const url = 'https://api.weather.gov/alerts/active?status=actual&message_type=alert&limit=500';
+    const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
+    const data = await resp.json();
+
+    const DIRS = {
+      N:0, NNE:22.5, NE:45, ENE:67.5, E:90, ESE:112.5, SE:135, SSE:157.5,
+      S:180, SSW:202.5, SW:225, WSW:247.5, W:270, WNW:292.5, NW:315, NNW:337.5
+    };
+
+    let trackCount = 0;
+
+    (data.features || []).forEach(f => {
+      const props = f.properties;
+      const evt = (props.event || '').toLowerCase();
+      if (!evt.includes('tornado') && !evt.includes('thunderstorm')) return;
+      if (!f.geometry) return;
+
+      const color = warnColor(props.event || '');
+
+      // Draw the warning polygon itself as a dashed outline
+      L.geoJSON(f.geometry, {
+        style: { color, weight: 1.8, opacity: 0.7, fill: false, dashArray: '5 4' }
+      }).addTo(group);
+
+      // Find storm centroid
+      let center = null;
+      try { center = L.geoJSON(f.geometry).getBounds().getCenter(); } catch(e) { return; }
+
+      // Extract motion from NWS parameters block (structured data in newer alerts)
+      // Also try description text as fallback
+      const params = props.parameters || {};
+      let bearing = null, spd = null;
+
+      // Check maxWindGust, thunderstormWindGust (contain direction/speed)
+      // Primary: parse "STORM MOTION...NE AT 45 MPH" from description
+      const desc = (props.description || '') + ' ' + (props.headline || '');
+      const m1 = desc.match(/STORM\s+MOTION[^\d]{0,20}?(\d+)\s*DEGREES?\s+AT\s+(\d+)/i);
+      if (m1) {
+        bearing = parseInt(m1[1]);
+        spd = parseInt(m1[2]);
+      } else {
+        // "moving northeast at 35 mph" or "MOVING NE AT 35 MPH"
+        const m2 = desc.match(/moving\s+(?:toward\s+the\s+)?([NSEW]{1,3}(?:EAST|WEST|NORTH|SOUTH)?)\s+at\s+(\d+)/i);
+        if (m2) {
+          const dirKey = m2[1].toUpperCase().replace(/EAST$/,'E').replace(/WEST$/,'W').replace(/NORTH$/,'N').replace(/SOUTH$/,'S');
+          bearing = DIRS[dirKey] ?? null;
+          spd = parseInt(m2[2]);
+        }
       }
-    );
-    wmsLayer.addTo(group);
 
-    // Also fetch NWS warnings for context polygons with motion text
-    try {
-      const url = 'https://api.weather.gov/alerts/active?status=actual&message_type=alert&limit=200';
-      const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
-      const data = await resp.json();
+      // Draw motion track if we got data
+      if (bearing !== null && spd !== null && spd > 0) {
+        trackCount++;
+        const cosLat = Math.cos(center.lat * Math.PI / 180);
+        const bearRad = bearing * Math.PI / 180;
+        const distPerTick = (spd / 60 * 15) / 69; // deg lat per 15 min
+        const tickCount = 4;
 
-      (data.features || []).forEach(f => {
-        const props = f.properties;
-        const evt = (props.event || '').toLowerCase();
-        if (!evt.includes('tornado') && !evt.includes('thunderstorm')) return;
-        if (!f.geometry) return;
+        // Motion arrow line to 60-min projected position
+        const endLat = center.lat + Math.cos(bearRad) * distPerTick * tickCount;
+        const endLon = center.lng + Math.sin(bearRad) * distPerTick * tickCount / cosLat;
 
-        const desc = (props.description || '') + ' ' + (props.headline || '');
-        const color = warnColor(props.event || '');
-
-        // Draw dashed outline of warning polygon
-        L.geoJSON(f.geometry, {
-          style: { color, weight: 2, opacity: 0.75, fill: false, dashArray: '5 4' }
+        L.polyline([[center.lat, center.lng], [endLat, endLon]], {
+          color, weight: 2.5, opacity: 0.9
         }).addTo(group);
 
-        // Parse motion for popup info
-        const motionMatch = desc.match(/moving\s+(?:toward\s+(?:the\s+)?)?(\w+(?:\s+\w+)?)\s+at\s+(\d+)\s*mph/i);
-        let motionStr = '';
-        if (motionMatch) motionStr = `<br>Moving ${motionMatch[1]} at ${motionMatch[2]} mph`;
-
-        // Centroid tap popup
-        let center = null;
-        try { center = L.geoJSON(f.geometry).getBounds().getCenter(); } catch(e) {}
-        if (center) {
-          L.circleMarker(center, {
-            radius: 5, color, fillColor: color, fillOpacity: 0.9, weight: 1.5
-          }).bindPopup(`<div class="rmp-inner">
-            <div class="rmp-title" style="color:${color}">${props.event}</div>
-            <div class="rmp-body">${(props.areaDesc||'').split(';')[0]}${motionStr}</div>
-          </div>`, { className: 'rv-map-popup' }).addTo(group);
+        // 15-min tick marks perpendicular to track
+        for (let t = 1; t <= tickCount; t++) {
+          const tLat = center.lat + Math.cos(bearRad) * distPerTick * t;
+          const tLon = center.lng + Math.sin(bearRad) * distPerTick * t / cosLat;
+          const perpRad = bearRad + Math.PI / 2;
+          const tickSize = 0.025;
+          L.polyline([
+            [tLat - Math.cos(perpRad) * tickSize, tLon - Math.sin(perpRad) * tickSize / cosLat],
+            [tLat + Math.cos(perpRad) * tickSize, tLon + Math.sin(perpRad) * tickSize / cosLat]
+          ], { color, weight: 2, opacity: 0.85 }).addTo(group);
         }
-      });
-    } catch(e) { console.warn('Storm tracks warning fetch:', e); }
+
+        // Arrowhead at projected end
+        L.circleMarker([endLat, endLon], {
+          radius: 4, color, fillColor: color, fillOpacity: 1, weight: 1.5
+        }).addTo(group);
+      }
+
+      // Tappable centroid
+      const dirLabel = bearing !== null ? `${bearing}° at ${spd} mph` : '';
+      L.circleMarker(center, {
+        radius: 6, color, fillColor: color, fillOpacity: 0.85, weight: 1.5
+      }).bindPopup(`<div class="rmp-inner">
+        <div class="rmp-title" style="color:${color}">${props.event}</div>
+        <div class="rmp-body">${(props.areaDesc||'').split(';')[0]}${dirLabel ? '<br>Motion: ' + dirLabel : ''}</div>
+      </div>`, { className: 'rv-map-popup' }).addTo(group);
+    });
+
+    if (trackCount === 0) {
+      // No active severe warnings with motion data — show a subtle map note
+      console.info('Storm tracks: no active tornado/thunderstorm warnings with motion data');
+    }
   }
 }
 
@@ -3270,9 +3374,7 @@ function initRadar(lat, lon) {
       maxNativeZoom: 19, maxZoom: 19, subdomains: 'abcd'
     }).addTo(rvMap);
 
-    L.circleMarker([lat, lon], {
-      radius: 6, color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 1, weight: 2
-    }).addTo(rvMap);
+    rvAddCrosshair(lat, lon);
 
     document.getElementById('rvPlayBtn').addEventListener('click', rvTogglePlay);
     document.getElementById('rvTimeline').addEventListener('click', (e) => {
@@ -3286,12 +3388,16 @@ function initRadar(lat, lon) {
     rvToggleDbzBar();
     rvInitOverlayBar();
     rvInitScrubber();
+    rvInitLocateBtn();
+    // Default outlook layer on
+    setTimeout(() => {
+      const outlookBtn = document.querySelector('[data-id="outlook"]');
+      if (outlookBtn) rvToggleOverlay('outlook', outlookBtn);
+    }, 800);
   } else {
     rvMap.setView([lat, lon], 8);
     rvMap.eachLayer(l => { if (l._url && l._url.includes('openweathermap')) rvMap.removeLayer(l); else if (l._wmsParams) rvMap.removeLayer(l); });
-    L.circleMarker([lat, lon], {
-      radius: 6, color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 1, weight: 2
-    }).addTo(rvMap);
+    rvAddCrosshair(lat, lon);
   }
 
   rvLoadFrames();

@@ -524,7 +524,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .radar-dbz-bar { height: 14px; border-radius: 4px; position: relative; cursor: crosshair; touch-action: none; }
 .radar-dbz-bar::after { content: ''; position: absolute; top: -3px; bottom: -3px; left: var(--scrub-pct, -999px); width: 2px; background: rgba(255,255,255,0.9); border-radius: 1px; pointer-events: none; display: none; }
 .radar-dbz-bar.scrubbing::after { display: block; }
-.radar-dbz-tooltip { position: absolute; bottom: calc(100% + 8px); background: var(--card2); border: 1.5px solid; border-radius: 6px; padding: 6px 10px; pointer-events: none; white-space: nowrap; z-index: 10; }
+.radar-dbz-tooltip { position: absolute; bottom: calc(100% + 8px); background: var(--card2); border: 1.5px solid; border-radius: 6px; padding: 6px 10px; pointer-events: none; white-space: nowrap; z-index: 10; text-align: center; }
 .dbz-tip-val { font-family: var(--mono); font-size: 15px; font-weight: 700; line-height: 1.2; display: block; }
 .dbz-tip-unit { font-size: 10px; font-weight: 500; opacity: .65; margin-left: 2px; }
 .dbz-tip-lbl { font-size: 10px; font-weight: 500; color: var(--dim); letter-spacing: .3px; display: block; margin-top: 3px; }
@@ -558,9 +558,15 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .rv-map-popup .leaflet-popup-tip { background: #1a1c1f; }
 .rv-map-popup .leaflet-popup-content { margin: 0; }
 .rv-map-popup .leaflet-popup-close-button { color: var(--dim) !important; top: 6px; right: 8px; }
+/* ── Locate Button ── */
+.rv-locate-btn { width: 34px; height: 34px; background: var(--card2); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.4); -webkit-appearance: none; transition: background .15s, color .15s; margin-bottom: 10px; margin-right: 10px; }
+.rv-locate-btn:active { background: var(--card3); }
+.rv-locate-btn.locating { color: var(--blue); animation: pulse-opacity 1s infinite; }
+@keyframes pulse-opacity { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
 .rmp-inner { padding: 11px 13px; min-width: 160px; max-width: 240px; }
-.rmp-title { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
-.rmp-body { font-size: 10px; color: var(--dim); line-height: 1.5; }
+.rmp-title { font-size: 12px; font-weight: 700; margin-bottom: 1px; }
+.rmp-subtitle { font-size: 9px; font-weight: 600; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 6px; }
+.rmp-body { font-size: 10.5px; color: var(--dim); line-height: 1.5; }
 #notifBanner { margin: 12px 12px 0; border-radius: var(--r); overflow: hidden; }
 .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
 .settings-row-text { flex: 1; min-width: 0; }
@@ -897,7 +903,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.474l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.0.8</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.1.0</div>
   </div>
 
 </div>
@@ -1021,7 +1027,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         <button onclick="document.getElementById('settingsModal').classList.remove('open'); document.getElementById('infoModal').classList.add('open');" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">View Data Sources →</button>
       </div>
 
-      <div class="info-footer">StormWatch PWA · v2.0.8</div>
+      <div class="info-footer">StormWatch PWA · v2.1.0</div>
     </div>
   </div>
 </div>
@@ -1115,7 +1121,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
       <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
       <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:2;color:rgba(255,255,255,0.6)">
-        <b>v2.0.8</b><br>
+        <b>v2.1.0</b><br>
         · OWM Weather Maps 2.0 radar with Rain, Wind, Cloud &amp; Temp layers<br>
         · Push notifications for severe weather alerts with per-type toggles<br>
         · Smart polling — 3 min refresh when storms expected, 15 min otherwise<br>
@@ -1126,7 +1132,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         · Fixed notification permission banner disappearing on location update
       </div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.0.8</div>
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.1.0</div>
     </div>
   </div>
 </div>
@@ -1145,7 +1151,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.0.8"></script>
+<script src="app.js?v=2.1.0"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>
