@@ -2673,7 +2673,7 @@ function renderHourly(periods) {
     const windMax = Math.max(...windNums.map(Number));
     const fcLower = (p.shortForecast || '').toLowerCase();
     const isSevere = /tornado|severe|thunderstorm|warning|hail/.test(fcLower);
-    const alertClass = isSevere || precip >= 80 ? 'hc-alert-high' : precip >= 50 ? 'hc-alert-mid' : '';
+    const alertClass = isSevere || precip >= 90 ? 'hc-alert-high' : precip >= 70 ? 'hc-alert-mid' : '';
     return `<div class="hour-card${alertClass ? ' ' + alertClass : ''}" data-time="${p.startTime}">
       <span class="hc-time">${hr}</span>
       <span class="hc-icon">${rowWxIcon(p.shortForecast, p.isDaytime !== false, 32)}</span>
