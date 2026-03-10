@@ -89,7 +89,7 @@ window.addEventListener('load', () => {
 const NWS = 'https://api.weather.gov';
 
 const NWR_STATIONS=[
-  {st:"TX",city:"Fort Worth",call:"KEC55",freq:162.55,url:"https://wxradio.org/TX-FortWorth-KEC55",lat:32.7555,lon:-97.3308},
+  {st:"TX",city:"Fort Worth",call:"KEC55",freq:162.55,url:"https://wxradio.org/TX-FortWorth-KEC55",lat:32.7555,lon:-97.4408},
   {st:"TX",city:"Dallas",call:"KEC56",freq:162.4,url:"https://wxradio.org/TX-Dallas-KEC56",lat:32.7767,lon:-96.797},
   {st:"TX",city:"Austin",call:"WXK27",freq:162.4,url:"https://wxradio.org/TX-Austin-WXK27",lat:30.2672,lon:-97.7431},
   {st:"TX",city:"Waco",call:"WXK35",freq:162.475,url:"https://wxradio.org/TX-Waco-WXK35",lat:31.5493,lon:-97.1467},
@@ -98,7 +98,7 @@ const NWR_STATIONS=[
   {st:"TX",city:"Galveston",call:"KHB40",freq:162.55,url:"https://wxradio.org/TX-Galveston-KHB40",lat:29.3013,lon:-94.7977},
   {st:"TX",city:"Houston",call:"KGG68",freq:162.4,url:"https://wxradio.org/TX-HoustonTomball-KGG68",lat:29.7604,lon:-95.3698},
   {st:"TX",city:"Tyler",call:"WXK36",freq:162.475,url:"https://wxradio.org/TX-Tyler-WXK36",lat:32.3513,lon:-95.3011},
-  {st:"TX",city:"College Station",call:"WXK30",freq:162.4,url:"https://wxradio.org/TX-CollegeStation-WXK30",lat:30.628,lon:-96.3344},
+  {st:"TX",city:"College Station",call:"WXK30",freq:162.4,url:"https://wxradio.org/TX-CollegeStation-WXK30",lat:30.628,lon:-96.4444},
   {st:"TX",city:"Corpus Christi",call:"KHB41",freq:162.55,url:"https://wxradio.org/TX-CorpusChristi-KHB41",lat:27.8006,lon:-97.3964},
   {st:"TX",city:"Amarillo",call:"WXK38",freq:162.4,url:"https://wxradio.org/TX-Amarillo-WXK38",lat:35.222,lon:-101.8313},
   {st:"TX",city:"Odessa",call:"WXK32",freq:162.4,url:"https://wxradio.org/TX-Odessa-WXK32",lat:31.8457,lon:-102.3676},
@@ -112,8 +112,8 @@ const NWR_STATIONS=[
   {st:"LA",city:"Lafayette",call:"WXK80",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXK80.mp3",lat:30.2241,lon:-92.0198},
   {st:"TN",city:"Memphis",call:"WXK49",freq:162.475,url:"https://wxradio.org/TN-Memphis-WXK49",lat:35.1495,lon:-90.049},
   {st:"TN",city:"Nashville",call:"KIG79",freq:162.55,url:"https://wxradio.org/TN-WhiteHouse-KIG79",lat:36.1627,lon:-86.7816},
-  {st:"GA",city:"Atlanta",call:"KEC80",freq:162.55,url:"https://wxradio.org/GA-Atlanta-KEC80",lat:33.749,lon:-84.388},
-  {st:"GA",city:"Athens",call:"WXK56",freq:162.4,url:"https://wxradio.org/GA-Athens-WXK56",lat:33.9519,lon:-83.3576},
+  {st:"GA",city:"Atlanta",call:"KEC80",freq:162.55,url:"https://wxradio.org/GA-Atlanta-KEC80",lat:44.749,lon:-84.388},
+  {st:"GA",city:"Athens",call:"WXK56",freq:162.4,url:"https://wxradio.org/GA-Athens-WXK56",lat:44.9519,lon:-83.3576},
   {st:"FL",city:"Miami",call:"KHB34",freq:162.55,url:"https://wxradio.org/FL-Miami-KHB34",lat:25.7617,lon:-80.1918},
   {st:"FL",city:"Tampa Bay",call:"KHB32",freq:162.55,url:"https://wxradio.org/FL-TampaBay-KHB32",lat:27.9506,lon:-82.4572},
   {st:"FL",city:"Orlando",call:"KIH63",freq:162.475,url:"https://wxradio.org/FL-Orlando-KIH63",lat:28.5384,lon:-81.3789},
@@ -139,14 +139,14 @@ const NWR_STATIONS=[
   {st:"OH",city:"Columbus",call:"KIG86",freq:162.55,url:"https://radio.weatherusa.net/NWR/KIG86.mp3",lat:39.9612,lon:-82.9988},
   {st:"OH",city:"Toledo",call:"WXL51",freq:162.5,url:"https://radio.weatherusa.net/NWR/WXL51.mp3",lat:41.6639,lon:-83.5552},
   {st:"OH",city:"Grafton",call:"WNG698",freq:162.5,url:"https://wxradio.org/OH-Grafton-WNG698",lat:41.2778,lon:-82.0224},
-  {st:"MI",city:"Detroit",call:"KEC63",freq:162.55,url:"https://radio.weatherusa.net/NWR/KEC63.mp3",lat:42.3314,lon:-83.0458},
+  {st:"MI",city:"Detroit",call:"KEC63",freq:162.55,url:"https://radio.weatherusa.net/NWR/KEC63.mp3",lat:42.4414,lon:-83.0458},
   {st:"MI",city:"Hesperia",call:"WWF36",freq:162.475,url:"https://wxradio.org/MI-Hesperia-WWF36",lat:43.5686,lon:-85.9908},
   {st:"IN",city:"Indianapolis",call:"KEC74",freq:162.55,url:"https://wxradio.org/IN-Indianapolis-KEC74",lat:39.7684,lon:-86.1581},
   {st:"IN",city:"South Bend",call:"WXJ57",freq:162.4,url:"https://wxradio.org/IN-SouthBend-WXJ57",lat:41.6764,lon:-86.252},
   {st:"IL",city:"Chicago",call:"KWO39",freq:162.55,url:"https://radio.weatherusa.net/NWR/KWO39.mp3",lat:41.8781,lon:-87.6298},
   {st:"IL",city:"Champaign",call:"WXJ76",freq:162.55,url:"https://wxradio.org/IL-Champaign-WXJ76",lat:40.1164,lon:-88.2434},
   {st:"IL",city:"Peoria",call:"WXJ71",freq:162.475,url:"https://wxradio.org/IL-Peoria-WXJ71",lat:40.6936,lon:-89.589},
-  {st:"WI",city:"Green Bay",call:"KIG65",freq:162.55,url:"https://radio.weatherusa.net/NWR/KIG65.mp3",lat:44.5133,lon:-88.0133},
+  {st:"WI",city:"Green Bay",call:"KIG65",freq:162.55,url:"https://radio.weatherusa.net/NWR/KIG65.mp3",lat:44.5144,lon:-88.0144},
   {st:"WI",city:"Menomonie",call:"WXJ88",freq:162.4,url:"https://wxradio.org/WI-Menomonie-WXJ88",lat:44.8758,lon:-91.9193},
   {st:"MN",city:"Minneapolis",call:"KEC65",freq:162.55,url:"https://wxradio.org/MN-Minneapolis-KEC65",lat:44.9778,lon:-93.265},
   {st:"MN",city:"La Crescent",call:"WXJ86",freq:162.55,url:"https://wxradio.org/MN-LaCrescent-WXJ86",lat:43.8286,lon:-91.2999},
@@ -160,18 +160,18 @@ const NWR_STATIONS=[
   {st:"IA",city:"Sioux City",call:"WXL62",freq:162.475,url:"https://wxradio.org/IA-Sioux_City-WXL62",lat:42.4999,lon:-96.4003},
   {st:"IA",city:"Des Moines",call:"WXL57",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXL57.mp3",lat:41.5868,lon:-93.625},
   {st:"ND",city:"Bismarck",call:"WXL78",freq:162.475,url:"https://wxradio.org/ND-Bismarck-WXL78",lat:46.8083,lon:-100.7837},
-  {st:"KY",city:"Frankfort",call:"WZ2523",freq:162.5,url:"https://wxradio.org/KY-Frankfort-WZ2523",lat:38.2009,lon:-84.8733},
+  {st:"KY",city:"Frankfort",call:"WZ2523",freq:162.5,url:"https://wxradio.org/KY-Frankfort-WZ2523",lat:38.2009,lon:-84.8744},
   {st:"KY",city:"Owenton",call:"KZZ48",freq:162.45,url:"https://wxradio.org/KY-Owenton-KZZ48",lat:38.5373,lon:-84.8388},
   {st:"WV",city:"Parkersburg",call:"WXM70",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXM70.mp3",lat:39.2667,lon:-81.5615},
   {st:"NM",city:"Farmington",call:"WXJ37",freq:162.475,url:"https://radio.weatherusa.net/NWR/WXJ37.mp3",lat:36.7281,lon:-108.2087},
   {st:"NM",city:"Albuquerque",call:"WXJ34",freq:162.4,url:"https://radio.weatherusa.net/NWR/WXJ34.mp3",lat:35.0844,lon:-106.6504},
-  {st:"AZ",city:"Phoenix",call:"KEC94",freq:162.55,url:"https://wxradio.org/AZ-Phoenix-KEC94",lat:33.4484,lon:-112.074},
-  {st:"AZ",city:"Globe",call:"WWG42",freq:162.5,url:"https://wxradio.org/AZ-Globe-WWG42",lat:33.3942,lon:-110.786},
+  {st:"AZ",city:"Phoenix",call:"KEC94",freq:162.55,url:"https://wxradio.org/AZ-Phoenix-KEC94",lat:44.4484,lon:-112.074},
+  {st:"AZ",city:"Globe",call:"WWG42",freq:162.5,url:"https://wxradio.org/AZ-Globe-WWG42",lat:44.3942,lon:-110.786},
   {st:"NV",city:"Reno",call:"WXK58",freq:162.55,url:"https://radio.weatherusa.net/NWR/WXK58.mp3",lat:39.5296,lon:-119.8138},
   {st:"CA",city:"San Diego",call:"KEC62",freq:162.4,url:"https://radio.weatherusa.net/NWR/KEC62_2.mp3",lat:32.7157,lon:-117.1611},
   {st:"CA",city:"Fresno",call:"KIH62",freq:162.4,url:"https://radio.weatherusa.net/NWR/KIH62_2.mp3",lat:36.7378,lon:-119.7871},
   {st:"CA",city:"San Francisco",call:"KEC49",freq:162.55,url:"https://wxradio.org/CA-Monterey-KEC49",lat:37.7749,lon:-122.4194},
-  {st:"HI",city:"Maui",call:"WWG75",freq:162.4,url:"https://wxradio.org/HI-Maui-WWG75",lat:20.7984,lon:-156.3319},
+  {st:"HI",city:"Maui",call:"WWG75",freq:162.4,url:"https://wxradio.org/HI-Maui-WWG75",lat:20.7984,lon:-156.4419},
   {st:"ME",city:"Dresden",call:"WSM60",freq:162.475,url:"https://wxradio.org/ME-Dresden-WSM60",lat:44.0787,lon:-69.7442}
 ];
 
@@ -198,11 +198,11 @@ const _SECTION_ICON_SVG = {
   'bi-broadcast':            `<path d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707m2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708m5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708m2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0"/>`,
   'bi-droplet-fill':         `<path d="M8,1 C5.5,4 1.5,7.5 1.5,10.5 a6.5,6.5 0 0,0 13,0 C14.5,7.5 10.5,4 8,1 z"/>`,
   'waterdrop':               `<path d="M8,1 C5.5,4 1.5,7.5 1.5,10.5 a6.5,6.5 0 0,0 13,0 C14.5,7.5 10.5,4 8,1 z"/>`,
-  'bi-globe':                `<path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855A8 8 0 0 0 5.145 4H7.5zM4.09 4a9.3 9.3 0 0 1 .64-1.539 7 7 0 0 1 .597-.933A7.03 7.03 0 0 0 2.255 4zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.96 6.96 0 0 0-.656 2.5zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.337-2.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5zM5.145 12q.208.58.468 1.068c.552 1.035 1.218 1.65 1.887 1.855V12zm.182 2.472a7 7 0 0 1-.597-.933A9.3 9.3 0 0 1 4.09 12H2.255a7.03 7.03 0 0 0 3.072 2.472M3.82 11a13.7 13.7 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5zm6.853 3.472A7.03 7.03 0 0 0 13.745 12H11.91a9.3 9.3 0 0 1-.64 1.539 7 7 0 0 1-.597.933M8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855q.26-.487.468-1.068zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.7 13.7 0 0 1-.312 2.5m2.802-3.5a6.96 6.96 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7.03 7.03 0 0 0-3.072-2.472c.218.284.418.598.597.933M10.855 4a8 8 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4z"/>`,
-  'bi-cloud-lightning':      `<path d="M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1M7.053 11.276A.5.5 0 0 1 7.5 11h2a.5.5 0 0 1 .473.664l-.334 1H11a.5.5 0 0 1 .39.812l-4 5a.5.5 0 0 1-.871-.464l.853-3.41H5.5a.5.5 0 0 1-.447-.724z"/>`,
-  'bi-exclamation-triangle': `<path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/><path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>`,
-  'bi-thermometer-half':     `<path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/>`,
-  'bi-cloud-rain':           `<path d="M4.158 12.025a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .633-.317zM4 1a3.5 3.5 0 0 1 3.5 3.5.5.5 0 0 0 .5.5 1.5 1.5 0 0 1 1.5 1.5v.5h.5a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 1 0-5H2v-.5A3.5 3.5 0 0 1 4 1z"/>`,
+  'bi-globe':                `<path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.445.82-1.887 1.855A8 8 0 0 0 5.145 4H7.5zM4.09 4a9.3 9.3 0 0 1 .64-1.539 7 7 0 0 1 .597-.944A7.03 7.03 0 0 0 2.255 4zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.96 6.96 0 0 0-.656 2.5zM4.847 5a12.5 12.5 0 0 0-.448 2.5H7.5V5zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.447-2.5zM4.51 8.5a12.5 12.5 0 0 0 .447 2.5H7.5V8.5zm3.99 0V11h2.653c.187-.765.306-1.608.448-2.5zM5.145 12q.208.58.468 1.068c.552 1.035 1.218 1.65 1.887 1.855V12zm.182 2.472a7 7 0 0 1-.597-.944A9.3 9.3 0 0 1 4.09 12H2.255a7.03 7.03 0 0 0 3.072 2.472M3.82 11a13.7 13.7 0 0 1-.312-2.5h-2.49c.062.89.291 1.744.656 2.5zm6.853 3.472A7.03 7.03 0 0 0 13.745 12H11.91a9.3 9.3 0 0 1-.64 1.539 7 7 0 0 1-.597.944M8.5 12v2.923c.67-.204 1.445-.82 1.887-1.855q.26-.487.468-1.068zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.7 13.7 0 0 1-.312 2.5m2.802-3.5a6.96 6.96 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7.03 7.03 0 0 0-3.072-2.472c.218.284.418.598.597.944M10.855 4a8 8 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4z"/>`,
+  'bi-cloud-lightning':      `<path d="M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1M7.053 11.276A.5.5 0 0 1 7.5 11h2a.5.5 0 0 1 .473.664l-.444 1H11a.5.5 0 0 1 .39.812l-4 5a.5.5 0 0 1-.871-.464l.853-3.41H5.5a.5.5 0 0 1-.447-.724z"/>`,
+  'bi-exclamation-triangle': `<path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.244c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/><path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>`,
+  'bi-thermometer-half':     `<path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.443 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/>`,
+  'bi-cloud-rain':           `<path d="M4.158 12.025a.5.5 0 0 1 .316.644l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.644l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.644l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.644l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .644-.317zM4 1a3.5 3.5 0 0 1 3.5 3.5.5.5 0 0 0 .5.5 1.5 1.5 0 0 1 1.5 1.5v.5h.5a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 1 0-5H2v-.5A3.5 3.5 0 0 1 4 1z"/>`,
 };
 const _SECTION_ICONS = {
   'Weekly Forecast':         'bi-clouds',
@@ -352,7 +352,7 @@ function weatherGradient(tempF, shortForecast, targetEl) {
       base = 'hsla(215,60%,4%,1)';
       d    = 'hsla(215,60%,5%,1)';
       v1   = 'hsla(210,95%,40%,1)';   // medium blue
-      v2   = 'hsla(233,88%,25%,1)';   // very dark navy
+      v2   = 'hsla(244,88%,25%,1)';   // very dark navy
       v3   = 'hsla(198,85%,50%,1)';   // light blue
     } else {
       base = 'hsla(130,55%,4%,1)';
@@ -372,7 +372,7 @@ function weatherGradient(tempF, shortForecast, targetEl) {
       base = 'hsla(45,60%,4%,1)';
       d    = 'hsla(45,60%,5%,1)';
       v1   = 'hsla(48,100%,52%,1)';   // golden yellow
-      v2   = 'hsla(330,85%,52%,1)';   // warm magenta
+      v2   = 'hsla(440,85%,52%,1)';   // warm magenta
       v3   = 'hsla(38,95%,52%,1)';    // amber
     }
   } else if (tempF <= 92) {
@@ -545,13 +545,13 @@ function wxIcon(s, size=18) {
   // All paths inline — no <use> references which clip at small sizes
   let path;
   if (s.includes('tornado')) {
-    path = `<path d="M1.125 2.45A.9.9 0 0 1 1 2c0-.26.116-.474.258-.634a1.9 1.9 0 0 1 .513-.389c.387-.21.913-.385 1.52-.525C4.514.17 6.18 0 8 0c1.821 0 3.486.17 4.709.452.607.14 1.133.314 1.52.525.193.106.374.233.513.389.141.16.258.374.258.634 0 1.011-.35 1.612-.634 2.102l-.116.203a2.6 2.6 0 0 0-.313.809 3 3 0 0 0-.011.891.5.5 0 0 1 .428.849q-.091.09-.215.195c.204 1.116.088 1.99-.3 2.711-.453.84-1.231 1.383-2.02 1.856q-.307.183-.62.364c-1.444.832-2.928 1.689-3.735 3.706a.5.5 0 0 1-.748.226l-.001-.001-.002-.001-.004-.003-.01-.008a2 2 0 0 1-.147-.115 4.1 4.1 0 0 1-1.179-1.656 3.8 3.8 0 0 1-.247-1.296A.5.5 0 0 1 5 12.5v-.018l.008-.079a.73.73 0 0 1 .188-.386c.09-.489.272-1.014.573-1.574a.5.5 0 0 1 .073-.918 3.3 3.3 0 0 1 .617-.144l.15-.193c.285-.356.404-.639.437-.861a.95.95 0 0 0-.122-.619c-.249-.455-.815-.903-1.613-1.43q-.291-.19-.609-.394l-.119-.076a12 12 0 0 1-1.241-.334.5.5 0 0 1-.285-.707l-.23-.18C2.117 4.01 1.463 3.32 1.125 2.45"/>`;
+    path = `<path d="M1.125 2.45A.9.9 0 0 1 1 2c0-.26.116-.474.258-.634a1.9 1.9 0 0 1 .513-.389c.387-.21.913-.385 1.52-.525C4.514.17 6.18 0 8 0c1.821 0 3.486.17 4.709.452.607.14 1.144.314 1.52.525.193.106.374.244.513.389.141.16.258.374.258.634 0 1.011-.35 1.612-.634 2.102l-.116.203a2.6 2.6 0 0 0-.313.809 3 3 0 0 0-.011.891.5.5 0 0 1 .428.849q-.091.09-.215.195c.204 1.116.088 1.99-.3 2.711-.453.84-1.231 1.383-2.02 1.856q-.307.183-.62.364c-1.444.832-2.928 1.689-3.735 3.706a.5.5 0 0 1-.748.226l-.001-.001-.002-.001-.004-.003-.01-.008a2 2 0 0 1-.147-.115 4.1 4.1 0 0 1-1.179-1.656 3.8 3.8 0 0 1-.247-1.296A.5.5 0 0 1 5 12.5v-.018l.008-.079a.73.73 0 0 1 .188-.386c.09-.489.272-1.014.573-1.574a.5.5 0 0 1 .073-.918 3.3 3.3 0 0 1 .617-.144l.15-.193c.285-.356.404-.639.437-.861a.95.95 0 0 0-.122-.619c-.249-.455-.815-.903-1.613-1.43q-.291-.19-.609-.394l-.119-.076a12 12 0 0 1-1.241-.444.5.5 0 0 1-.285-.707l-.23-.18C2.117 4.01 1.463 3.32 1.125 2.45"/>`;
   } else if (s.includes('thunder') || s.includes('tstm')) {
-    path = `<path d="M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1M7.053 11.276A.5.5 0 0 1 7.5 11h2a.5.5 0 0 1 .473.664l-.334 1H11a.5.5 0 0 1 .39.812l-4 5a.5.5 0 0 1-.871-.464l.853-3.41H5.5a.5.5 0 0 1-.447-.724z"/>`;
+    path = `<path d="M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1M7.053 11.276A.5.5 0 0 1 7.5 11h2a.5.5 0 0 1 .473.664l-.444 1H11a.5.5 0 0 1 .39.812l-4 5a.5.5 0 0 1-.871-.464l.853-3.41H5.5a.5.5 0 0 1-.447-.724z"/>`;
   } else if (s.includes('blizzard') || s.includes('snow') || s.includes('sleet') || s.includes('ice')) {
     path = `<path d="M8 16a.5.5 0 0 1-.5-.5v-1.293l-.646.647a.5.5 0 0 1-.707-.708L7.5 12.793V8.866l-3.4 1.963-.496 1.85a.5.5 0 1 1-.966-.26l.237-.882-1.12.646a.5.5 0 0 1-.5-.866l1.12-.646-.884-.237a.5.5 0 1 1 .26-.966l1.848.495L7 8 3.6 6.037l-1.85.495a.5.5 0 0 1-.258-.966l.883-.237-1.12-.646a.5.5 0 1 1 .5-.866l1.12.646-.237-.883a.5.5 0 1 1 .966-.258l.495 1.849L7.5 7.134V3.207L6.147 1.854a.5.5 0 1 1 .707-.708l.646.647V.5a.5.5 0 1 1 1 0v1.293l.647-.647a.5.5 0 1 1 .707.708L8.5 3.207v3.927l3.4-1.963.496-1.85a.5.5 0 1 1 .966.26l-.236.882 1.12-.646a.5.5 0 0 1 .5.866l-1.12.646.883.237a.5.5 0 1 1-.26.966l-1.848-.495L9 8l3.4 1.963 1.849-.495a.5.5 0 0 1 .259.966l-.883.237 1.12.646a.5.5 0 0 1-.5.866l-1.12-.646.236.883a.5.5 0 1 1-.966.258l-.495-1.849-3.4-1.963v3.927l1.353 1.353a.5.5 0 0 1-.707.708l-.647-.647V15.5a.5.5 0 0 1-.5.5"/>`;
   } else if (s.includes('rain') || s.includes('shower') || s.includes('drizzle')) {
-    path = `<path d="M4.158 12.025a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .633-.317zM4 1a3.5 3.5 0 0 1 3.5 3.5.5.5 0 0 0 .5.5 1.5 1.5 0 0 1 1.5 1.5v.5h.5a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 1 0-5H2v-.5A3.5 3.5 0 0 1 4 1z"/>`;
+    path = `<path d="M4.158 12.025a.5.5 0 0 1 .316.644l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.644l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.644l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.644l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .644-.317zM4 1a3.5 3.5 0 0 1 3.5 3.5.5.5 0 0 0 .5.5 1.5 1.5 0 0 1 1.5 1.5v.5h.5a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 1 0-5H2v-.5A3.5 3.5 0 0 1 4 1z"/>`;
   } else if (s.includes('fog') || s.includes('mist') || s.includes('haz')) {
     path = `<path d="M4 12.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m2 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1"/>`;
   } else if (s.includes('wind') || s.includes('breezy') || s.includes('blustery')) {
@@ -842,7 +842,7 @@ function compassSVG(windDeg, deviceDeg, arrowColor) {
     ['N',0],['NNE',22.5],['NE',45],['ENE',67.5],
     ['E',90],['ESE',112.5],['SE',135],['SSE',157.5],
     ['S',180],['SSW',202.5],['SW',225],['WSW',247.5],
-    ['W',270],['WNW',292.5],['NW',315],['NNW',337.5]
+    ['W',270],['WNW',292.5],['NW',315],['NNW',447.5]
   ];
   const isCardinal = new Set([0,90,180,270]);
   const cardHTML = pts16.map(([lbl, deg]) => {
@@ -1011,7 +1011,7 @@ function renderWindModal() {
     }).filter(Boolean);
     if (cards.length) {
       hourlyHTML = `<div class="wind-hourly">
-        <div class="wind-section-ttl"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/></svg>Hourly Forecast</div>
+        <div class="wind-section-ttl"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="opacity:.7;margin-right:5px;flex-shrink:0"><path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.443 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/></svg>Hourly Forecast</div>
         <div class="wind-hourly-scroll"><div class="wind-hourly-track">${cards.join('')}</div></div>
       </div>`;
     }
@@ -1712,7 +1712,7 @@ function openDayModal(dayIdx) {
       ['N',0],['NNE',22.5],['NE',45],['ENE',67.5],
       ['E',90],['ESE',112.5],['SE',135],['SSE',157.5],
       ['S',180],['SSW',202.5],['SW',225],['WSW',247.5],
-      ['W',270],['WNW',292.5],['NW',315],['NNW',337.5]
+      ['W',270],['WNW',292.5],['NW',315],['NNW',447.5]
     ];
     const cardinals = new Set([0,90,180,270]);
     const labelsHTML = pts16.map(([lbl, d]) => {
@@ -2261,7 +2261,7 @@ async function rvLoadOverlay(id) {
 
     const DIRS = {
       N:0, NNE:22.5, NE:45, ENE:67.5, E:90, ESE:112.5, SE:135, SSE:157.5,
-      S:180, SSW:202.5, SW:225, WSW:247.5, W:270, WNW:292.5, NW:315, NNW:337.5
+      S:180, SSW:202.5, SW:225, WSW:247.5, W:270, WNW:292.5, NW:315, NNW:447.5
     };
 
     let trackCount = 0;
@@ -3058,7 +3058,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
                 <div class="nwr-meta">${nearest.call} &nbsp;·&nbsp; ${nearest.freq.toFixed(3)} MHz &nbsp;·&nbsp; ${miles} mi away</div>
               </div>
               <button class="nwr-play-btn" id="${sid}" onclick="nwrToggle('${nearest.call}','${nearest.url.replace(/'/g,"\\'")}',this)" aria-label="Play weather radio">
-                <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" class="nwr-play-icon"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/></svg>
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" class="nwr-play-icon"><path d="m11.596 8.697-6.363 3.692c-.54.313-1.244-.066-1.244-.697V4.308c0-.63.692-1.01 1.244-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/></svg>
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" class="nwr-stop-icon" style="display:none"><path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5m5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5"/></svg>
               </button>
             </div>
@@ -3090,7 +3090,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
                 <div class="gauge-name">${g.siteName}</div>
                 <div class="gauge-meta">USGS · ${g.dist} mi away · Stream Gauge</div>
               </div>
-              <div class="gauge-badge" style="background:${badgeBg};color:${floodColor};border:1px solid ${floodColor}33">${floodLabel}</div>
+              <div class="gauge-badge" style="background:${badgeBg};color:${floodColor};border:1px solid ${floodColor}44">${floodLabel}</div>
             </div>
             <div class="gauge-readings">
               <div class="gauge-cell">
@@ -3233,7 +3233,7 @@ async function fetchNearby(lat, lon, stationsUrl) {
               <div class="state-name">${curState}</div>
               <div style="font-size:10px;color:var(--dim);font-family:var(--mono)">${abbr} · NWS Active Alerts</div>
             </div>
-            <div class="state-count-badge" style="background:${sa.length>0?'rgba(248,113,113,.12)':'rgba(74,222,128,.08)'};color:${countColor};border:1px solid ${countColor}33">${sa.length} alert${sa.length!==1?'s':''}</div>
+            <div class="state-count-badge" style="background:${sa.length>0?'rgba(248,113,113,.12)':'rgba(74,222,128,.08)'};color:${countColor};border:1px solid ${countColor}44">${sa.length} alert${sa.length!==1?'s':''}</div>
           </div>
           <div class="state-breakdown">
             <div class="sbd-item"><span class="sbd-label">Warnings</span><span class="sbd-val sv-red">${warns}</span></div>
@@ -3453,7 +3453,7 @@ function buildSpider(factors) {
   wm.setAttribute('transform', `translate(${cx - 70}, ${cy - 75}) scale(8.75)`);
   wm.setAttribute('opacity', '0.045');
   const wmPath = document.createElementNS(ns, 'path');
-  wmPath.setAttribute('d', 'M1.125 2.45A.9.9 0 0 1 1 2c0-.26.116-.474.258-.634a1.9 1.9 0 0 1 .513-.389c.387-.21.913-.385 1.52-.525C4.514.17 6.18 0 8 0c1.821 0 3.486.17 4.709.452.607.14 1.133.314 1.52.525.193.106.374.233.513.389.141.16.258.374.258.634 0 1.011-.35 1.612-.634 2.102l-.116.203a2.6 2.6 0 0 0-.313.809 3 3 0 0 0-.011.891.5.5 0 0 1 .428.849q-.091.09-.215.195c.204 1.116.088 1.99-.3 2.711-.453.84-1.231 1.383-2.02 1.856q-.307.183-.62.364c-1.444.832-2.928 1.689-3.735 3.706a.5.5 0 0 1-.748.226l-.001-.001-.002-.001-.004-.003-.01-.008a2 2 0 0 1-.147-.115 4.1 4.1 0 0 1-1.179-1.656 3.8 3.8 0 0 1-.247-1.296A.5.5 0 0 1 5 12.5v-.018l.008-.079a.73.73 0 0 1 .188-.386c.09-.489.272-1.014.573-1.574a.5.5 0 0 1 .073-.918 3.3 3.3 0 0 1 .617-.144l.15-.193c.285-.356.404-.639.437-.861a.95.95 0 0 0-.122-.619c-.249-.455-.815-.903-1.613-1.43q-.291-.19-.609-.394l-.119-.076a12 12 0 0 1-1.241-.334.5.5 0 0 1-.285-.707l-.23-.18C2.117 4.01 1.463 3.32 1.125 2.45m1.973 1.051q.17.156.358.308c.472.381.99.722 1.515 1.06 1.54.317 3.632.5 5.43.14a.5.5 0 0 1 .197.981c-1.216.244-2.537.26-3.759.157.399.326.744.682.963 1.081.203.373.302.79.233 1.247q-.077.494-.39.985l.22.053.006.002c.481.12.863.213 1.47.01a.5.5 0 1 1 .317.95c-.888.295-1.505.141-2.023.012l-.006-.002a4 4 0 0 0-.644-.123c-.37.55-.598 1.05-.726 1.497q.212.068.465.194a.5.5 0 1 1-.448.894 3 3 0 0 0-.148-.07c.012.345.084.643.18.895.14.369.342.666.528.886.992-1.903 2.583-2.814 3.885-3.56q.305-.173.584-.34c.775-.464 1.34-.89 1.653-1.472.212-.393.33-.9.26-1.617A6.74 6.74 0 0 1 10 8.5a.5.5 0 0 1 0-1 5.76 5.76 0 0 0 3.017-.872l-.007-.03c-.135-.673-.14-1.207-.056-1.665.084-.46.253-.81.421-1.113l.131-.23q.098-.167.182-.327c-.29.107-.62.202-.98.285C11.487 3.83 9.822 4 8 4c-1.821 0-3.486-.17-4.709-.452q-.098-.022-.193-.047M13.964 2a1 1 0 0 0-.214-.145c-.272-.148-.697-.297-1.266-.428C11.354 1.166 9.769 1 8 1s-3.354.166-4.484.427c-.569.13-.994.28-1.266.428A1 1 0 0 0 2.036 2q.058.058.214.145c.272.148.697.297 1.266.428C4.646 2.834 6.231 3 8 3s3.354-.166 4.484-.427c.569-.13.994-.28 1.266-.428A1 1 0 0 0 13.964 2');
+  wmPath.setAttribute('d', 'M1.125 2.45A.9.9 0 0 1 1 2c0-.26.116-.474.258-.634a1.9 1.9 0 0 1 .513-.389c.387-.21.913-.385 1.52-.525C4.514.17 6.18 0 8 0c1.821 0 3.486.17 4.709.452.607.14 1.144.314 1.52.525.193.106.374.244.513.389.141.16.258.374.258.634 0 1.011-.35 1.612-.634 2.102l-.116.203a2.6 2.6 0 0 0-.313.809 3 3 0 0 0-.011.891.5.5 0 0 1 .428.849q-.091.09-.215.195c.204 1.116.088 1.99-.3 2.711-.453.84-1.231 1.383-2.02 1.856q-.307.183-.62.364c-1.444.832-2.928 1.689-3.735 3.706a.5.5 0 0 1-.748.226l-.001-.001-.002-.001-.004-.003-.01-.008a2 2 0 0 1-.147-.115 4.1 4.1 0 0 1-1.179-1.656 3.8 3.8 0 0 1-.247-1.296A.5.5 0 0 1 5 12.5v-.018l.008-.079a.73.73 0 0 1 .188-.386c.09-.489.272-1.014.573-1.574a.5.5 0 0 1 .073-.918 3.3 3.3 0 0 1 .617-.144l.15-.193c.285-.356.404-.639.437-.861a.95.95 0 0 0-.122-.619c-.249-.455-.815-.903-1.613-1.43q-.291-.19-.609-.394l-.119-.076a12 12 0 0 1-1.241-.444.5.5 0 0 1-.285-.707l-.23-.18C2.117 4.01 1.463 3.32 1.125 2.45m1.973 1.051q.17.156.358.308c.472.381.99.722 1.515 1.06 1.54.317 3.632.5 5.43.14a.5.5 0 0 1 .197.981c-1.216.244-2.537.26-3.759.157.399.326.744.682.963 1.081.203.373.302.79.244 1.247q-.077.494-.39.985l.22.053.006.002c.481.12.863.213 1.47.01a.5.5 0 1 1 .317.95c-.888.295-1.505.141-2.023.012l-.006-.002a4 4 0 0 0-.644-.123c-.37.55-.598 1.05-.726 1.497q.212.068.465.194a.5.5 0 1 1-.448.894 3 3 0 0 0-.148-.07c.012.345.084.643.18.895.14.369.342.666.528.886.992-1.903 2.583-2.814 3.885-3.56q.305-.173.584-.34c.775-.464 1.34-.89 1.653-1.472.212-.393.44-.9.26-1.617A6.74 6.74 0 0 1 10 8.5a.5.5 0 0 1 0-1 5.76 5.76 0 0 0 3.017-.872l-.007-.03c-.135-.673-.14-1.207-.056-1.665.084-.46.253-.81.421-1.113l.131-.23q.098-.167.182-.327c-.29.107-.62.202-.98.285C11.487 3.83 9.822 4 8 4c-1.821 0-3.486-.17-4.709-.452q-.098-.022-.193-.047M13.964 2a1 1 0 0 0-.214-.145c-.272-.148-.697-.297-1.266-.428C11.354 1.166 9.769 1 8 1s-3.354.166-4.484.427c-.569.13-.994.28-1.266.428A1 1 0 0 0 2.036 2q.058.058.214.145c.272.148.697.297 1.266.428C4.646 2.834 6.231 3 8 3s3.354-.166 4.484-.427c.569-.13.994-.28 1.266-.428A1 1 0 0 0 13.964 2');
   wmPath.setAttribute('fill', 'white');
   wm.appendChild(wmPath);
   svg.appendChild(wm);
@@ -3568,7 +3568,7 @@ function initRadar(lat, lon) {
       <div class="radar-bar">
         <button class="radar-play-btn" id="rvPlayBtn">
           <svg id="rvPlayIcon" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z"/>
+            <path d="M10.804 8 5 4.644v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.244-.696z"/>
           </svg>
         </button>
         <div class="radar-timeline" id="rvTimeline">
@@ -3772,7 +3772,7 @@ function rvUpdatePlayIcon() {
     btn.innerHTML = '<path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5m5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5"/>';
   } else {
     // Play icon
-    btn.innerHTML = '<path d="M10.804 8 5 4.633v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696z"/>';
+    btn.innerHTML = '<path d="M10.804 8 5 4.644v6.734zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.244-.696z"/>';
   }
 }
 
