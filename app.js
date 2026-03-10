@@ -1878,6 +1878,12 @@ function openDayModal(dayIdx) {
     (windCardHTML || '') +
     allTilesHTML;
 
+  // Auto-select the correct precip chart half when viewing today
+  if (dayIdx === 0 && new Date().getHours() >= 12) {
+    const pTab = document.querySelector('#dayModalBody .pchart-tab:nth-child(2)');
+    if (pTab) pchartPage(pTab, 1);
+  }
+
   // Paint gradient for this specific day
   const _gp = d;
   // gradient already applied above
@@ -1942,12 +1948,13 @@ function rvInitLocateBtn() {
 }
 
 // ── Radar Fullscreen Button ───────────────────────────────────────────────────
-const _ICON_EXPAND   = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="display:block"><path d="M1.5 1h4v1.5h-2.5v2.5h-1.5v-4zm9 0h4v4h-1.5v-2.5h-2.5v-1.5zm-9 9h1.5v2.5h2.5v1.5h-4v-4zm10.5 2.5v-2.5h1.5v4h-4v-1.5h2.5z"/></svg>`;
-const _ICON_COLLAPSE = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="display:block"><path d="M5.5 1h-4v4h1.5v-2.5h2.5v-1.5zm5 0h4v4h-1.5v-2.5h-2.5v-1.5zm-5 10h-1.5v-2.5h-2.5v-1.5h4v4zm6.5-2.5h-2.5v2.5h-1.5v-4h4v1.5z"/></svg>`;
-
 function rvSetFullscreenIcon(isFullscreen) {
   const el = document.getElementById('rvFullscreenBtn');
-  if (el) el.innerHTML = isFullscreen ? _ICON_COLLAPSE : _ICON_EXPAND;
+  if (!el) return;
+  const exp = el.querySelector('.rv-ico-expand');
+  const col = el.querySelector('.rv-ico-collapse');
+  if (exp) exp.style.display = isFullscreen ? 'none' : 'block';
+  if (col) col.style.display = isFullscreen ? 'block' : 'none';
 }
 
 function rvInitFullscreenBtn() {
@@ -1957,7 +1964,10 @@ function rvInitFullscreenBtn() {
     const el = L.DomUtil.create('button', 'rv-fullscreen-btn');
     el.id = 'rvFullscreenBtn';
     el.title = 'Fullscreen';
-    el.innerHTML = _ICON_EXPAND;
+    // Embed both icons upfront; swap display only — never reassign innerHTML
+    el.innerHTML =
+      '<svg class="rv-ico-expand" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="display:block;pointer-events:none"><path d="M1.5 1h4v1.5h-2.5v2.5h-1.5v-4zm9 0h4v4h-1.5v-2.5h-2.5v-1.5zm-9 9h1.5v2.5h2.5v1.5h-4v-4zm10.5 2.5v-2.5h1.5v4h-4v-1.5h2.5z"/></svg>' +
+      '<svg class="rv-ico-collapse" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="display:none;pointer-events:none"><path d="M5.5 1h-4v4h1.5v-2.5h2.5v-1.5zm5 0h4v4h-1.5v-2.5h-2.5v-1.5zm-5 10h-1.5v-2.5h-2.5v-1.5h4v4zm6.5-2.5h-2.5v2.5h-1.5v-4h4v1.5z"/></svg>';
     L.DomEvent.on(el, 'click', L.DomEvent.stopPropagation);
     L.DomEvent.on(el, 'click', L.DomEvent.preventDefault);
     L.DomEvent.on(el, 'click', () => {
