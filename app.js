@@ -201,6 +201,7 @@ const _SECTION_ICON_SVG = {
   'bi-cloud-lightning':      `<path d="M13.405 4.027a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 10H13a3 3 0 0 0 .405-5.973M8.5 1a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 1M7.053 11.276A.5.5 0 0 1 7.5 11h2a.5.5 0 0 1 .473.664l-.334 1H11a.5.5 0 0 1 .39.812l-4 5a.5.5 0 0 1-.871-.464l.853-3.41H5.5a.5.5 0 0 1-.447-.724z"/>`,
   'bi-exclamation-triangle': `<path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/><path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>`,
   'bi-thermometer-half':     `<path d="M9.5 12.5a1.5 1.5 0 1 1-2-1.415V6.5a.5.5 0 0 1 1 0v4.585a1.5 1.5 0 0 1 1 1.415z"/><path d="M5.5 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM8 1a1.5 1.5 0 0 0-1.5 1.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0l-.166-.15V2.5A1.5 1.5 0 0 0 8 1"/>`,
+  'bi-cloud-rain':           `<path d="M4.158 12.025a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m3 0a.5.5 0 0 1 .316.633l-1 3a.5.5 0 0 1-.948-.316l1-3a.5.5 0 0 1 .633-.317zM4 1a3.5 3.5 0 0 1 3.5 3.5.5.5 0 0 0 .5.5 1.5 1.5 0 0 1 1.5 1.5v.5h.5a2.5 2.5 0 0 1 0 5h-9a2.5 2.5 0 0 1 0-5H2v-.5A3.5 3.5 0 0 1 4 1z"/>`,
 };
 const _SECTION_ICONS = {
   'Weekly Forecast':         'bi-clouds',
@@ -214,6 +215,7 @@ const _SECTION_ICONS = {
   'Active Tropical Storms':  'bi-cloud-lightning',
   'State Alerts':            'bi-exclamation-triangle',
   'Hourly Forecast':         'bi-thermometer-half',
+  'Precipitation':             'bi-cloud-rain',
   'Beaufort Scale':          'bi-broadcast',
 };
 function sectionTtl(label, extraStyle = '') {
@@ -1379,6 +1381,7 @@ function openDayModal(dayIdx) {
           temp: oh.temperature_2m?.[i] != null ? Math.round(oh.temperature_2m[i]) : null,
           feelsLike: oh.apparent_temperature?.[i] != null ? Math.round(oh.apparent_temperature[i]) : null,
           precip: oh.precipitation_probability?.[i] ?? null,
+          precipMm: oh.precipitation?.[i] ?? null,
           wind: oh.wind_speed_10m?.[i] != null ? Math.round(oh.wind_speed_10m[i]) : null,
           gust: oh.wind_gusts_10m?.[i] != null ? Math.round(oh.wind_gusts_10m[i]) : null,
           windDeg: oh.wind_direction_10m?.[i] != null ? Math.round(oh.wind_direction_10m[i]) : null,
@@ -1699,7 +1702,7 @@ function openDayModal(dayIdx) {
     <div class="dm-tile-ttl">Est. Rain</div>
     <div class="dm-tile-big" style="color:var(--blue)">${rainInches}<span class="dm-tile-unit">in</span></div>
     <div class="dm-tile-badge" style="color:var(--blue);border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.1)">${rainLabel}</div>
-    <div class="dm-tile-sub">${rainLabel === 'None' ? 'No precipitation expected' : `${rainSum?.toFixed(1)} mm total`}</div>
+    <div class="dm-tile-sub">${rainLabel === 'None' ? 'No precipitation expected' : `${rainInches} in total`}</div>
   </div>` : '';
 
   const allGridTiles = [humidTileHTML, visTileHTML, pressTileHTML, rainTileHTML].filter(Boolean).join('');
@@ -1707,9 +1710,85 @@ function openDayModal(dayIdx) {
 
   const metricCards = [aqiCardHTML, uvCardHTML].filter(Boolean).join('');
 
+  // ── Precip bar chart ──────────────────────────────────────────────────────
+  const precipChartHTML = (() => {
+    const allHrs = hoursWithData.filter(h => h.precip != null || h.precipMm != null);
+    if (allHrs.length < 2) return '';
+
+    // Show 12 hours at a time — two pages, AM and PM
+    const pages = [allHrs.slice(0, 12), allHrs.slice(12, 24)].filter(p => p.length > 0);
+    const totalMm = allHrs.reduce((a, h) => a + (h.precipMm || 0), 0);
+    const totalInches = (totalMm / 25.4);
+    const totalLabel = totalMm < 0.01 ? 'No precip expected' : totalInches < 0.01 ? 'Trace' : `${totalInches.toFixed(2)} in total`;
+
+    const renderPage = (hrs) => {
+      const maxMm = Math.max(...hrs.map(h => h.precipMm || 0), 0.2);
+      return hrs.map(h => {
+        const mm = h.precipMm || 0;
+        const prob = h.precip ?? 0;
+        const pct = Math.min((mm / maxMm) * 100, 100);
+        const hr = new Date(h.time);
+        const label = hr.toLocaleTimeString([], {hour: 'numeric'});
+        const opacity = 0.25 + (prob / 100) * 0.75;
+        const hasRain = mm > 0.01 || prob > 10;
+        const barH = hasRain ? Math.max(pct, prob > 5 ? 6 : 2) : 2;
+        return `<div class="pchart-col">
+          <div class="pchart-bar-wrap">
+            <div class="pchart-bar" style="height:${barH}%;background:rgba(96,165,250,${hasRain ? opacity : 0.12});" title="${(mm/25.4).toFixed(3)}\" · ${prob}%"></div>
+          </div>
+          <div class="pchart-label">${label}</div>
+        </div>`;
+      }).join('');
+    };
+
+    const _maxMm = Math.max(...allHrs.map(h => h.precipMm || 0), 0.2);
+    const yLabel = (_maxMm / 25.4) < 0.1 ? (_maxMm / 25.4).toFixed(3)+'"' : (_maxMm / 25.4).toFixed(2)+'"';
+
+    const pageTabsHTML = pages.length > 1 ? `
+      <div class="pchart-tabs">
+        <button class="pchart-tab active" onclick="pchartPage(this,0)">12 AM–12 PM</button>
+        <button class="pchart-tab" onclick="pchartPage(this,1)">12 PM–12 AM</button>
+      </div>` : '';
+
+    const pagesHTML = pages.map((hrs, pi) =>
+      `<div class="pchart-page" data-page="${pi}" style="display:${pi===0?'flex':'none'}">
+        <div class="pchart-yaxis"><span>${yLabel}</span><span>0</span></div>
+        <div class="pchart-bars">${renderPage(hrs)}</div>
+      </div>`
+    ).join('');
+
+    // Pill color matches rain tile blue
+    const pillColor = totalMm < 0.01
+      ? 'color:var(--dim);border-color:var(--border2);background:var(--card2)'
+      : 'color:var(--blue);border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.1)';
+    const pillLabel = totalMm < 0.01 ? 'None'
+      : (totalInches < 0.01 ? 'Trace'
+      : totalInches < 0.5 ? 'Light'
+      : totalInches < 1.5 ? 'Moderate' : 'Heavy');
+
+    return `<div>
+      ${sectionTtl('Precipitation')}
+      <div class="pchart-wrap">
+        <div class="pchart-header">
+          <div class="pchart-icon-wrap" style="background:rgba(96,165,250,0.12);border-color:rgba(96,165,250,0.35)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 16 16" fill="rgba(96,165,250,0.9)"><use href="#bi-droplet-fill"/></svg>
+          </div>
+          <div class="pchart-info">
+            <div class="pchart-area">Open-Meteo · Daily</div>
+          </div>
+          <div class="pchart-badge" style="${pillColor}">${pillLabel}</div>
+          <div class="pchart-score" style="color:var(--blue)">${totalMm < 0.01 ? '0' : totalInches.toFixed(2)}<span style="font-size:13px;font-weight:400;color:var(--dim);margin-left:3px">in</span></div>
+        </div>
+        ${pageTabsHTML}
+        <div class="pchart-pages">${pagesHTML}</div>
+      </div>
+    </div>`;
+  })();
+
   document.getElementById('dayModalBody').innerHTML =
     heroHTML +
     hourlyHTML +
+    precipChartHTML +
     metricCards +
     (windCardHTML || '') +
     allTilesHTML;
@@ -1721,6 +1800,12 @@ function openDayModal(dayIdx) {
   document.getElementById('dayModal').classList.add('open');
 }
 
+
+function pchartPage(btn, pageIdx) {
+  const wrap = btn.closest('.pchart-wrap');
+  wrap.querySelectorAll('.pchart-tab').forEach((t,i) => t.classList.toggle('active', i === pageIdx));
+  wrap.querySelectorAll('.pchart-page').forEach((p,i) => p.style.display = i === pageIdx ? 'flex' : 'none');
+}
 
 function closeDayModal() {
   window._dayModalOpen = false;
