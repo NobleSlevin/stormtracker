@@ -1361,7 +1361,7 @@ function openDayModal(dayIdx) {
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div>
-        <div style="font-size:60px;font-weight:300;line-height:1;color:#eef0f4">${highTemp}<sup style="font-size:22px;vertical-align:super">°F</sup><span style="font-size:26px;font-weight:300;opacity:.5"> / ${lowTemp}°</span></div>
+        <div style="font-size:60px;font-weight:600;line-height:1;color:#eef0f4">${highTemp}<sup style="font-size:22px;vertical-align:super">°F</sup><span style="font-size:26px;font-weight:400;opacity:.5"> / ${lowTemp}°</span></div>
       </div>
       <div style="flex-shrink:0">${rowWxIcon(d.shortForecast, d.isDaytime !== false, 70)}</div>
     </div>
@@ -2886,9 +2886,9 @@ async function rvLoadFrames() {
       });
 
       rvFrames.forEach(frame => {
-        // RainViewer tile URL: /v2/radar/{path}/256/{z}/{x}/{y}/6/1_1.png
-        const url = `https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/6/1_1.png`;
-        const layer = L.tileLayer(url, { opacity: 0, tileSize: 256, zIndex: 2 });
+        // RainViewer 512px tiles support zoom up to 12; color scheme 6 = original, smooth=1, snow=1
+        const url = `https://tilecache.rainviewer.com${frame.path}/512/{z}/{x}/{y}/6/1_1.png`;
+        const layer = L.tileLayer(url, { opacity: 0, tileSize: 512, zoomOffset: -1, zIndex: 2 });
         rvLayers.push(layer);
         layer.addTo(rvMap);
       });
@@ -3373,10 +3373,19 @@ async function sendTestNotification() {
     return;
   }
   try {
-    new Notification('⛈️ Severe Thunderstorm Warning', {
-      body: 'Johnson County · 70 mph winds and golf ball hail · until 6:15 PM',
-      icon: '/icon.png',
-    });
+    // iOS PWA requires SW-based notifications; fall back to direct Notification for desktop
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg?.showNotification) {
+      await reg.showNotification('⛈️ Severe Thunderstorm Warning', {
+        body: 'Johnson County · 70 mph winds and golf ball hail · Until 6:15 PM',
+        icon: '/icon.png',
+      });
+    } else {
+      new Notification('⛈️ Severe Thunderstorm Warning', {
+        body: 'Johnson County · 70 mph winds and golf ball hail · Until 6:15 PM',
+        icon: '/icon.png',
+      });
+    }
   } catch(e) {
     alert('Could not send test notification: ' + e.message);
   }
