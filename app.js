@@ -1460,7 +1460,6 @@ async function fetchSPCHazards(lat, lon) {
       wind:    windData ? spcPointLevel(lat, lon, windData) : 0,
       hail:    hailData ? spcPointLevel(lat, lon, hailData) : 0,
     };
-    renderHeroThreats();
   } catch(e) {
     console.warn('SPC hazard fetch failed:', e);
   }
@@ -3946,6 +3945,8 @@ async function fetchOpenMeteo(lat, lon) {
 async function fetchForPoint(lat, lon) {
   // Fire Tomorrow.io non-blocking — it only updates the hero icon, not critical data
   fetchTomorrowRealtime(lat, lon);
+  // Start SPC hazard fetch immediately — runs in parallel with forecast
+  const spcPromise = fetchSPCHazards(lat, lon);
   // Start or update SW background alert polling
   if (Notification.permission === 'granted') {
     if (_swReg?.active) startAlertPolling(lat, lon);
@@ -3963,14 +3964,14 @@ async function fetchForPoint(lat, lon) {
     const tempEl = document.querySelector('.fch-temp');
     if (tempEl) tempEl.innerHTML = `${Math.round(window._omCurrentTemp)}<sup>°F</sup>`;
   }
+  // fchThreats is now in the DOM — if SPC already resolved, render immediately; otherwise wait
+  spcPromise.then(() => renderHeroThreats());
   await Promise.all([
     fetchObservations(stationUrl),
     fetchNearby(lat, lon, stationUrl),
     renderAQISlot(lat, lon),
   ]);
   if (periods && periods.length) computeTornadoRisk(periods, lat, lon, allAlerts);
-  // Fire SPC hazard threats after hero is rendered — fchThreats div now exists
-  fetchSPCHazards(lat, lon);
 
   // If radar tab is already visible when location updates, init or re-center
   if (isRadarTabActive()) {
