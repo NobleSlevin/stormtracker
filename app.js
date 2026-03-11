@@ -4083,13 +4083,13 @@ function initRadar(lat, lon) {
       const _backdrop = document.createElement('div');
       _backdrop.className = 'rovr-sheet-backdrop';
       _backdrop.id = 'rvOvrBackdrop';
-      _backdrop.onclick = rvCloseOvrSheet;
+      _backdrop.onclick = (e) => { e.stopPropagation(); rvCloseOvrSheet(); };
       _tabRadar.appendChild(_backdrop);
 
       const _sheet = document.createElement('div');
       _sheet.className = 'rovr-sheet';
       _sheet.id = 'rvOvrSheet';
-      _sheet.innerHTML = `<div class="rovr-sheet-handle"></div><div class="rovr-sheet-title">Map Overlays</div><div class="rovr-sheet-list" id="rvOvrList"></div>`;
+      _sheet.innerHTML = `<div class="rovr-sheet-handle" onclick="rvCloseOvrSheet()"></div><div class="rovr-sheet-title">Map Overlays</div><div class="rovr-sheet-list" id="rvOvrList"></div>`;
       _tabRadar.appendChild(_sheet);
     }
 
