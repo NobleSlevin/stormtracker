@@ -118,7 +118,7 @@ header { display: none; }
 .tab-panel.on { display: block; }
 #tabForecast { position: relative; }
 #wxOverlay { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: cover; background-position: center top; background-repeat: no-repeat; opacity: 0; transition: opacity 1.2s ease; will-change: opacity, background-position-y; transform: translateZ(0); }
-#tabRadar { padding: 0; }
+#tabRadar { padding: 0; position: relative; }
 #tabRadar.on { display: block; overflow-y: auto; }
 #tabRadar.on.map-ready { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 #radarMap { flex: 1; min-height: 0; width: 100%; background: var(--bg); }
@@ -557,11 +557,28 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .radar-dbz-labels { display: flex; justify-content: space-between; margin-top: 3px; }
 .radar-dbz-labels span { font-size: 9px; color: var(--muted); font-family: var(--mono); }
 /* ── Radar Overlay Toggle Bar ── */
-.radar-overlay-bar { display: flex; gap: 6px; padding: 6px 14px 8px; background: var(--card); border-top: 1px solid var(--border); flex-shrink: 0; }
-.rvovr-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 4px 9px; border-radius: 20px; border: 1px solid var(--border2); background: var(--card2); color: var(--dim); font-size: 10px; font-weight: 600; letter-spacing: .4px; cursor: pointer; transition: background .15s, color .15s, border-color .15s; -webkit-appearance: none; white-space: nowrap; }
-.rvovr-btn .ovr-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.rvovr-btn.active { background: color-mix(in srgb, var(--ovr-color) 15%, transparent); color: var(--ovr-color); border-color: color-mix(in srgb, var(--ovr-color) 40%, transparent); }
-.rvovr-btn.loading { opacity: .6; }
+.radar-bottom-bar { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; background: var(--card); border-top: 1px solid var(--border); flex-shrink: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; -webkit-appearance: none; }
+.radar-bottom-bar:active { background: var(--card2); }
+.rovr-bar-label { font-size: 11px; font-weight: 600; letter-spacing: .5px; color: var(--dim); }
+.radar-bottom-bar.has-active .rovr-bar-label { color: var(--text); }
+.rovr-sheet-btn { display: none; }
+.rovr-active-count { background: var(--blue); color: #000; font-size: 10px; font-weight: 700; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rovr-sheet-backdrop { display: none; position: absolute; inset: 0; z-index: 1100; background: rgba(0,0,0,.5); }
+.rovr-sheet-backdrop.open { display: block; }
+.rovr-sheet { position: absolute; bottom: 0; left: 0; right: 0; z-index: 1101; background: var(--card); border-radius: 16px 16px 0 0; border-top: 1px solid var(--border); transform: translateY(100%); transition: transform .28s cubic-bezier(.32,0,.67,0); padding-bottom: env(safe-area-inset-bottom, 0px); max-height: 75%; display: flex; flex-direction: column; }
+.rovr-sheet.open { transform: translateY(0); transition: transform .28s cubic-bezier(.33,1,.68,1); }
+.rovr-sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border2); margin: 10px auto 4px; flex-shrink: 0; }
+.rovr-sheet-title { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 6px 18px 10px; flex-shrink: 0; }
+.rovr-sheet-list { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 0 8px; }
+.rovr-row { display: flex; align-items: center; gap: 14px; padding: 11px 18px; border-top: 1px solid var(--border); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rovr-row:active { background: rgba(255,255,255,.04); }
+.rovr-toggle { width: 26px; height: 26px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .15s; }
+.rovr-toggle svg { opacity: 0; transition: opacity .15s; }
+.rovr-row.active .rovr-toggle svg { opacity: 1; }
+.rovr-row-info { flex: 1; min-width: 0; }
+.rovr-row-label { font-size: 14px; font-weight: 600; color: var(--text); }
+.rovr-row-desc { font-size: 11px; color: var(--dim); margin-top: 1px; font-family: var(--mono); }
+.rovr-row.loading .rovr-toggle { opacity: .5; }
 /* ── Segmented Loop Scrubber ── */
 .radar-scrubber { display: none; align-items: center; gap: 2px; padding: 8px 14px; background: var(--card2); border-top: 1px solid var(--border); flex-shrink: 0; }
 .radar-scrubber.visible { display: flex; }
@@ -575,10 +592,19 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 .rv-alert-popup .leaflet-popup-content { margin: 0; }
 .rv-alert-popup .leaflet-popup-tip { background: #1a1c1f; }
 .rv-alert-popup .leaflet-popup-close-button { color: var(--dim) !important; top: 6px; right: 8px; }
-.rap-inner { padding: 12px 14px; min-width: 180px; max-width: 260px; }
-.rap-event { font-size: 12px; font-weight: 700; letter-spacing: .3px; margin-bottom: 3px; }
-.rap-area { font-size: 10px; color: var(--dim); margin-bottom: 6px; line-height: 1.4; }
-.rap-expire { font-size: 10px; font-family: var(--mono); color: var(--muted); }
+.rap-inner { padding: 12px 14px; min-width: 180px; max-width: 280px; }
+.rap-event { font-size: 13px; font-weight: 700; letter-spacing: .3px; margin-bottom: 2px; }
+.rap-wfo { font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.rap-area { font-size: 10px; color: var(--dim); margin-bottom: 4px; line-height: 1.4; }
+.rap-headline { font-size: 10.5px; color: var(--text); line-height: 1.45; margin-bottom: 5px; }
+.rap-tags { font-size: 10px; color: var(--blue); font-family: var(--mono); margin-bottom: 5px; }
+.rap-expire { font-size: 10px; font-family: var(--mono); color: var(--muted); display: flex; gap: 10px; }
+.rap-emerg { font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #ff4444; background: rgba(255,68,68,.12); border-radius: 4px; padding: 2px 6px; margin-bottom: 6px; }
+/* Emergency pulsing polygon */
+@keyframes rv-pulse { 0%,100%{opacity:1;stroke-width:3.5px} 50%{opacity:.45;stroke-width:5px} }
+.rv-emergency-polygon path { animation: rv-pulse 1.4s ease-in-out infinite; }
+/* ETA labels on storm tracks */
+.rv-eta-label { background: none; border: none; }
 /* ── SPC / Storm track popup ── */
 .rv-map-popup .leaflet-popup-content-wrapper { background: #1a1c1f; border: 1px solid var(--border2); border-radius: 8px; padding: 0; box-shadow: 0 4px 20px rgba(0,0,0,.6); }
 .rv-map-popup .leaflet-popup-tip { background: #1a1c1f; }
@@ -951,7 +977,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
       <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.892 3.433-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.892-1.64-.901-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.474l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/></svg>
     </button>
   </div>
-  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.3.42</div>
+  <div class="ticker-byline">BUILT BY TREY &nbsp;·&nbsp; STORMWATCH PWA &nbsp;·&nbsp; v2.3.51</div>
   </div>
 
 </div>
@@ -1086,7 +1112,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         <button onclick="document.getElementById('settingsModal').classList.remove('open'); document.getElementById('infoModal').classList.add('open');" style="font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:0;">View Data Sources →</button>
       </div>
 
-      <div class="info-footer">StormWatch PWA · v2.3.42</div>
+      <div class="info-footer">StormWatch PWA · v2.3.51</div>
     </div>
   </div>
 </div>
@@ -1180,7 +1206,7 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
 
       <div class="info-section-ttl" style="margin-top:20px">Release Notes</div>
       <div class="info-blurb" style="font-family:var(--mono);font-size:12px;line-height:2;color:rgba(255,255,255,0.6)">
-        <b>v2.3.42</b><br>
+        <b>v2.3.51</b><br>
         · SPC Day 2 &amp; Day 3 threat gauges now appear in day modal hero<br>
         <br>
         <b>v2.3.17</b><br>
@@ -1219,7 +1245,14 @@ svg#radar-chart { width: 100%; max-width: 480px; height: auto; overflow: visible
         · dBZ spectrum bar with touch/mouse scrub and intensity label
       </div>
 
-      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.42</div>
+      <div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--border);display:flex;justify-content:center;">
+        <button onclick="document.getElementById('infoModal').classList.remove('open'); openGlossaryModal();" style="display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 18px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783"/></svg>
+          Open Weather Glossary
+        </button>
+      </div>
+
+      <div class="info-footer">Built by Trey &nbsp;·&nbsp; StormWatch PWA &nbsp;·&nbsp; v2.3.51</div>
     </div>
   </div>
 </div>
@@ -1238,7 +1271,7 @@ window.addEventListener('resize', setAppHeight);
 setTimeout(setAppHeight, 100);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2.3.42"></script>
+<script src="app.js?v=2.3.51"></script>
 
   <!-- Day Detail Modal -->
   <div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal()"></div>

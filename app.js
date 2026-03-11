@@ -869,6 +869,8 @@ function compassSVG(windDeg, deviceDeg, arrowColor) {
     const lineR = 88;
     const ac = arrowColor || 'white';
     const hw = 7, hh = 14;
+    // Arrow drawn pointing DOWN at 0°. Rotating by windDeg (FROM bearing) clockwise
+    // moves the arrowhead to point in the TO direction (downwind). e.g. SW(225°)→NE(↗)
     windArrowHTML = `<g transform="rotate(${windDeg}, ${cx}, ${cy})">
       <line x1="${cx}" y1="${cy - lineR}" x2="${cx}" y2="${cy + lineR}" stroke="${ac}" stroke-width="2.5" stroke-linecap="round"/>
       <polygon points="${cx},${cy + lineR} ${cx - hw},${cy + lineR - hh} ${cx + hw},${cy + lineR - hh}" fill="${ac}"/>
@@ -1112,6 +1114,27 @@ function openGlossaryModal() {
     <div>
       <div class="gloss-section-ttl">Beaufort Wind Scale</div>
       ${bftRowsHTML}
+    </div>
+    <div>
+      <div class="gloss-section-ttl">Radar — Base Layers</div>
+      ${[
+        ['Reflectivity (dBZ)', 'Measures the strength of energy returned to the radar. Higher dBZ = larger/denser precipitation particles. 20 dBZ = light rain or moderate snow; 40 dBZ = heavy rain or sleet; 60+ dBZ = very large hail or intense rain.'],
+        ['Wind', 'Model-derived surface wind speed and direction overlay. Colored by intensity. Sourced from OpenWeatherMap Weather Maps 2.0, updated hourly.'],
+        ['Cloud Cover', 'Model-derived total cloud fraction overlay. Lighter = thin/patchy, darker = overcast. Useful for tracking storm anvils and clearing trends.'],
+        ['Temperature', 'Surface temperature overlay. Color gradient from cold (blue) to warm (red). Helps identify warm/cold frontal boundaries on the map.'],
+      ].map(([term, desc]) => `<div class="gloss-row"><div class="gloss-def"><span class="gloss-term">${term}</span><span class="gloss-desc">${desc}</span></div></div>`).join('')}
+    </div>
+    <div>
+      <div class="gloss-section-ttl">Radar — Overlay Layers</div>
+      ${[
+        ['Warnings', 'Active NWS storm-based warnings (Tornado Warning, Severe Thunderstorm Warning, Flash Flood Warning, etc.) shown as color-coded polygons. Red = tornado; yellow = severe thunderstorm; green = flood.'],
+        ['Watches', 'SPC/NWS watch boxes currently in effect. Watches cover larger areas than warnings and indicate conditions are favorable for severe weather. Orange = severe thunderstorm watch; dark red = tornado watch.'],
+        ['Outlook', 'SPC Day 1 convective outlook showing categorical risk areas: Marginal → Slight → Enhanced → Moderate → High. Each zone has increasing probability of organized severe weather.'],
+        ['Tracks', 'NWS-generated storm motion vectors for active tornado and severe thunderstorm warnings. Each line shows projected storm position at 15-minute increments. Tick marks indicate time steps.'],
+        ['Meso Disc', 'SPC Mesoscale Discussions — short-range technical forecasts from SPC issued 1–3 hours before a watch. Dashed purple polygons indicate areas being closely monitored for severe weather potential.'],
+        ['Storm Rpts', 'Local Storm Reports (LSRs) from the past 6 hours, submitted by NWS spotters and emergency managers. Icons: 🌪️ tornado · 🌨️ hail · 💨 wind · 🌧️ heavy rain · ❄️ snow · 🌊 flood. Tap any dot for magnitude and remarks.'],
+        ['Echo Tops', 'NOAA MRMS product showing the maximum altitude where radar detects 18 dBZ echoes. Higher echo tops (50,000+ ft) indicate explosive updrafts and severe storm potential. Updated every ~4 minutes.'],
+      ].map(([term, desc]) => `<div class="gloss-row"><div class="gloss-def"><span class="gloss-term">${term}</span><span class="gloss-desc">${desc}</span></div></div>`).join('')}
     </div>
     <div>
       <div class="gloss-section-ttl">General Terms</div>
@@ -1405,7 +1428,7 @@ function renderForecast(periods){
     <div class="fch-top"><div class="fch-day">${dn[now.getDay()]}, ${mn[now.getMonth()]} ${now.getDate()}</div></div>
     <div class="fch-temp">—<sup>°F</sup></div>
     <div class="fch-icon">${heroWxIcon(hero.shortForecast, hero.isDaytime !== false)}</div>
-    <div class="fch-meta"><div>${hero.shortForecast}</div><div>Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
+    <div class="fch-meta"><div>${hero.shortForecast}</div><div class="fch-meta-wind">Wind: <b>${hero.windDirection||''} ${hero.windSpeed||''}</b></div></div>
     <div class="fch-extras" id="fchExtras"></div>
     <div id="fchThreats"></div>
     <div class="fch-info-row"><button class="fch-info-btn" onclick="openGlossaryModal()" aria-label="Weather glossary"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></button></div>
@@ -2272,6 +2295,9 @@ const RV_OVERLAYS = [
   { id: 'watches',    label: 'Watches',    color: '#fb923c' },
   { id: 'outlook',    label: 'Outlook',    color: '#a78bfa' },
   { id: 'stormtracks',label: 'Tracks',     color: '#fbbf24' },
+  { id: 'meso',       label: 'Meso Disc',  color: '#e879f9' },
+  { id: 'lsr',        label: 'Storm Rpts', color: '#34d399' },
+  { id: 'echotops',   label: 'Echo Tops',  color: '#67e8f9' },
 ];
 
 // Active overlays set and their Leaflet layer groups
@@ -2280,24 +2306,72 @@ const rvOverlayGroups = {};
 
 // Warning event → color map
 const WARN_COLORS = {
-  'Tornado Warning':            '#ef4444',
-  'Tornado Emergency':          '#ff0000',
-  'Severe Thunderstorm Warning':'#facc15',
-  'Flash Flood Warning':        '#22c55e',
-  'Flash Flood Emergency':      '#15803d',
-  'Special Marine Warning':     '#fb923c',
-  'Snow Squall Warning':        '#93c5fd',
-  'Extreme Wind Warning':       '#f97316',
+  // Tornado
+  'Tornado Warning':              '#ef4444',
+  'Tornado Emergency':            '#ff0000',
+  'Tornado Watch':                '#ffdd00',
+  // Severe Thunderstorm
+  'Severe Thunderstorm Warning':  '#facc15',
+  'Severe Thunderstorm Watch':    '#db7c00',
+  // Flash Flood
+  'Flash Flood Warning':          '#22c55e',
+  'Flash Flood Emergency':        '#00ff00',
+  'Flash Flood Watch':            '#2e8b57',
+  'Flood Warning':                '#00ff00',
+  'Flood Watch':                  '#2e8b57',
+  // Winter
+  'Winter Storm Warning':         '#ff69b4',
+  'Winter Storm Watch':           '#4682b4',
+  'Blizzard Warning':             '#ff4500',
+  'Ice Storm Warning':            '#8b008b',
+  'Winter Weather Advisory':      '#7b68ee',
+  'Wind Chill Warning':           '#b0c4de',
+  'Frost Advisory':               '#6495ed',
+  // Wind
+  'High Wind Warning':            '#daa520',
+  'High Wind Watch':              '#b8860b',
+  'Wind Advisory':                '#d2b48c',
+  'Extreme Wind Warning':         '#ff8c00',
+  // Marine
+  'Special Marine Warning':       '#ffa500',
+  'Gale Warning':                 '#dda0dd',
+  'Storm Warning':                '#9400d3',
+  'Hurricane Warning':            '#ff0000',
+  'Hurricane Watch':              '#ff69b4',
+  'Tropical Storm Warning':       '#b22222',
+  'Tropical Storm Watch':         '#f08080',
+  // Other
+  'Snow Squall Warning':          '#c8a2c8',
+  'Dust Storm Warning':           '#ffe4b5',
+  'Fire Weather Watch':           '#ff7518',
+  'Red Flag Warning':             '#ff4500',
+  'Dense Fog Advisory':           '#708090',
+  'Special Weather Statement':    '#ffe4e1',
 };
 function warnColor(event) {
+  const ev = event || '';
   for (const [k, v] of Object.entries(WARN_COLORS)) {
-    if (event.includes(k.split(' ')[0]) && event.includes(k.split(' ').slice(-1)[0])) return v;
+    if (ev.toLowerCase().includes(k.toLowerCase())) return v;
   }
-  if (event.toLowerCase().includes('tornado')) return '#ef4444';
-  if (event.toLowerCase().includes('thunder')) return '#facc15';
-  if (event.toLowerCase().includes('flood'))   return '#22c55e';
-  if (event.toLowerCase().includes('wind'))    return '#f97316';
+  if (ev.toLowerCase().includes('tornado'))    return '#ef4444';
+  if (ev.toLowerCase().includes('thunder'))    return '#facc15';
+  if (ev.toLowerCase().includes('flood'))      return '#22c55e';
+  if (ev.toLowerCase().includes('wind'))       return '#f97316';
+  if (ev.toLowerCase().includes('winter'))     return '#ff69b4';
+  if (ev.toLowerCase().includes('snow'))       return '#c8a2c8';
+  if (ev.toLowerCase().includes('hurricane'))  return '#ff0000';
+  if (ev.toLowerCase().includes('marine'))     return '#ffa500';
   return '#f87171';
+}
+function isEmergency(event, props) {
+  const ev = (event || '').toLowerCase();
+  if (ev.includes('tornado emergency') || ev.includes('flash flood emergency')) return true;
+  // PDS tags appear in parameters
+  const tags = [].concat(props?.parameters?.tornadoDetection || props?.parameters?.significantTornadoParameter || []);
+  if (tags.some(t => /pds|particularly dangerous/i.test(String(t)))) return true;
+  const desc = (props?.description || '').toLowerCase();
+  if (desc.includes('particularly dangerous situation') || desc.includes('pds')) return true;
+  return false;
 }
 
 // SPC risk levels
@@ -2310,41 +2384,80 @@ const SPC_RISKS = {
   'HIGH': { label: 'High (5/5)',       color: '#f060f0', desc: 'Particularly dangerous situation. A major tornado outbreak or widespread destructive winds is expected. Take shelter now.' },
 };
 
+// Short descriptions shown in the sheet
+const RV_OVERLAY_DESC = {
+  warnings:    'NWS active storm-based warnings',
+  watches:     'SPC tornado & thunderstorm watches',
+  outlook:     'SPC Day 1 convective outlook',
+  stormtracks: 'NWS storm motion vectors',
+  meso:        'SPC mesoscale discussions',
+  lsr:         'Local storm reports (past 6 hrs)',
+  echotops:    'MRMS echo top heights',
+};
+
+function rvUpdateOvrCount() {
+  const count = rvActiveOverlays.size;
+  const btn   = document.getElementById('rvOvrSheetBtn');
+  const badge = document.getElementById('rvOvrCount');
+  if (badge) {
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'inline' : 'none';
+  }
+  if (btn) btn.classList.toggle('has-active', count > 0);
+}
+
+function rvOpenOvrSheet() {
+  document.getElementById('rvOvrBackdrop')?.classList.add('open');
+  document.getElementById('rvOvrSheet')?.classList.add('open');
+}
+
+function rvCloseOvrSheet() {
+  document.getElementById('rvOvrBackdrop')?.classList.remove('open');
+  document.getElementById('rvOvrSheet')?.classList.remove('open');
+}
+
 function rvInitOverlayBar() {
-  const bar = document.getElementById('rvOvrBar');
-  if (!bar || bar.dataset.inited) return;
-  bar.dataset.inited = '1';
+  const list = document.getElementById('rvOvrList');
+  if (!list || list.dataset.inited) return;
+  list.dataset.inited = '1';
 
   RV_OVERLAYS.forEach(ovr => {
-    const btn = document.createElement('button');
-    btn.className = 'rvovr-btn';
-    btn.dataset.id = ovr.id;
-    btn.style.setProperty('--ovr-color', ovr.color);
-    btn.innerHTML = `<span class="ovr-dot" style="background:${ovr.color}"></span>${ovr.label}`;
-    btn.addEventListener('click', () => rvToggleOverlay(ovr.id, btn));
-    bar.appendChild(btn);
+    const row = document.createElement('div');
+    row.className = 'rovr-row';
+    row.dataset.id = ovr.id;
+    row.innerHTML = `
+      <div class="rovr-toggle" style="border-color:${ovr.color}">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="${ovr.color}">
+          <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/>
+        </svg>
+      </div>
+      <div class="rovr-row-info">
+        <div class="rovr-row-label" style="color:var(--text)">${ovr.label}</div>
+        <div class="rovr-row-desc">${RV_OVERLAY_DESC[ovr.id] || ''}</div>
+      </div>`;
+    row.addEventListener('click', () => rvToggleOverlay(ovr.id, row));
+    list.appendChild(row);
   });
 }
 
-async function rvToggleOverlay(id, btn) {
+async function rvToggleOverlay(id, row) {
   if (rvActiveOverlays.has(id)) {
-    // Turn off
     rvActiveOverlays.delete(id);
     if (rvOverlayGroups[id]) { rvMap.removeLayer(rvOverlayGroups[id]); delete rvOverlayGroups[id]; }
-    btn.classList.remove('active', 'loading');
+    row.classList.remove('active', 'loading');
   } else {
-    // Turn on
     rvActiveOverlays.add(id);
-    btn.classList.add('active', 'loading');
+    row.classList.add('active', 'loading');
     try {
       await rvLoadOverlay(id);
     } catch(e) {
       console.warn('Overlay load error:', id, e);
       rvActiveOverlays.delete(id);
-      btn.classList.remove('active');
+      row.classList.remove('active');
     }
-    btn.classList.remove('loading');
+    row.classList.remove('loading');
   }
+  rvUpdateOvrCount();
 }
 
 async function rvLoadOverlay(id) {
@@ -2358,23 +2471,66 @@ async function rvLoadOverlay(id) {
     const url = `https://api.weather.gov/alerts/active?status=actual&message_type=${type}&limit=500`;
     const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
     const data = await resp.json();
-    (data.features || []).forEach(f => {
-      if (!f.geometry) return;
-      const props = f.properties;
-      const color = warnColor(props.event || '');
+
+    // Sort: emergencies first, then by severity so higher sits on top
+    const sevOrder = { Extreme: 0, Severe: 1, Moderate: 2, Minor: 3 };
+    const features = (data.features || [])
+      .filter(f => f.geometry)
+      .sort((a, b) => (sevOrder[b.properties?.severity] ?? 4) - (sevOrder[a.properties?.severity] ?? 4));
+
+    features.forEach(f => {
+      const props = f.properties || {};
+      const event = props.event || 'Alert';
+      const color = warnColor(event);
+      const emergency = isEmergency(event, props);
+
+      // Weight and fill — emergency gets thicker border
+      const weight   = emergency ? 3.5 : event.toLowerCase().includes('warning') ? 2 : 1.5;
+      const fillOpacity = emergency ? 0.22 : event.toLowerCase().includes('warning') ? 0.15 : 0.10;
+      const dashArray = event.toLowerCase().includes('watch') ? '8 5' : null;
+
       const layer = L.geoJSON(f.geometry, {
-        style: { color, weight: 1.5, opacity: 0.9, fillColor: color, fillOpacity: 0.12 }
+        style: {
+          color, weight, opacity: 0.95,
+          fillColor: color, fillOpacity,
+          dashArray,
+          className: emergency ? 'rv-emergency-polygon' : ''
+        }
       });
-      layer.on('click', (e) => {
-        const expires = props.expires ? new Date(props.expires) : null;
-        const expStr = expires ? expires.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '—';
-        const area = (props.areaDesc || '').split(';')[0].trim();
-        L.popup({ className: 'rv-alert-popup', maxWidth: 280 })
+
+      layer.on('click', e => {
+        const expires = props.expires || props.ends;
+        const issued  = props.sent;
+        const expDate = expires ? new Date(expires) : null;
+        const issDate = issued  ? new Date(issued)  : null;
+        const fmt = d => d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+        const fmtDay = d => d ? d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) : '';
+
+        const wfo = (props.senderName || '').replace('NWS ', '');
+        const area = (props.areaDesc || '').split(';').slice(0, 2).join(', ').trim();
+        const headline = props.headline || '';
+        const emergLabel = emergency ? `<div class="rap-emerg">⚠️ PARTICULARLY DANGEROUS SITUATION</div>` : '';
+
+        // Extract hail / wind / tornado tags from NWS parameters if present
+        const params = props.parameters || {};
+        const hail   = [].concat(params.maxHailSize || []).join('');
+        const wind   = [].concat(params.maxWindGust || []).join('');
+        const torn   = [].concat(params.tornadoDetection || []).join('');
+        const tags = [hail && `🌨️ Hail: ${hail}"`, wind && `💨 Wind: ${wind}`, torn && `🌪️ ${torn}`].filter(Boolean);
+
+        L.popup({ className: 'rv-alert-popup', maxWidth: 300 })
           .setLatLng(e.latlng)
           .setContent(`<div class="rap-inner">
-            <div class="rap-event" style="color:${color}">${props.event || 'Alert'}</div>
-            <div class="rap-area">${area}</div>
-            <div class="rap-expire">Expires ${expStr}</div>
+            ${emergLabel}
+            <div class="rap-event" style="color:${color}">${event}</div>
+            ${wfo ? `<div class="rap-wfo">Issued by NWS ${wfo}</div>` : ''}
+            ${area ? `<div class="rap-area">${area}</div>` : ''}
+            ${headline ? `<div class="rap-headline">${headline.replace(/^.*? - /,'')}</div>` : ''}
+            ${tags.length ? `<div class="rap-tags">${tags.join(' · ')}</div>` : ''}
+            <div class="rap-expire">
+              ${issDate ? `<span>Issued ${fmt(issDate)}</span>` : ''}
+              ${expDate ? `<span>Expires ${fmt(expDate)}${fmtDay(expDate) !== fmtDay(issDate) ? ' ' + fmtDay(expDate) : ''}</span>` : ''}
+            </div>
           </div>`)
           .openOn(rvMap);
       });
@@ -2485,56 +2641,172 @@ async function rvLoadOverlay(id) {
         const distPerTick = (spd / 60 * 15) / 69; // deg lat per 15 min
         const tickCount = 4;
 
-        // Motion arrow line to 60-min projected position
+        // White dotted projected path line (RadarScope style)
         const endLat = center.lat + Math.cos(bearRad) * distPerTick * tickCount;
         const endLon = center.lng + Math.sin(bearRad) * distPerTick * tickCount / cosLat;
 
+        // Colored backing line for visibility
         L.polyline([[center.lat, center.lng], [endLat, endLon]], {
-          color, weight: 2.5, opacity: 0.9
+          color, weight: 4, opacity: 0.35
         }).addTo(group);
 
-        // 15-min tick marks perpendicular to track
+        // White dotted line on top
+        L.polyline([[center.lat, center.lng], [endLat, endLon]], {
+          color: '#ffffff', weight: 2, opacity: 0.9, dashArray: '5 6'
+        }).addTo(group);
+
+        // 15-min tick marks with ETA labels
+        const nowMs = Date.now();
         for (let t = 1; t <= tickCount; t++) {
           const tLat = center.lat + Math.cos(bearRad) * distPerTick * t;
           const tLon = center.lng + Math.sin(bearRad) * distPerTick * t / cosLat;
           const perpRad = bearRad + Math.PI / 2;
-          const tickSize = 0.025;
+          const tickSize = 0.022;
+
+          // Tick crossbar — white
           L.polyline([
             [tLat - Math.cos(perpRad) * tickSize, tLon - Math.sin(perpRad) * tickSize / cosLat],
             [tLat + Math.cos(perpRad) * tickSize, tLon + Math.sin(perpRad) * tickSize / cosLat]
-          ], { color, weight: 2, opacity: 0.85 }).addTo(group);
+          ], { color: '#ffffff', weight: 2, opacity: 0.9 }).addTo(group);
+
+          // ETA label at each tick
+          const etaMin = t * 15;
+          const etaDate = new Date(nowMs + etaMin * 60000);
+          const etaStr = etaDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          L.marker([tLat, tLon], {
+            icon: L.divIcon({
+              className: 'rv-eta-label',
+              html: `<span style="color:#fff;font-size:9px;font-family:var(--mono);text-shadow:0 0 3px #000,0 0 3px #000;white-space:nowrap;pointer-events:none">+${etaMin}m ${etaStr}</span>`,
+              iconAnchor: [-6, 6]
+            }),
+            interactive: false
+          }).addTo(group);
         }
 
-        // Arrowhead at projected end
+        // Arrowhead dot at projected end
         L.circleMarker([endLat, endLon], {
-          radius: 4, color, fillColor: color, fillOpacity: 1, weight: 1.5
+          radius: 5, color: '#ffffff', fillColor: color, fillOpacity: 1, weight: 2
         }).addTo(group);
       }
 
-      // Tappable centroid
-      const dirLabel = bearing !== null ? `${bearing}° at ${spd} mph` : '';
+      // Tappable storm centroid — colored dot
+      const dirLabel = bearing !== null ? `${bearing}° at ${spd} mph` : 'No motion data';
+      const wfo = (props.senderName || '').replace('NWS ', '');
       L.circleMarker(center, {
-        radius: 6, color, fillColor: color, fillOpacity: 0.85, weight: 1.5
-      }).bindPopup(`<div class="rmp-inner">
-        <div class="rmp-title" style="color:${color}">${props.event}</div>
-        <div class="rmp-body">${(props.areaDesc||'').split(';')[0]}${dirLabel ? '<br>Motion: ' + dirLabel : ''}</div>
-      </div>`, { className: 'rv-map-popup' }).addTo(group);
+        radius: 7, color, fillColor: color, fillOpacity: 0.9, weight: 2
+      }).bindPopup(`<div class="rap-inner">
+        <div class="rap-event" style="color:${color}">${props.event || 'Warning'}</div>
+        ${wfo ? `<div class="rap-wfo">NWS ${wfo}</div>` : ''}
+        <div class="rap-area">${(props.areaDesc||'').split(';')[0]}</div>
+        <div class="rap-tags">🧭 Motion: ${dirLabel}</div>
+        <div class="rap-expire"><span>Expires ${props.expires ? new Date(props.expires).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</span></div>
+      </div>`, { className: 'rv-alert-popup' }).addTo(group);
     });
 
     if (trackCount === 0) {
       // No active severe warnings with motion data — show a subtle map note
       console.info('Storm tracks: no active tornado/thunderstorm warnings with motion data');
     }
+
+  } else if (id === 'meso') {
+    // ── SPC Mesoscale Discussions ──────────────────────────────────────────
+    // NOAA ArcGIS MapServer — same server used for SPC outlook data
+    const url = 'https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/spc_mesoscale_discussion/MapServer/0/query?where=1%3D1&outFields=*&f=geojson';
+    const resp = await fetch(url);
+    const data = await resp.json();
+    const color = '#e879f9';
+    (data.features || []).forEach(f => {
+      if (!f.geometry) return;
+      const p = f.properties || {};
+      const layer = L.geoJSON(f.geometry, {
+        style: { color, weight: 2, opacity: 0.9, fillColor: color, fillOpacity: 0.10, dashArray: '6 4' }
+      });
+      layer.on('click', e => {
+        const concerning = p.concerning || p.wtype_summary || p.name || 'Severe Weather Potential';
+        const areas = p.areas_affected || p.affect || '';
+        const valid = p.valid_time_utc || p.issuetime || '';
+        const validStr = valid ? new Date(valid).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        L.popup({ className: 'rv-map-popup', maxWidth: 300 })
+          .setLatLng(e.latlng)
+          .setContent(`<div class="rmp-inner">
+            <div class="rmp-title" style="color:${color}">SPC Mesoscale Discussion</div>
+            <div class="rmp-subtitle" style="color:${color};font-weight:600">${concerning}</div>
+            ${areas ? `<div class="rmp-body">${areas}</div>` : ''}
+            ${validStr ? `<div class="rmp-body" style="color:var(--dim)">Issued ${validStr}</div>` : ''}
+          </div>`)
+          .openOn(rvMap);
+      });
+      layer.addTo(group);
+    });
+
+  } else if (id === 'lsr') {
+    // ── Local Storm Reports (IEM GeoJSON, past 6 hours) ──────────────────
+    const secs = 6 * 3600;
+    const url = `https://mesonet.agron.iastate.edu/geojson/lsr.php?hours=6`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    // Type → emoji + color
+    const LSR_TYPES = {
+      'T': { emoji: '🌪️', color: '#ef4444', label: 'Tornado' },
+      'F': { emoji: '🌪️', color: '#f97316', label: 'Funnel Cloud' },
+      'G': { emoji: '💨', color: '#fb923c', label: 'Wind Gust' },
+      'D': { emoji: '🌲', color: '#a3a3a3', label: 'Tree/Damage' },
+      'H': { emoji: '🌨️', color: '#93c5fd', label: 'Hail' },
+      'R': { emoji: '🌧️', color: '#60a5fa', label: 'Heavy Rain' },
+      'S': { emoji: '❄️', color: '#e2e8f0', label: 'Snow' },
+      'W': { emoji: '🌊', color: '#34d399', label: 'Flood' },
+      'f': { emoji: '🌊', color: '#22c55e', label: 'Flash Flood' },
+      'M': { emoji: '⛰️', color: '#a78bfa', label: 'Mudslide' },
+    };
+
+    (data.features || []).forEach(f => {
+      if (!f.geometry) return;
+      const p = f.properties || {};
+      const [lng, lat] = f.geometry.coordinates;
+      const typeMeta = LSR_TYPES[p.type] || { emoji: '⚠️', color: '#fbbf24', label: p.typetext || 'Report' };
+      const validStr = p.valid ? new Date(p.valid).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      const mag = p.magnitude ? ` · ${p.magnitude} ${p.units || ''}` : '';
+
+      const marker = L.circleMarker([lat, lng], {
+        radius: 7,
+        color: typeMeta.color,
+        fillColor: typeMeta.color,
+        fillOpacity: 0.85,
+        weight: 1.5
+      });
+      marker.bindPopup(`<div class="rmp-inner">
+        <div class="rmp-title" style="color:${typeMeta.color}">${typeMeta.emoji} ${typeMeta.label}${mag}</div>
+        <div class="rmp-body">${p.city || ''}, ${p.state || ''}</div>
+        ${validStr ? `<div class="rmp-body" style="color:var(--dim)">${validStr}</div>` : ''}
+        ${p.remark ? `<div class="rmp-body" style="font-size:11px;margin-top:4px">${p.remark}</div>` : ''}
+      </div>`, { className: 'rv-map-popup' });
+      marker.addTo(group);
+    });
+
+  } else if (id === 'echotops') {
+    // ── Echo Tops (NOAA MRMS via nowCOAST WMS) ─────────────────────────
+    // EchoTop_18 = height (kft) of 18 dBZ echo top — strong updraft indicator
+    const WMS = 'https://nowcoast.noaa.gov/geoserver/observations/weather_radar/ows';
+    const layer = L.tileLayer.wms(WMS, {
+      layers: 'mrms_EchoTop_18_conus',
+      format: 'image/png',
+      transparent: true,
+      opacity: 0.75,
+      version: '1.3.0',
+      attribution: 'NOAA MRMS'
+    });
+    layer.addTo(group);
   }
 }
 
 // Reload active overlays (called after location change)
 async function rvReloadOverlays() {
   for (const id of rvActiveOverlays) {
-    const btn = document.querySelector(`[data-id="${id}"]`);
-    if (btn) btn.classList.add('loading');
+    const row = document.querySelector(`#rvOvrList [data-id="${id}"]`);
+    if (row) row.classList.add('loading');
     try { await rvLoadOverlay(id); } catch(e) { console.warn(e); }
-    if (btn) btn.classList.remove('loading');
+    if (row) row.classList.remove('loading');
   }
 }
 
@@ -2796,8 +3068,7 @@ function patchHourlyTemps(omHourly) {
     if (om.wdir != null) {
       const arrowEl = card.querySelector('.hc-wind-arrow');
       if (arrowEl) {
-        // Arrow SVG points down (↓) at 0°. Wind direction is FROM bearing.
-        // Rotating by wdir makes the arrow point in the downwind (travel) direction.
+        // Arrow SVG points down (↓) at 0°. Rotating by FROM bearing moves arrowhead to TO direction.
         const rotate = Math.round(om.wdir) % 360;
         arrowEl.style.transform = `rotate(${rotate}deg)`;
       }
@@ -3022,7 +3293,8 @@ async function fetchObservations(stationsUrl) {
     // NWS obs station can be 20-40 mi away and report an hour behind, so we never use it for temp display.
     set('obsHumid', humid);
     set('obsDew',   dewF);
-    set('obsWind',  windMph);
+    // obsWind and obsGust are owned by Open-Meteo (exact point, current model data).
+    // NWS obs station can be 20-40 mi away and up to 1hr stale — skip wind here.
     set('obsPress', pressMb);
     set('obsVis',   visMi);
     const _os=document.getElementById('obsStrip');_os.dataset.active='1';document.getElementById('obsStripWrap')?.classList.remove('collapsed');
@@ -3807,8 +4079,27 @@ function initRadar(lat, lon) {
           <span>-30</span><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span>
         </div>
       </div>
-      <div class="radar-overlay-bar" id="rvOvrBar"></div>
+      <div class="radar-bottom-bar" id="rvOvrSheetBtn" onclick="rvOpenOvrSheet()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="opacity:.6"><path d="M8.235 1.559a.5.5 0 0 0-.47 0l-7.5 4a.5.5 0 0 0 0 .882L3.188 8 .264 9.559a.5.5 0 0 0 0 .882l7.5 4a.5.5 0 0 0 .47 0l7.5-4a.5.5 0 0 0 0-.882L12.813 8l2.922-1.559a.5.5 0 0 0 0-.882zm3.515 7.008L14.438 10 8 13.433 1.562 10 4.25 8.567l3.515 1.874a.5.5 0 0 0 .47 0zM8 9.433 1.562 6 8 2.567 14.438 6z"/></svg>
+        <span class="rovr-bar-label">Map Overlays</span>
+        <span class="rovr-active-count" id="rvOvrCount" style="display:none">0</span>
+      </div>
       <div class="radar-scrubber" id="rvScrubber"></div>`;
+    // Sheet and backdrop live on #tabRadar (not inside the flex panel) so they aren't clipped
+    const _tabRadar = document.getElementById('tabRadar');
+    if (!document.getElementById('rvOvrSheet')) {
+      const _backdrop = document.createElement('div');
+      _backdrop.className = 'rovr-sheet-backdrop';
+      _backdrop.id = 'rvOvrBackdrop';
+      _backdrop.onclick = rvCloseOvrSheet;
+      _tabRadar.appendChild(_backdrop);
+
+      const _sheet = document.createElement('div');
+      _sheet.className = 'rovr-sheet';
+      _sheet.id = 'rvOvrSheet';
+      _sheet.innerHTML = `<div class="rovr-sheet-handle"></div><div class="rovr-sheet-title">Map Overlays</div><div class="rovr-sheet-list" id="rvOvrList"></div>`;
+      _tabRadar.appendChild(_sheet);
+    }
 
     // Build layer switcher buttons
     const bar = document.getElementById('rvLayerBar');
@@ -3861,8 +4152,8 @@ function initRadar(lat, lon) {
     rvInitFullscreenBtn();
     // Default outlook layer on
     setTimeout(() => {
-      const outlookBtn = document.querySelector('[data-id="outlook"]');
-      if (outlookBtn) rvToggleOverlay('outlook', outlookBtn);
+      const outlookRow = document.querySelector('#rvOvrList [data-id="outlook"]');
+      if (outlookRow) rvToggleOverlay('outlook', outlookRow);
     }, 800);
   } else {
     rvMap.setView([lat, lon], 8);
@@ -4050,9 +4341,6 @@ async function fetchOpenMeteo(lat, lon) {
     // Feels like
     if (c.apparent_temperature != null) set('obsFeels', Math.round(c.apparent_temperature));
 
-    // Wind gust
-    if (c.wind_gusts_10m != null) set('obsGust', Math.round(c.wind_gusts_10m));
-
     // Store wind data for Wind modal
     window._windData = {
       speed:     c.wind_speed_10m   != null ? Math.round(c.wind_speed_10m)   : null,
@@ -4154,6 +4442,24 @@ async function fetchOpenMeteo(lat, lon) {
     if (!_applyHeroTemp()) {
       const _retryTimer = setInterval(() => { if (_applyHeroTemp()) clearInterval(_retryTimer); }, 200);
       setTimeout(() => clearInterval(_retryTimer), 10000); // give up after 10s
+    }
+
+    // Patch hero wind line with OM live speed/direction/gust — same pattern as temp patch
+    const _applyHeroWind = () => {
+      const metaEl = document.querySelector('.fch-meta');
+      if (!metaEl) return false;
+      const windEl = metaEl.querySelector('.fch-meta-wind');
+      if (!windEl) return false;
+      const wd = window._windData;
+      if (!wd || wd.speed == null) return false;
+      const cardDir = degToCard(wd.direction);
+      const gustStr = wd.gust != null ? ` G${wd.gust}` : '';
+      windEl.innerHTML = `Wind: <b>${cardDir} ${wd.speed}${gustStr} mph</b>`;
+      return true;
+    };
+    if (!_applyHeroWind()) {
+      const _wRetry = setInterval(() => { if (_applyHeroWind()) clearInterval(_wRetry); }, 200);
+      setTimeout(() => clearInterval(_wRetry), 10000);
     }
   } catch(e) {
     console.warn('Open-Meteo error:', e);

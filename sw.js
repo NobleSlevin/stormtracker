@@ -1,5 +1,5 @@
-const CACHE = 'stormwatch-v2.3.42';
-const ASSETS = ['/', '/index.html', '/app.js?v=2.3.42', '/icon.png', '/manifest.json'];
+const CACHE = 'stormwatch-v2.3.51';
+const ASSETS = ['/', '/index.html', '/app.js?v=2.3.51', '/icon.png', '/manifest.json'];
 
 // ── Install ──────────────────────────────────────────────────────────────────
 self.addEventListener('install', e => {
@@ -114,7 +114,7 @@ async function runAlertPoll() {
 
     _lastPollHadSevere = features.some(f => {
       const sev = f.properties?.severity || '';
-      return sev === 'Extreme' || sev === 'Severe';
+      return sev === 'Extreme' || sev === 'Severe' || sev === 'Moderate';
     });
 
     // Find alerts we haven't notified about yet
@@ -139,7 +139,7 @@ async function runAlertPoll() {
       const id = alert.properties?.id || alert.id;
       _seenAlertIds.add(id);
       const p = alert.properties || {};
-      if (p.severity === 'Extreme' || p.severity === 'Severe') _seenSevereIds.add(id);
+      if (p.severity === 'Extreme' || p.severity === 'Severe' || p.severity === 'Moderate') _seenSevereIds.add(id);
       if (alertPassesFilter(p)) await fireAlertNotification(p);
     }
 
