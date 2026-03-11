@@ -2396,14 +2396,8 @@ const RV_OVERLAY_DESC = {
 };
 
 function rvUpdateOvrCount() {
-  const count = rvActiveOverlays.size;
-  const btn   = document.getElementById('rvOvrSheetBtn');
-  const badge = document.getElementById('rvOvrCount');
-  if (badge) {
-    badge.textContent = count;
-    badge.style.display = count > 0 ? 'inline' : 'none';
-  }
-  if (btn) btn.classList.toggle('has-active', count > 0);
+  const btn = document.getElementById('rvOvrSheetBtn');
+  if (btn) btn.classList.toggle('has-active', rvActiveOverlays.size > 0);
 }
 
 function rvOpenOvrSheet() {
@@ -2427,9 +2421,7 @@ function rvInitOverlayBar() {
     row.dataset.id = ovr.id;
     row.innerHTML = `
       <div class="rovr-toggle" style="border-color:${ovr.color}">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="${ovr.color}">
-          <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/>
-        </svg>
+        <div class="rovr-toggle-dot" style="background:${ovr.color}"></div>
       </div>
       <div class="rovr-row-info">
         <div class="rovr-row-label" style="color:var(--text)">${ovr.label}</div>
@@ -4082,7 +4074,7 @@ function initRadar(lat, lon) {
       <div class="radar-bottom-bar" id="rvOvrSheetBtn" onclick="rvOpenOvrSheet()">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style="opacity:.6"><path d="M8.235 1.559a.5.5 0 0 0-.47 0l-7.5 4a.5.5 0 0 0 0 .882L3.188 8 .264 9.559a.5.5 0 0 0 0 .882l7.5 4a.5.5 0 0 0 .47 0l7.5-4a.5.5 0 0 0 0-.882L12.813 8l2.922-1.559a.5.5 0 0 0 0-.882zm3.515 7.008L14.438 10 8 13.433 1.562 10 4.25 8.567l3.515 1.874a.5.5 0 0 0 .47 0zM8 9.433 1.562 6 8 2.567 14.438 6z"/></svg>
         <span class="rovr-bar-label">Map Overlays</span>
-        <span class="rovr-active-count" id="rvOvrCount" style="display:none">0</span>
+
       </div>
       <div class="radar-scrubber" id="rvScrubber"></div>`;
     // Sheet and backdrop live on #tabRadar (not inside the flex panel) so they aren't clipped
